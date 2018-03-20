@@ -1,5 +1,6 @@
 ---
 title: GitHub访问慢解决方案
+date: 2018-03-17 13:47:22
 categories:
 - github
 tags:
@@ -30,8 +31,16 @@ https://www.ipaddress.com/ip-lookup/
 192.30.253.112
 192.30.253.113
 
+添加到host文件：
+
+```
 192.30.253.113 github.com
+```
 
 ### github.global.ssl.fastly.net
 
+添加到host文件
+
+```
 151.101.45.194 github.global.ssl.fastly.net
+```

@@ -1,5 +1,6 @@
 ---
-title: spring apo与动态代理
+title: spring aop与动态代理
+date: 2018-03-20 22:30:22
 categories:
 - spring
 tags:

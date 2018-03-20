@@ -1,5 +1,6 @@
 ---
 title: zookeeper的通信协调
+date: 2018-03-17 15:47:22
 categories:
 - zookeeper
 tags:

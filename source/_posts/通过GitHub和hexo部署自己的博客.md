@@ -1,5 +1,6 @@
 ---
 title: 通过GitHub和hexo部署自己的博客
+date: 2018-03-17 16:47:22
 categories:
 - Hexo
 tags:
@@ -13,6 +14,8 @@ tags:
 ---
 
 [搭建个人博客-hexo+github详细完整步骤--简书](https://www.jianshu.com/p/189fd945f38f)
+
+[搭建hexo博客并简单的实现多终端同步](https://righere.github.io/2016/10/10/install-hexo/)
 
 ---
 # 注意问题
