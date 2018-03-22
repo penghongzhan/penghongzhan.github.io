@@ -38,6 +38,20 @@ zookeeper的集群角色有两种：leader和learner，learner对应的服务器
 
 follower服务器接受到客户端的事务请求之后，会通过request请求发送给leader服务器，leader 会根据事务请求创建投票，以proposal信号发送给集群中得 follower服务器。follower服务器会进行事务日志的记录，记录成功之后会向leader服务器响应ack信号，一旦过半以上的服务器响应之后，leader会向follower服务器发送commit信号，表示可以进行事务日志的提交。对于follower服务器来说，由于之前发送过来的proposal信号中携带了完整的事务请求，follower本地也记录了事务日志，所以leader发送给follower的commit信号只是一个简单的触发信号，不再携带事务内容，但是对于observer服务器来说，由于不存在事务投票的过程，所以observer本身没有记录事务内容，所以leader服务器通过另一个信号，叫inform信号，携带事务内容给observer，进行事务的同步。
 
+## zookeeper的事务请求头说明：
+
+- clientID：用来唯一标识一个客户端，应该是zookeeper生成的sessionID。
+- cxid：客户端操作序列号。
+- zxid：该事务请求对应的事务zxid。
+- time：服务器开始处理该事务请求的时间。
+- typ：事务请求的类型，例如创建、删除等
+
+事务请求头封装完成之后，会发送完整的事务请求到follower服务器进行事务操作，包括sync, proposal, commit。
+
+- sync：针对事务请求进行事务日志的记录，完成之后像leader服务器发送ack信号。
+- proposal：每一个事务请求都需要集群中过半的服务器投票通过才能更新到zk的内存数据库中。zk将事务封装成proposal请求发送给follower服务器，经过上一步的sync操作之后，leader服务器会收到follower返回的ack信号，一旦过半的follower返回成功，会进行后续的commit操作。
+- commit：对事务日志记录的事务进行提交，更新到内存数据库中。
+
 ## 会话管理型
 
 该消息是zk跟客户端保持会话用到的消息，客户端过来的请求不一定会发送到leader服务器，很多会发送到follower服务器，如果不是事务操作，follower可以直接响应，所以有一些客户端的会话是通过follower服务器上的learner来管理的，leader要想管理所有的会话，就需要通过会话管理消息，实际上是一种ping操作，来获取learner维护的客户端会话。从而通过leader服务器统一对连接到zookeeper的客户端进行会话激活。
