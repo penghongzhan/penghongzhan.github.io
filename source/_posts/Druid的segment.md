@@ -16,7 +16,9 @@ segment首先按照规定的时间段进行数据的聚合，时间区间内的�
 # segment的核心数据结构
 ---
 
-![数据结构示例.png](https://upload-images.jianshu.io/upload_images/3151600-0e349c1fae92437d.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+图1：数据结构示例
+
+![数据结构示例](https://upload-images.jianshu.io/upload_images/3151600-0e349c1fae92437d.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
 
 每个维度列的存储需要三种数据结构：
 
@@ -81,28 +83,28 @@ Segment内部格式版本号，目前有效版本号标识只有v8和v9，默认
 
 ### XXXXX.smoosh
 
-xxxxx从00000开始编号，最大为2G，是为了满足Java内存文件映射MappedByteBuffer限制；我们以图3.1为例，在Indexing Service阶段，Druid会为每列数据生成对应的索引，并将压缩编码后的原始数据以及索引存入到以列名称命名的*.drd文件中(比如图3.1中_time.drd; page.drd; username.drd; ... )，所有的*.drd文件最终会被合并成为*.smoosh文件。其中压缩编码后的每列原始数据包含两部分：(1)使用Jackson序列化的ColumnDescriptor，包含列数据的元信息，比如列数据的类型，是
+xxxxx从00000开始编号，最大为2G，是为了满足Java内存文件映射MappedByteBuffer限制；以图1[数据结构示例]为例，在Indexing Service阶段，Druid会为每列数据生成对应的索引，并将压缩编码后的原始数据以及索引存入到以列名称命名的*.drd文件中(比如图1[数据结构示例]中_time.drd; page.drd; username.drd; ... )，所有的*.drd文件最终会被合并成为*.smoosh文件。其中压缩编码后的每列原始数据包含两部分：(1)使用Jackson序列化的ColumnDescriptor，包含列数据的元信息，比如列数据的类型，是
 否包含多值(multi-value)等； (2)剩余部分为编码后的二进制数据。
 
 ### metasmoosh
 
-XXXXsmoosh文件是多个*drd文件的并集，那么我们在加载内存后如何区分对应的数据？Druid使用meta.smoosh文件记录元信息，包括列名、分片编号与偏移量。我们依然以图3.1为例，meta.smoosh文件格式为cvs，包含两部分：
+XXXXsmoosh文件是多个*drd文件的并集，那么在加载内存后如何区分对应的数据？Druid使用meta.smoosh文件记录元信息，包括列名、分片编号与偏移量。以图1[数据结构示例]为例，meta.smoosh文件格式为cvs，包含两部分：
 
 (1) 文件头
 
-v1 | 2147483647 | 1
----|---|---
+```
+v1, 2147483647, 1
+```
 
-表3.3 metasmoosh文件头样例。其中n代表Segment内部版本号，2147483647-2GB表示xxxxx.smoosh文件最大大小，1表示分片数量，即index.zip中XXXXX.smoosh文件数目。
+其中n代表Segment内部版本号，2147483647-2GB表示xxxxx.smoosh文件最大大小，1表示分片数量，即index.zip中XXXXX.smoosh文件数目。
 
 (2) 文件体
 
-Column | SmooshId | StartPos | EndPos |
+Column | SmooshId | StartPos | EndPos
 ---|---|---|---
-_time | 0 | 0 | 8000 |
-Page | 0 | 110001 | 120000 |
-_time | 0 | 8001 | 100000 |
+_time | 0 | 0 | 8000
+Page | 0 | 110001 | 120000
+_time | 0 | 8001 | 100000
 
 第一列表示列式存储的各个列名，也就是各个维度；SmooshId表示所在的Smoosh文件的id，如文件头中所示，只有一个文件，所以都是0；StartPos表示该列在整个文件中的开始位置，EndPos表示结束位置，因为所有列的内容是序列化成二进制字节码进行保存的，所以知道了位置才能反序列化出各个列的内容。
-
 
