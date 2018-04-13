@@ -16,7 +16,7 @@ segment首先按照规定的时间段进行数据的聚合，时间区间内的�
 # segment的核心数据结构
 ---
 
-![image](https://note.youdao.com/yws/public/resource/8474127ca8e329252cdf37a82140f588/xmlnote/BFC935EE07824759A07A646CF02B1F8E/21850)
+![数据结构示例.png](https://upload-images.jianshu.io/upload_images/3151600-0e349c1fae92437d.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
 
 每个维度列的存储需要三种数据结构：
 
