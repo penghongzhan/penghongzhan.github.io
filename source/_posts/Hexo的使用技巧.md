@@ -2,9 +2,9 @@
 title: Hexo的使用技巧
 date: 2018-03-17 14:47:22
 categories:
-- Hexo
+- hexo
 tags:
-- Hexo
+- hexo
 - 博客部署
 ---
 

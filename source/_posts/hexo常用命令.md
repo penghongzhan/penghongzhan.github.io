@@ -2,9 +2,9 @@
 title: hexo常用命令
 date: 2018-04-13 13:28:27
 tags: 
-- Hexo
+- hexo
 categories: 
-- Hexo
+- hexo
 ---
 
 - 创建新的文章：`hexo new "name"`
