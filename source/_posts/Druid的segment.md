@@ -88,7 +88,7 @@ xxxxx从00000开始编号，最大为2G，是为了满足Java内存文件映射M
 
 ### metasmoosh
 
-XXXXsmoosh文件是多个*drd文件的并集，那么在加载内存后如何区分对应的数据？Druid使用meta.smoosh文件记录元信息，包括列名、分片编号与偏移量。以图1[数据结构示例]为例，meta.smoosh文件格式为cvs，包含两部分：
+XXXXsmoosh文件是多个*.drd文件的并集，那么在加载内存后如何区分对应的数据？Druid使用meta.smoosh文件记录元信息，包括列名、分片编号与偏移量。以图1[数据结构示例]为例，meta.smoosh文件格式为cvs，包含两部分：
 
 (1) 文件头
 
