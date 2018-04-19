@@ -2,9 +2,9 @@
 title: 通过GitHub和hexo部署自己的博客
 date: 2018-03-17 11:47:22
 categories:
-- hexo
+- Hexo
 tags:
-- hexo
+- Hexo
 - github
 - 博客部署
 ---
