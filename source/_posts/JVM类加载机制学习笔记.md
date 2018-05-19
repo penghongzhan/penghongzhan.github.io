@@ -4,8 +4,9 @@ date: 2018-05-15 07:43:47
 tags:
 - java
 - jvm
+- classload
 categories:
-- jvm
+- java
 ---
 
 **JVM类加载机制**

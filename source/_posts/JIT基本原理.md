@@ -6,6 +6,7 @@ categories:
 tags:
 - java
 - jit
+- jvm
 ---
 
 ---
