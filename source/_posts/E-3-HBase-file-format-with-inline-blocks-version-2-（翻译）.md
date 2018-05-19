@@ -24,32 +24,32 @@ A version 2 HFile is structured as follows:
 
 在版本2中，数据部分中的每个块都包含以下字段：
 
-1. 8字节字节序列，用于标识块类型，这个字节序列相当于版本1的"magic records"。支持的块类型包括：
+(1) 8字节字节序列，用于标识块类型，这个字节序列相当于版本1的"magic records"。支持的块类型包括：
 
-- DATA：数据块
-- LEAF_INDEX：多级索引中的叶子节点
-- BLOOM_CHUNK：bloom filter
-- META：元数据块，版本2中不再包含bloom filter
-- INTERMEDIATE_INDEX：多级索引中的中间节点
-- ROOT_INDEX：多级索引的根节点
-- FILE_INFO：元数据的少量的kv map
-- BLOOM_META：bloom filter的元数据块
-- TRAILER：固定大小，记录其他各个快偏移量
-- INDEX_V1：该类型仅仅用于版本1的block
+   - DATA：数据块
+   - LEAF_INDEX：多级索引中的叶子节点
+   - BLOOM_CHUNK：bloom filter
+   - META：元数据块，版本2中不再包含bloom filter
+   - INTERMEDIATE_INDEX：多级索引中的中间节点
+   - ROOT_INDEX：多级索引的根节点
+   - FILE_INFO：元数据的少量的kv map
+   - BLOOM_META：bloom filter的元数据块
+   - TRAILER：固定大小，记录其他各个快偏移量
+   - INDEX_V1：该类型仅仅用于版本1的block
 
-2. 块数据压缩之后的大小，不包括头信息(int)
+(2) 块数据压缩之后的大小，不包括头信息(int)
 
-当顺序读HFile数据的时候，可以用来跳过当前数据块
+   当顺序读HFile数据的时候，可以用来跳过当前数据块
 
-3. 数据块压缩之前的大小，不包括头信息(int)
+(3) 数据块压缩之前的大小，不包括头信息(int)
 
-如果压缩算法配置为none，那么该大小和上个字段相同
+   如果压缩算法配置为none，那么该大小和上个字段相同
 
-4. 相同类型的上一个块的偏移量(long)
+(4) 相同类型的上一个块的偏移量(long)
 
-可以用来查找上一个数据块或者索引块
+   可以用来查找上一个数据块或者索引块
 
-5. 压缩之后的数据（如果压缩算法为none，实际上是压缩之前的数据）
+(5) 压缩之后的数据（如果压缩算法为none，实际上是压缩之前的数据）
 
 上面的块格式用于以下HFile部分：
 
