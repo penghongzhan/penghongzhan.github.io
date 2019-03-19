@@ -21,10 +21,10 @@ HMaster负责region的分配，数据库的创建和删除操作。
 
 具体来说，HMaster的职责包括：
 
-- 调控Region server的工作
+- 调控Region server的工作 
    - 在集群启动的时候分配region，根据恢复服务或者负载均衡的需要重新分配region。
    - 监控集群中的Region server的工作状态。（通过监听zookeeper对于ephemeral node状态的通知）。
-- 管理数据库
+- 管理数据库 
    - 提供创建，删除或者更新表格的接口。
 
 ## region Server
@@ -45,7 +45,7 @@ HMaster负责region的分配，数据库的创建和删除操作。
 
 **B+ Tree：**![B+ Tree](http://upload-images.jianshu.io/upload_images/3151600-677e2a977fb37e5c.jpg?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
 
-无SQL数据库通常使用LSM树作为数据存储过程体系结构，HBase也不例外。众所周知，RDBMS采用B+树来组织其索引，如图《B+ Tree》所示。这些B+树通常是3级n向平衡树，B+树中的节点对应磁盘上的块。所以对于RDBMS的更新，它可能需要5倍的磁盘操作（B+树查找目标行块3次，目标块读取1次，数据更新1次）。
+无SQL数据库通常使用LSM树作为数据存储过程体系结构，HBase也不例外。众所周知，RDBMS采用B+树来组织其索引，如图《B+ Tree》所示。这些B+树通常是3级n向平衡树，B+树中的节点对应磁盘上的块。所以对于RDBMS的更新，它可能需要5倍的磁盘操作（B+树查找目标行块3次，目标块读取1次，数据更新1次）。 
 
 在RDBMS中，如果没有B+树，数据随机无序写在磁盘块中，读操作需要扫全表，性能会很低。B+树对于数据读操作能很好地提高性能，但对于数据写，效率不高。对于大型分布式数据系统，B+树还无法与LSM树相抗衡。
 
@@ -106,7 +106,7 @@ HFile是HBase存储数据的文件组织形式，参考BigTable的SSTable和Hado
 
 ### block的概念
 
-**图 HFile(v2) 逻辑结构01：**[图片上传失败...(image-5a0e8b-1526826414288)]
+**图 HFile(v2) 逻辑结构01：**![HFile(v2)](https://upload-images.jianshu.io/upload_images/3151600-b20fbfc644e36732.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
 
 - Scanned block section: 在 HBase 顺序扫描 HFiles 的时候需要被读取的块内容，包括Data Block、leaf index block以及bloom filter block（图中没有画出）；
 - Non-scanned block section: 在 HBase 顺序扫描 HFiles 的时候不会被读取的块内容，主要包括Meta Block和Intermediate Level Data Index Blocks两部分；
@@ -161,7 +161,7 @@ root index在HFile解析的时候直接被加载到内存中，root index entry�
 - 在该non-root index block中，通过二分查找找到某个index entry，进而找到row key对应的叶子节点的block的位置
 - 在该non-root index block中，通过二分查找找到某个index entry，进而找到row key对应的data block，将整个数据块加载到内存，通过遍历的方式找到对应的value。
 
-**图 HFile 逻辑结构：**[图片上传失败...(image-fe5147-1526826414288)]
+**图 HFile 查询：**![HFile查询](https://upload-images.jianshu.io/upload_images/3151600-b6863426090ee72e.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
 
 ---
 # hbase和mysql对比
@@ -181,3 +181,5 @@ root index在HFile解析的时候直接被加载到内存中，root index entry�
 - [HBase – 探索HFile索引机制](http://hbasefly.com/2016/04/03/hbase_hfile_index/)
 - [HBase – 存储文件HFile结构解析](http://hbasefly.com/2016/03/25/hbase-hfile/)
 
+
+   
