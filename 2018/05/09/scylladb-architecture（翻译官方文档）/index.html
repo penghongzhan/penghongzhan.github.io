@@ -1,0 +1,787 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next mist use-motion" lang="zh-Hans">
+<head><meta name="generator" content="Hexo 3.9.0">
+  <meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform">
+<meta http-equiv="Cache-Control" content="no-siteapp">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css">
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css">
+
+<link href="/css/main.css?v=5.1.4" rel="stylesheet" type="text/css">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=5.1.4">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=5.1.4" color="#222">
+
+
+
+
+
+  <meta name="keywords" content="scylladb,">
+
+
+
+
+
+
+
+
+
+
+<meta name="description" content="原文链接  架构对比 Scylla是NoSQL数据存储设计的新方法，针对现代化硬件进行了优化 传统堆栈  锁竞争 缓存竞争 NUMA（非统一内存访问）不友好  seastar的共享堆栈  没有竞争 线性扩展 NUMA友好  架构对比： 传统的nosql数据存储包括一个建立在linux操作系统之上的JVM，利用页面缓存，并使用复杂的内存分配策略来“欺骗”JVM垃圾回收器，以避免内存回收过程中的sto">
+<meta name="keywords" content="scylladb">
+<meta property="og:type" content="article">
+<meta property="og:title" content="scylla architecture（翻译官方文档）">
+<meta property="og:url" content="https://penghongzhan.github.io/2018/05/09/scylladb-architecture（翻译官方文档）/index.html">
+<meta property="og:site_name" content="HongMo&#39;s Blog">
+<meta property="og:description" content="原文链接  架构对比 Scylla是NoSQL数据存储设计的新方法，针对现代化硬件进行了优化 传统堆栈  锁竞争 缓存竞争 NUMA（非统一内存访问）不友好  seastar的共享堆栈  没有竞争 线性扩展 NUMA友好  架构对比： 传统的nosql数据存储包括一个建立在linux操作系统之上的JVM，利用页面缓存，并使用复杂的内存分配策略来“欺骗”JVM垃圾回收器，以避免内存回收过程中的sto">
+<meta property="og:locale" content="zh-Hans">
+<meta property="og:image" content="https://www.scylladb.com/wp-content/uploads/network-diagram.png">
+<meta property="og:updated_time" content="2019-08-12T11:07:34.000Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="scylla architecture（翻译官方文档）">
+<meta name="twitter:description" content="原文链接  架构对比 Scylla是NoSQL数据存储设计的新方法，针对现代化硬件进行了优化 传统堆栈  锁竞争 缓存竞争 NUMA（非统一内存访问）不友好  seastar的共享堆栈  没有竞争 线性扩展 NUMA友好  架构对比： 传统的nosql数据存储包括一个建立在linux操作系统之上的JVM，利用页面缓存，并使用复杂的内存分配策略来“欺骗”JVM垃圾回收器，以避免内存回收过程中的sto">
+<meta name="twitter:image" content="https://www.scylladb.com/wp-content/uploads/network-diagram.png">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Mist',
+    version: '5.1.4',
+    sidebar: {"position":"left","display":"post","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    duoshuo: {
+      userId: '0',
+      author: '博主'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="https://penghongzhan.github.io/2018/05/09/scylladb-architecture（翻译官方文档）/">
+
+
+
+
+
+  <title>scylla architecture（翻译官方文档） | HongMo's Blog</title>
+  
+
+
+
+
+
+
+
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">HongMo's Blog</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle"></p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br>
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br>
+            
+            标签
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br>
+            
+            分类
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br>
+            
+            归档
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-about">
+          <a href="/about/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-user"></i> <br>
+            
+            关于
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="https://penghongzhan.github.io/2018/05/09/scylladb-architecture（翻译官方文档）/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="penghong.zhan">
+      <meta itemprop="description" content>
+      <meta itemprop="image" content="https://upload-images.jianshu.io/upload_images/3151600-ee530fd12e23001d.jpg?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="HongMo's Blog">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">scylla architecture（翻译官方文档）</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2018-05-09T22:46:24+08:00">
+                2018-05-09
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category">
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/scylladb/" itemprop="url" rel="index">
+                    <span itemprop="name">scylladb</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <p><a href="https://www.scylladb.com/product/technology/" target="_blank" rel="noopener">原文链接</a></p>
+<hr>
+<h1 id="架构对比"><a href="#架构对比" class="headerlink" title="架构对比"></a>架构对比</h1><hr>
+<p>Scylla是NoSQL数据存储设计的新方法，针对现代化硬件进行了优化</p>
+<p><strong>传统堆栈</strong></p>
+<ul>
+<li>锁竞争</li>
+<li>缓存竞争</li>
+<li>NUMA（非统一内存访问）不友好</li>
+</ul>
+<p><strong>seastar的共享堆栈</strong></p>
+<ul>
+<li>没有竞争</li>
+<li>线性扩展</li>
+<li>NUMA友好</li>
+</ul>
+<p><strong>架构对比：</strong><img src="https://www.scylladb.com/wp-content/uploads/network-diagram.png" alt="架构对比"></p>
+<p>传统的nosql数据存储包括一个建立在linux操作系统之上的JVM，利用页面缓存，并使用复杂的内存分配策略来“欺骗”JVM垃圾回收器，以避免内存回收过程中的<code>stop-the-world pauses</code>。由于低处理器利用率，这样的设计会遭受突然延迟卡顿，昂贵的锁竞争和低吞吐量。</p>
+<p>Scylla设计基于现代化的无共享方法。Scylla运行多个引擎，每个核心对应一个引擎，每个引擎具有自己的内存，CPU和多队列NIC。我们可以在一台商业服务器上轻松实现一百万个CQL操作。另外，Scylla针对插入、删除和读取的操作，实现一致的低延迟，延时控制在一毫秒以内。</p>
+<hr>
+<h1 id="效果"><a href="#效果" class="headerlink" title="效果"></a>效果</h1><hr>
+<p>性能改进不仅可以减少硬件资源，还可以简化架构，调试和DevOps人工的开发流程。Scylla为您提供了构建适合应用程序的数据模型的能力，而不是扭曲数据模型以适应您的NoSQL系统。</p>
+<p>复杂性减慢了开发时间。 Scylla的高效设计意味着架构师可以消除额外的表，外部缓存和复杂的操作系统级配置。</p>
+<hr>
+<h1 id="实现"><a href="#实现" class="headerlink" title="实现"></a>实现</h1><hr>
+<p>现代化的工作负载运行的硬件不同于编程范例所依赖的硬件以及当前软件基础架构所设计的硬件。</p>
+<p>scylla使用seastar架构实现了多核心硬件上的性能提升。</p>
+<h2 id="核心数量增长；时钟速度保持不变"><a href="#核心数量增长；时钟速度保持不变" class="headerlink" title="核心数量增长；时钟速度保持不变"></a>核心数量增长；时钟速度保持不变</h2><p>伴随着最新的时钟速度的出现，CPU制造商无法再依赖加快时钟速度来提升CPU的性能。相反，现代芯片通过增加核心数来提升性能。随着这一变化，真实世界的应用程序性能在单个内核上的效率和吞吐量变得越来越低，而更多的则是关于软件如何在多个内核之间进行协调。</p>
+<p>在新硬件上，标准工作负载的性能取决于核心之间的锁和协调，而不是单个核心的性能。软件架构师面临着两个没有吸引力的选择：</p>
+<ul>
+<li>粗粒度锁：这将面临应用程序线程争夺数据的控制权，并等待而不是产生有用的工作</li>
+<li>细粒度锁：除了难以编程和调试之外，由于锁定原语本身的原因，即使在没有争用发生时也会发现很大的开销。</li>
+</ul>
+<h2 id="同时，I-O速度继续增加"><a href="#同时，I-O速度继续增加" class="headerlink" title="同时，I/O速度继续增加"></a>同时，I/O速度继续增加</h2><p>现代系统上的网络和存储设备的速度也在不断增长。但是，尽管处理器获得了更多的内核，但在任何一个内核上处理数据包的能力都没有增长。</p>
+<p>一个的2GHz处理器在10GBps网络上以线速处理1024字节数据包，每个数据包只有1670个时钟周期。（source: <a href="http://www.intel.com/content/dam/www/public/us/en/documents/presentation/dpdk-packet-processing-ia-overview-presentation.pdf" target="_blank" rel="noopener">Intel DPDK Overview</a>）</p>
+<p>当每个数据包有许多时钟周期可用时，有效和安全的软件设计方法已不再可持续。</p>
+<hr>
+<h1 id="seastar模式：无共享"><a href="#seastar模式：无共享" class="headerlink" title="seastar模式：无共享"></a>seastar模式：无共享</h1><hr>
+<p>因为跨内核共享信息需要高成本的锁，所以Scylla使用无共享模式，将所有请求分散到独立的内核中。</p>
+<p>Scylla每个内核运行应用程序的一个线程，并且依赖于显式消息传递，而不是线程之间的共享内存。此设计可避免缓慢，不可缩放的锁定原语和缓存反弹。</p>
+<p>任何跨核心的资源共享都必须被明确处理。例如，当两个请求是同一个会话的一部分，并且每个CPU都分别获得了依赖于相同会话状态的请求时，一个CPU必须明确地将请求转发给另一个。每个CPU可能处理任何的响应（不太懂什么意思）。Seastar框架提供了限制跨内核通信需求的功能，但是当通信不可避免时，它会提供高性能的非阻塞通信原语以确保性能不会降低。</p>
+<p>无锁的核心间通信线程化的应用程序需要固有的昂贵的锁操作，而Seastar模型完全避免了跨CPU通信的锁。</p>
+<p>从程序员的角度来看，Seastar使用预期，承诺和延续（f/p/c）。在使用epoll和libevent等用户空间库进行常规事件驱动编程使编写复杂应用程序变得非常困难的情况下，f/p/c使编写复杂的异步代码变得更加容易。</p>
+<p>例如，发送者核心C0和接收者核心C1之间的以下交互可以在不需要锁的情况下进行。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"># 看不懂</span><br><span class="line">C0: sender -&gt; wait for queue entry (usually immediate) -&gt; enqueue request, allocate promise.</span><br><span class="line">C1: dequeue request; execute it -&gt; move result to request object -&gt; enqueue request on response queue</span><br><span class="line">C0: dequeue request; extract response, use it to fulfill promise; destroy request</span><br><span class="line">Each actual queue, one for requests and a return queue for fulfilled requests, is a simple queue of pointers.</span><br></pre></td></tr></table></figure>
+
+<p>系统上每对CPU核心有一个请求队列和一个返回队列。由于核心不与自身配对，16核心系统将有240个请求队列和240个返回队列。</p>
+<p>其结果是一个独特的NoSQL数据存储，可以以最小的开销扩展到每个节点的大量内核。</p>
+
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/scylladb/" rel="tag"># scylladb</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2018/05/09/scylladb-overview（翻译官方文档）/" rel="next" title="scylladb overview（翻译官方文档）">
+                <i class="fa fa-chevron-left"></i> scylladb overview（翻译官方文档）
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2018/05/15/JVM类加载机制学习笔记/" rel="prev" title="JVM类加载机制学习笔记">
+                JVM类加载机制学习笔记 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+            
+              <img class="site-author-image" itemprop="image" src="https://upload-images.jianshu.io/upload_images/3151600-ee530fd12e23001d.jpg?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240" alt="penghong.zhan">
+            
+              <p class="site-author-name" itemprop="name">penghong.zhan</p>
+              <p class="site-description motion-element" itemprop="description">一个热爱生活的程序猿</p>
+          </div>
+
+          <nav class="site-state motion-element">
+
+            
+              <div class="site-state-item site-state-posts">
+              
+                <a href="/archives/">
+              
+                  <span class="site-state-item-count">25</span>
+                  <span class="site-state-item-name">日志</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-categories">
+                <a href="/categories/index.html">
+                  <span class="site-state-item-count">12</span>
+                  <span class="site-state-item-name">分类</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-tags">
+                <a href="/tags/index.html">
+                  <span class="site-state-item-count">30</span>
+                  <span class="site-state-item-name">标签</span>
+                </a>
+              </div>
+            
+
+          </nav>
+
+          
+
+          
+
+          
+          
+
+          
+          
+
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#架构对比"><span class="nav-number">1.</span> <span class="nav-text">架构对比</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#效果"><span class="nav-number">2.</span> <span class="nav-text">效果</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#实现"><span class="nav-number">3.</span> <span class="nav-text">实现</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#核心数量增长；时钟速度保持不变"><span class="nav-number">3.1.</span> <span class="nav-text">核心数量增长；时钟速度保持不变</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#同时，I-O速度继续增加"><span class="nav-number">3.2.</span> <span class="nav-text">同时，I/O速度继续增加</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#seastar模式：无共享"><span class="nav-number">4.</span> <span class="nav-text">seastar模式：无共享</span></a></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2019</span>
+  <span class="with-love">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">penghong.zhan</span>
+
+  
+</div>
+
+
+  <div class="powered-by">由 <a class="theme-link" target="_blank" href="https://hexo.io">Hexo</a> 强力驱动</div>
+
+
+
+  <span class="post-meta-divider">|</span>
+
+
+
+  <div class="theme-info">主题 &mdash; <a class="theme-link" target="_blank" href="https://github.com/iissnan/hexo-theme-next">NexT.Mist</a> v5.1.4</div>
+
+
+
+
+        
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.4"></script>
+
+
+
+  
+  
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.4"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>

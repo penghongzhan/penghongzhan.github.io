@@ -1,0 +1,872 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next mist use-motion" lang="zh-Hans">
+<head><meta name="generator" content="Hexo 3.9.0">
+  <meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform">
+<meta http-equiv="Cache-Control" content="no-siteapp">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css">
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css">
+
+<link href="/css/main.css?v=5.1.4" rel="stylesheet" type="text/css">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=5.1.4">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=5.1.4" color="#222">
+
+
+
+
+
+  <meta name="keywords" content="flink,watermark,">
+
+
+
+
+
+
+
+
+
+
+<meta name="description" content="翻译：Event Time  Event Time / Processing Time / Ingestion Time（事件时间/处理时间/摄入时间） flink支持不同的时间概念：  处理时间：当前机器处理该条事件的时间  流处理程序使用该时间进行处理的时候，所有的操作（类似于时间窗口）都会使用当前机器的时间，例如按照小时时间窗进行处理，程序将处理该机器一个小时内接收到的数据。 1Howev">
+<meta name="keywords" content="flink,watermark">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Flink的事件时间和watermarks（翻译Flink官方文档）">
+<meta property="og:url" content="https://penghongzhan.github.io/2018/05/02/Flink的事件时间和watermarks（翻译Flink官方文档）/index.html">
+<meta property="og:site_name" content="HongMo&#39;s Blog">
+<meta property="og:description" content="翻译：Event Time  Event Time / Processing Time / Ingestion Time（事件时间/处理时间/摄入时间） flink支持不同的时间概念：  处理时间：当前机器处理该条事件的时间  流处理程序使用该时间进行处理的时候，所有的操作（类似于时间窗口）都会使用当前机器的时间，例如按照小时时间窗进行处理，程序将处理该机器一个小时内接收到的数据。 1Howev">
+<meta property="og:locale" content="zh-Hans">
+<meta property="og:image" content="https://ci.apache.org/projects/flink/flink-docs-release-1.4/fig/times_clocks.svg">
+<meta property="og:image" content="https://ci.apache.org/projects/flink/flink-docs-release-1.4/fig/stream_watermark_in_order.svg">
+<meta property="og:image" content="https://ci.apache.org/projects/flink/flink-docs-release-1.4/fig/stream_watermark_out_of_order.svg">
+<meta property="og:image" content="https://ci.apache.org/projects/flink/flink-docs-release-1.4/fig/parallel_streams_watermarks.svg">
+<meta property="og:image" content="https://ci.apache.org/projects/flink/flink-docs-release-1.4/fig/parallel_kafka_watermarks.svg">
+<meta property="og:updated_time" content="2019-08-12T11:07:34.000Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Flink的事件时间和watermarks（翻译Flink官方文档）">
+<meta name="twitter:description" content="翻译：Event Time  Event Time / Processing Time / Ingestion Time（事件时间/处理时间/摄入时间） flink支持不同的时间概念：  处理时间：当前机器处理该条事件的时间  流处理程序使用该时间进行处理的时候，所有的操作（类似于时间窗口）都会使用当前机器的时间，例如按照小时时间窗进行处理，程序将处理该机器一个小时内接收到的数据。 1Howev">
+<meta name="twitter:image" content="https://ci.apache.org/projects/flink/flink-docs-release-1.4/fig/times_clocks.svg">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Mist',
+    version: '5.1.4',
+    sidebar: {"position":"left","display":"post","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    duoshuo: {
+      userId: '0',
+      author: '博主'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="https://penghongzhan.github.io/2018/05/02/Flink的事件时间和watermarks（翻译Flink官方文档）/">
+
+
+
+
+
+  <title>Flink的事件时间和watermarks（翻译Flink官方文档） | HongMo's Blog</title>
+  
+
+
+
+
+
+
+
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">HongMo's Blog</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle"></p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br>
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br>
+            
+            标签
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br>
+            
+            分类
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br>
+            
+            归档
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-about">
+          <a href="/about/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-user"></i> <br>
+            
+            关于
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="https://penghongzhan.github.io/2018/05/02/Flink的事件时间和watermarks（翻译Flink官方文档）/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="penghong.zhan">
+      <meta itemprop="description" content>
+      <meta itemprop="image" content="https://upload-images.jianshu.io/upload_images/3151600-ee530fd12e23001d.jpg?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="HongMo's Blog">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">Flink的事件时间和watermarks（翻译Flink官方文档）</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2018-05-02T22:14:29+08:00">
+                2018-05-02
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category">
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/flink/" itemprop="url" rel="index">
+                    <span itemprop="name">flink</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <hr>
+<p>翻译：<a href="https://ci.apache.org/projects/flink/flink-docs-release-1.4/dev/event_time.html" target="_blank" rel="noopener">Event Time</a></p>
+<hr>
+<h1 id="Event-Time-Processing-Time-Ingestion-Time（事件时间-处理时间-摄入时间）"><a href="#Event-Time-Processing-Time-Ingestion-Time（事件时间-处理时间-摄入时间）" class="headerlink" title="Event Time / Processing Time / Ingestion Time（事件时间/处理时间/摄入时间）"></a>Event Time / Processing Time / Ingestion Time（事件时间/处理时间/摄入时间）</h1><hr>
+<p>flink支持不同的时间概念：</p>
+<ul>
+<li>处理时间：当前机器处理该条事件的时间</li>
+</ul>
+<p>流处理程序使用该时间进行处理的时候，所有的操作（类似于时间窗口）都会使用当前机器的时间，例如按照小时时间窗进行处理，程序将处理该机器一个小时内接收到的数据。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">However, in distributed and asynchronous environments processing time does not provide determinism, because it is susceptible to the speed at which records arrive in the system (for example from the message queue), and to the speed at which the records flow between operators inside the system.</span><br></pre></td></tr></table></figure>
+
+<p>处理时间是最简单的概念，不需要协调机器时间和流中事件相关的时间。他提供了最小的延时和最佳的性能。但是在分布式和异步环境中，处理时间不能提供确定性，因为它对事件到达系统的速度和数据流在系统的各个operator之间处理的速度很敏感。</p>
+<ul>
+<li>事件时间：事件时间是每条事件在它产生的时候记录的时间，该时间记录在事件中，在处理的时候可以被提取出来。小时的时间窗处理将会包含事件时间在该小时内的所有事件，而忽略事件到达的时间和到达的顺序</li>
+</ul>
+<p>事件时间对于乱序、延时、或者数据重放等情况，都能给出正确的结果。事件时间依赖于事件本身，而跟物理时钟没有关系。利用事件时间编程必须指定如何生成事件时间的watermark，这是使用事件时间处理事件的机制。机制是这样描述的：</p>
+<p>事件时间处理通常存在一定的延时，因此自然的需要为延时和无序的事件等待一段时间。因此，使用事件时间编程通常需要与处理时间相结合。</p>
+<ul>
+<li>摄入时间：摄入时间是事件进入flink的时间，在source operator中，每个事件拿到当前时间作为时间戳，后续的时间窗口基于该时间。</li>
+</ul>
+<p>摄入时间在概念上处于事件时间和处理时间之间，与处理时间相比稍微昂贵一点，但是能过够给出更多可预测的结果。因为摄入时间使用的是source operator产生的不变的时间，后续不同的operator都将基于这个不变的时间进行处理，但是处理时间使用的是处理消息当时的机器系统时钟的时间。</p>
+<p>与事件时间相比，摄入时间无法处理延时和无序的情况，但是不需要明确执行如何生成watermark。</p>
+<p>在系统内部，摄入时间采用更类似于事件时间的处理方式进行处理，但是有自动生成的时间戳和自动的watermark。</p>
+<p><img src="https://ci.apache.org/projects/flink/flink-docs-release-1.4/fig/times_clocks.svg" alt="三种时间"></p>
+<h2 id="Setting-a-Time-Characteristic（设置时间特性）"><a href="#Setting-a-Time-Characteristic（设置时间特性）" class="headerlink" title="Setting a Time Characteristic（设置时间特性）"></a>Setting a Time Characteristic（设置时间特性）</h2><p>flink程序的第一部分工作通常是设置时间特性，该设置用于定义数据源使用什么时间，在时间窗口处理中使用什么时间。</p>
+<p>下面的例子展示了一个flink程序在一个小时的时间窗口中的聚合操作。窗口的操作取决于时间特征。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line">final StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();</span><br><span class="line"></span><br><span class="line">env.setStreamTimeCharacteristic(TimeCharacteristic.ProcessingTime);</span><br><span class="line"></span><br><span class="line">// alternatively:</span><br><span class="line">// env.setStreamTimeCharacteristic(TimeCharacteristic.IngestionTime);</span><br><span class="line">// env.setStreamTimeCharacteristic(TimeCharacteristic.EventTime);</span><br><span class="line"></span><br><span class="line">DataStream&lt;MyEvent&gt; stream = env.addSource(new FlinkKafkaConsumer09&lt;MyEvent&gt;(topic, schema, props));</span><br><span class="line"></span><br><span class="line">stream</span><br><span class="line">    .keyBy( (event) -&gt; event.getUser() )</span><br><span class="line">    .timeWindow(Time.hours(1))</span><br><span class="line">    .reduce( (a, b) -&gt; a.add(b) )</span><br><span class="line">    .addSink(...);</span><br></pre></td></tr></table></figure>
+
+<p>需要注意的是，如果使用事件时间来运行该程序，程序不仅需要直接定义事件的事件时间，还需要发送一个watermark，或者在数据源之后需要注入一个<code>时间戳分配方法和watermark生成方法</code>。这些方法描述怎么获取事件时间以及时间流展示的乱序程度。</p>
+<hr>
+<h1 id="Event-Time-and-Watermarks（事件时间和watermark）"><a href="#Event-Time-and-Watermarks（事件时间和watermark）" class="headerlink" title="Event Time and Watermarks（事件时间和watermark）"></a>Event Time and Watermarks（事件时间和watermark）</h1><hr>
+<p>注意：flink的时间流模型有很多的实现技术，推荐先看一下下面两篇文章</p>
+<ul>
+<li><a href="https://www.oreilly.com/ideas/the-world-beyond-batch-streaming-101" target="_blank" rel="noopener">Streaming 101</a> by Tyler Akidau</li>
+<li>The <a href="https://research.google.com/pubs/archive/43864.pdf" target="_blank" rel="noopener">Dataflow Model paper</a></li>
+</ul>
+<p>支持事件时间的流处理需要能够获取事件时间的处理进度。对于一个小时时间窗，当事件时间处理超过了这个小时的时候需要被通知，以便operator可以关闭该小时的窗口处理。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">On the other hand, another streaming program might progress through weeks of event time with only a few seconds of processing, by fast-forwarding through some historic data already buffered in a Kafka topic (or another message queue).</span><br></pre></td></tr></table></figure>
+
+<p>事件时间能够独立于处理时间进行处理。例如，在一个程序中，当前operator处理的事件时间可能轻微落后于当前的处理时间，然而两者都已相同的速度进行处理。在另一方面，一个程序可能在数秒之内处理完几周的事件时间，通过快速转发缓存在kafka等消息队列中的消息。（其实主要考虑的是实时系统中，由于各种原因造成的延时，造成某些消息发到flink的时间延时于事件产生的时间，如果基于事件时间的时间窗，可能该时间窗采集了一小时之后还需要等待几分钟，才能接收到这条延时的事件，因此需要检测当前时间窗口的处理进度，可能等待一段时间是必要的，但是不可能无限等待某些延时的时间。）</p>
+<p>flink中检测事件时间处理进度的机制是watermark，watermark跟事件一样在流中进行传输并且携带一个时间戳<code>t</code>。一个watermark(t)声明了在流中的事件时间有一个到达时间t，意味着流中应该不再有时间比t小的事件（例如某个事件的时间戳比watermark的时间戳老）。</p>
+<p>下图展示了包含时间戳和watermark的事件流。在该例子中，时间是有顺序的，意味着该流中的watermark值是一个简单的标记。</p>
+<p><img src="https://ci.apache.org/projects/flink/flink-docs-release-1.4/fig/stream_watermark_in_order.svg" alt="image"></p>
+<p>watermarks对于乱序的流至关重要，例如下面时间戳乱序的事件流。一般来说，watermark是用来声明，在这一点上，某个特定时间戳之前的所有事件都已经到达。一旦一个watermark到达了operator，operator可以将内部事件时间提前到watermark的时间戳。</p>
+<p><img src="https://ci.apache.org/projects/flink/flink-docs-release-1.4/fig/stream_watermark_out_of_order.svg" alt="image"></p>
+<hr>
+<h1 id="Watermarks-in-Parallel-Streams"><a href="#Watermarks-in-Parallel-Streams" class="headerlink" title="Watermarks in Parallel Streams"></a>Watermarks in Parallel Streams</h1><hr>
+<p>watermark在source处或者之后生成。source的每个并行的子任务都会独立生成自己的watermark。这些watermarks定义了特定并行source的事件时间。</p>
+<p>watermark流经operator的时候，会将该operator的事件时间向前推进。当一个operator的事件时间被推前，它会为后续的operator生成一个新的watermark。</p>
+<p>一些operator有多个输入流，例如一个union操作和keyby操作等。这些operator的当前事件时间是各个流的最小的事件时间。随着输入流中事件时间的更新，该operator的事件时间也会更新。</p>
+<p>下图展示了并行流中的事件和watermark，operator会跟踪事件时间。</p>
+<p><img src="https://ci.apache.org/projects/flink/flink-docs-release-1.4/fig/parallel_streams_watermarks.svg" alt="image"></p>
+<hr>
+<h1 id="Late-Elements"><a href="#Late-Elements" class="headerlink" title="Late Elements"></a>Late Elements</h1><hr>
+<p>某些事件(t’)可能违背watermark的条件，就是说晚于watermark(t)到达，但是事件时间在watermark之前(t’小于t)。事实上，实际运行过程中，事件可能被延迟任意的时间，所以不可能指定一个时间，保证该时间之前的所有事件都被处理。而且，即使延时时间是有限的，过多的延时watermark的时间也是不理想的，因为这样会造成时间窗口处理的太多延时。</p>
+<hr>
+<h1 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h1><hr>
+<p>基于时间窗口的处理程序，需要依赖一个时间标识。因为我们进行聚合等操作，最常用的就是根据事件发生的时间进行，比如统计一小时之内的订单数量。如果压根不需要这种以时间作为限制的聚合操作，随便聚合都可以，那么不需要在意上面讲到的事件时间和watermark什么的，随便怎么聚合都可以。</p>
+<ul>
+<li>事件时间：事件发生的事件，例如一个用户在手机上下单之后生成一条订单事件，下单的时间就是事件时间。</li>
+<li>处理时间：根据当前operator的本地时间，无法解决事件延时进入flink，也无法解决本来有序进入flink的事件，经过各个节点处理之后，被延时，造成无序。</li>
+<li>注入时间：优于处理时间，表示事件进入flink的时间，能够解决事件在flink的各个operator之间处理过程中造成的延时，但是无法解决事件是延时到达flink的。</li>
+</ul>
+<p>使用事件时间作为窗口操作的条件是最合适的，但是由于某些事件会延时，不可能无限等待这些事件的到来，所以需要制定一个watermark来告诉operator当前的事件时间，时间窗口的处理也会根据这个时间来进行。延时的事件过来之后，如果已经落后于watermark的时间，那么该消息会被丢弃或者采用什么自定义的方案。</p>
+<hr>
+<p>下面是翻译官方文档中的：<a href="https://ci.apache.org/projects/flink/flink-docs-release-1.4/dev/event_timestamps_watermarks.html" target="_blank" rel="noopener">Generating Timestamps / Watermarks</a></p>
+<hr>
+<h1 id="watermark的生成方案"><a href="#watermark的生成方案" class="headerlink" title="watermark的生成方案"></a>watermark的生成方案</h1><hr>
+<p>使用事件时间作为流处理的时间，需要在代码上进行如下的设置：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">final StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();</span><br><span class="line">env.setStreamTimeCharacteristic(TimeCharacteristic.EventTime);</span><br></pre></td></tr></table></figure>
+
+<hr>
+<h1 id="分配时间戳"><a href="#分配时间戳" class="headerlink" title="分配时间戳"></a>分配时间戳</h1><hr>
+<p>使用事件时间需要每个事件都有一个事件时间戳，通常能够从事件的某个字段中提取出来。</p>
+<p>时间戳分配与生成watermark相结合，watermark告诉系统事件时间的处理进度。</p>
+<p>有两种分配事件时间和产生watermark的方式：</p>
+<ul>
+<li>直接从数据源中提取</li>
+<li>通过一个时间戳分配器和watermark生成器：在flink的时间戳分配器中需要定义要发送的watermark</li>
+</ul>
+<p>注意：时间戳和watermark都是采用毫秒，从java的1970-01-01T00:00:00Z时间作为起始。</p>
+<hr>
+<h1 id="具有时间戳和watermark的source函数"><a href="#具有时间戳和watermark的source函数" class="headerlink" title="具有时间戳和watermark的source函数"></a>具有时间戳和watermark的source函数</h1><hr>
+<p>source函数可以为他生成的时间分配时间戳，并可以向后发送watermark（我理解这个应该是flink自带的，这个时间更像摄入时间）。如果使用这种生成方案，就不需要再定义时间戳分配器了。需要注意的是，如果使用了时间戳分配器，source函数生成的所有的时间戳和watermark都会被重写。</p>
+<p>直接在source中将时间戳指定为某个元素，source函数中必须使用<code>collectWithTimestamp(...)</code>方法，要想生成watermark，source必须调用<code>emitWatermark(Watermark)</code>函数。</p>
+<p>下面是source指定时间戳和产生watermark的一个例子：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">@Override</span><br><span class="line">public void run(SourceContext&lt;MyType&gt; ctx) throws Exception &#123;</span><br><span class="line">	while (/* condition */) &#123;</span><br><span class="line">		MyType next = getNext();</span><br><span class="line">		ctx.collectWithTimestamp(next, next.getEventTimestamp());</span><br><span class="line"></span><br><span class="line">		if (next.hasWatermarkTime()) &#123;</span><br><span class="line">			ctx.emitWatermark(new Watermark(next.getWatermarkTime()));</span><br><span class="line">		&#125;</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<hr>
+<h1 id="指定时间戳-生成watermark"><a href="#指定时间戳-生成watermark" class="headerlink" title="指定时间戳/生成watermark"></a>指定时间戳/生成watermark</h1><hr>
+<p>时间戳分配器接收流，并生成具有时间戳和watermark的新流。如果原始的流中具有时间戳或者watermark，那么将被替换。</p>
+<p>时间戳通常在数据源生成之后立即被分配，但是也不是严格要求必须这样。一个常见的情况例如，map和filter函数可以在分配时间戳之前执行。在任何情况下，在第一次基于事件时间的操作进行之前，时间戳必须被分配。例如，使用kafka作为数据源，flink允许在数据源（或consumer）内部指定时间戳分配器和watermark发送器。关于如何操作参见<a href="https://ci.apache.org/projects/flink/flink-docs-release-1.4/dev/connectors/kafka.html" target="_blank" rel="noopener">Kafka Connector documentation</a></p>
+<p>注意：本章余下的部分介绍程序员必须实现的主要接口，以创建自己的时间戳提取器和watermark发送器。要查看flink预先实现的提取器，请参阅<a href="https://ci.apache.org/projects/flink/flink-docs-release-1.4/dev/event_timestamp_extractors.html" target="_blank" rel="noopener">预定义的时间戳提取器和watermark发送器页面</a></p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line">final StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();</span><br><span class="line">env.setStreamTimeCharacteristic(TimeCharacteristic.EventTime);</span><br><span class="line"></span><br><span class="line">DataStream&lt;MyEvent&gt; stream = env.readFile(</span><br><span class="line">        myFormat, myFilePath, FileProcessingMode.PROCESS_CONTINUOUSLY, 100,</span><br><span class="line">        FilePathFilter.createDefaultFilter(), typeInfo);</span><br><span class="line"></span><br><span class="line">DataStream&lt;MyEvent&gt; withTimestampsAndWatermarks = stream</span><br><span class="line">        .filter( event -&gt; event.severity() == WARNING )</span><br><span class="line">        .assignTimestampsAndWatermarks(new MyTimestampsAndWatermarks());</span><br><span class="line"></span><br><span class="line">withTimestampsAndWatermarks</span><br><span class="line">        .keyBy( (event) -&gt; event.getGroup() )</span><br><span class="line">        .timeWindow(Time.seconds(10))</span><br><span class="line">        .reduce( (a, b) -&gt; a.add(b) )</span><br><span class="line">        .addSink(...);</span><br></pre></td></tr></table></figure>
+
+<hr>
+<h1 id="周期生成的watermark"><a href="#周期生成的watermark" class="headerlink" title="周期生成的watermark"></a>周期生成的watermark</h1><hr>
+<p><code>AssignerWithPeriodicWatermarks</code>定期的分配时间戳和生成watermark（可能依赖于流中的元素或者单纯的依赖于处理时间）。</p>
+<p>watermark生成的时间间隔通过<code>ExecutionConfig.setAutoWatermarkInterval(...)</code>方法来定义。分配器的<code>getCurrentWatermark()</code>方法每次都会被触发，如果返回的结果不为空或者大于上一个的watermark，那么新的watermark将会被发送。</p>
+<p>两个分配时间戳并且生成watermark的例子如下：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br></pre></td><td class="code"><pre><span class="line">/**</span><br><span class="line"> * This generator generates watermarks assuming that elements arrive out of order,</span><br><span class="line"> * but only to a certain degree. The latest elements for a certain timestamp t will arrive</span><br><span class="line"> * at most n milliseconds after the earliest elements for timestamp t.</span><br><span class="line"> */</span><br><span class="line">/**</span><br><span class="line"> * 该发生器生成watermark，假定元素按顺序到达，但仅在一定程度上到达。某个时间戳t的最新元素将在时间戳t的最早元素之后最多n毫秒。</span><br><span class="line"> */</span><br><span class="line">public class BoundedOutOfOrdernessGenerator extends AssignerWithPeriodicWatermarks&lt;MyEvent&gt; &#123;</span><br><span class="line"></span><br><span class="line">    private final long maxOutOfOrderness = 3500; // 3.5 seconds</span><br><span class="line"></span><br><span class="line">    private long currentMaxTimestamp;</span><br><span class="line"></span><br><span class="line">    @Override</span><br><span class="line">    public long extractTimestamp(MyEvent element, long previousElementTimestamp) &#123;</span><br><span class="line">        long timestamp = element.getCreationTime();</span><br><span class="line">        currentMaxTimestamp = Math.max(timestamp, currentMaxTimestamp);</span><br><span class="line">        return timestamp;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    @Override</span><br><span class="line">    public Watermark getCurrentWatermark() &#123;</span><br><span class="line">        // return the watermark as current highest timestamp minus the out-of-orderness bound</span><br><span class="line">        return new Watermark(currentMaxTimestamp - maxOutOfOrderness);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">/**</span><br><span class="line"> * This generator generates watermarks that are lagging behind processing time by a fixed amount.</span><br><span class="line"> * It assumes that elements arrive in Flink after a bounded delay.</span><br><span class="line"> */</span><br><span class="line">public class TimeLagWatermarkGenerator extends AssignerWithPeriodicWatermarks&lt;MyEvent&gt; &#123;</span><br><span class="line"></span><br><span class="line">	private final long maxTimeLag = 5000; // 5 seconds</span><br><span class="line"></span><br><span class="line">	@Override</span><br><span class="line">	public long extractTimestamp(MyEvent element, long previousElementTimestamp) &#123;</span><br><span class="line">		return element.getCreationTime();</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	@Override</span><br><span class="line">	public Watermark getCurrentWatermark() &#123;</span><br><span class="line">		// return the watermark as current time minus the maximum time lag</span><br><span class="line">		return new Watermark(System.currentTimeMillis() - maxTimeLag);</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>上面两种生成watermark的方案为：</p>
+<ul>
+<li>当前事件的事件时间和当前最大时间（定义的一个变量，初始化为0）两个时间取最大值，这个最大值减去一个允许的延时时间作为watermark的时间</li>
+<li>系统时间减去允许的延时时间作为watermark的时间</li>
+</ul>
+<p>方案二比较容易理解，多介绍一下方案1：</p>
+<p>个人理解，但是感觉比方案二对于延时的事件更加宽松一些，如果大批事件发生延时，那么对应的watermark的时间就会往后推。但是方案二的时间只跟当前系统时间有关系，所以方案二对于大批事件出现延时的情况，可能很多被卡在watermark的时间之后出现了，有可能被丢弃。</p>
+<hr>
+<h1 id="带有标记的watermark"><a href="#带有标记的watermark" class="headerlink" title="带有标记的watermark"></a>带有标记的watermark</h1><hr>
+<p>如果想要在某个事件指定生成新的watermark的时候生成watermark，请调用<code>AssignerWithPunctuatedWatermarks</code>。这种情况下，flink首先会调用<code>extractTimestamp(...)</code>方法分配时间戳，然后立即调用<code>checkAndGetNextWatermark(...)</code>。</p>
+<p><code>checkAndGetNextWatermark（...）</code>方法传递在<code>extractTimestamp（...）</code>方法中分配的时间戳，并可以决定是否要生成watermark。只要<code>checkAndGetNextWatermark（...）</code>方法返回了一个非空的watermark，并且这个watermark的时间大于上一个watermark的时间，那么该watermark将向后发送。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line">public class PunctuatedAssigner extends AssignerWithPunctuatedWatermarks&lt;MyEvent&gt; &#123;</span><br><span class="line"></span><br><span class="line">	@Override</span><br><span class="line">	public long extractTimestamp(MyEvent element, long previousElementTimestamp) &#123;</span><br><span class="line">		return element.getCreationTime();</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	@Override</span><br><span class="line">	public Watermark checkAndGetNextWatermark(MyEvent lastElement, long extractedTimestamp) &#123;</span><br><span class="line">		return lastElement.hasWatermarkMarker() ? new Watermark(extractedTimestamp) : null;</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>注意：每个事件都可以生成watermark。但是，由于每个watermark都会导致一些后续的计算，因此过多的watermark会降低性能。</p>
+<hr>
+<h1 id="每个kafka的partition一个时间戳"><a href="#每个kafka的partition一个时间戳" class="headerlink" title="每个kafka的partition一个时间戳"></a>每个kafka的partition一个时间戳</h1><hr>
+<p>当使用kafka作为数据源的时候，每个partition都会有一个简单的事件时间模式（时间升序或者有序的无序。。。（这个翻译有点怪））。然而，在消费来自Kafka的流时，多个分区通常会并发消费，交错分区中的事件并销毁每个分区模式（这与Kafka的消费者客户端工作方式有关）。</p>
+<p>在这种情况下，可以使用flink的<code>Kafka-partition-aware</code>watermark生成器。使用这个特性的时候，watermark会在kafka的消费者中为每个partition生成，并且partition上的watermark的合并方式将会与流shuffle过程中watermark的合并方式相同。</p>
+<p>例如，如果partition中的时间戳是严格升序的，那么使用升序时间戳的watermark生成器为每个partition生成watermark，将带来完美的整体的watermark。</p>
+<p>下图显示了如何为每个Kafka分区生成watermark以及在这种情况下watermark如何通过流式数据流传播。</p>
+<p><strong>简单的理解（自己的理解）：</strong></p>
+<p>就是直接使用kafka中的事件时间作为watermark的时间，利用的是kafka的每个分区内部的事件时间是有序的。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">FlinkKafkaConsumer09&lt;MyType&gt; kafkaSource = new FlinkKafkaConsumer09&lt;&gt;(&quot;myTopic&quot;, schema, props);</span><br><span class="line">kafkaSource.assignTimestampsAndWatermarks(new AscendingTimestampExtractor&lt;MyType&gt;() &#123;</span><br><span class="line"></span><br><span class="line">    @Override</span><br><span class="line">    public long extractAscendingTimestamp(MyType element) &#123;</span><br><span class="line">        return element.eventTimestamp();</span><br><span class="line">    &#125;</span><br><span class="line">&#125;);</span><br><span class="line"></span><br><span class="line">DataStream&lt;MyType&gt; stream = env.addSource(kafkaSource);</span><br></pre></td></tr></table></figure>
+
+<p><img src="https://ci.apache.org/projects/flink/flink-docs-release-1.4/fig/parallel_kafka_watermarks.svg" alt="ascending timestamps watermark generator"></p>
+
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/flink/" rel="tag"># flink</a>
+          
+            <a href="/tags/watermark/" rel="tag"># watermark</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2018/04/19/翻译：HBase-Architecture-Analysis-Part1-Logical-Architecture/" rel="next" title="翻译：HBase-Architecture-Analysis-Part1-Logical-Architecture">
+                <i class="fa fa-chevron-left"></i> 翻译：HBase-Architecture-Analysis-Part1-Logical-Architecture
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2018/05/09/scylladb-overview（翻译官方文档）/" rel="prev" title="scylladb overview（翻译官方文档）">
+                scylladb overview（翻译官方文档） <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+            
+              <img class="site-author-image" itemprop="image" src="https://upload-images.jianshu.io/upload_images/3151600-ee530fd12e23001d.jpg?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240" alt="penghong.zhan">
+            
+              <p class="site-author-name" itemprop="name">penghong.zhan</p>
+              <p class="site-description motion-element" itemprop="description">一个热爱生活的程序猿</p>
+          </div>
+
+          <nav class="site-state motion-element">
+
+            
+              <div class="site-state-item site-state-posts">
+              
+                <a href="/archives/">
+              
+                  <span class="site-state-item-count">25</span>
+                  <span class="site-state-item-name">日志</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-categories">
+                <a href="/categories/index.html">
+                  <span class="site-state-item-count">12</span>
+                  <span class="site-state-item-name">分类</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-tags">
+                <a href="/tags/index.html">
+                  <span class="site-state-item-count">30</span>
+                  <span class="site-state-item-name">标签</span>
+                </a>
+              </div>
+            
+
+          </nav>
+
+          
+
+          
+
+          
+          
+
+          
+          
+
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#Event-Time-Processing-Time-Ingestion-Time（事件时间-处理时间-摄入时间）"><span class="nav-number">1.</span> <span class="nav-text">Event Time / Processing Time / Ingestion Time（事件时间/处理时间/摄入时间）</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#Setting-a-Time-Characteristic（设置时间特性）"><span class="nav-number">1.1.</span> <span class="nav-text">Setting a Time Characteristic（设置时间特性）</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#Event-Time-and-Watermarks（事件时间和watermark）"><span class="nav-number">2.</span> <span class="nav-text">Event Time and Watermarks（事件时间和watermark）</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#Watermarks-in-Parallel-Streams"><span class="nav-number">3.</span> <span class="nav-text">Watermarks in Parallel Streams</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#Late-Elements"><span class="nav-number">4.</span> <span class="nav-text">Late Elements</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#总结"><span class="nav-number">5.</span> <span class="nav-text">总结</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#watermark的生成方案"><span class="nav-number">6.</span> <span class="nav-text">watermark的生成方案</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#分配时间戳"><span class="nav-number">7.</span> <span class="nav-text">分配时间戳</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#具有时间戳和watermark的source函数"><span class="nav-number">8.</span> <span class="nav-text">具有时间戳和watermark的source函数</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#指定时间戳-生成watermark"><span class="nav-number">9.</span> <span class="nav-text">指定时间戳/生成watermark</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#周期生成的watermark"><span class="nav-number">10.</span> <span class="nav-text">周期生成的watermark</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#带有标记的watermark"><span class="nav-number">11.</span> <span class="nav-text">带有标记的watermark</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#每个kafka的partition一个时间戳"><span class="nav-number">12.</span> <span class="nav-text">每个kafka的partition一个时间戳</span></a></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2019</span>
+  <span class="with-love">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">penghong.zhan</span>
+
+  
+</div>
+
+
+  <div class="powered-by">由 <a class="theme-link" target="_blank" href="https://hexo.io">Hexo</a> 强力驱动</div>
+
+
+
+  <span class="post-meta-divider">|</span>
+
+
+
+  <div class="theme-info">主题 &mdash; <a class="theme-link" target="_blank" href="https://github.com/iissnan/hexo-theme-next">NexT.Mist</a> v5.1.4</div>
+
+
+
+
+        
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.4"></script>
+
+
+
+  
+  
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.4"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>

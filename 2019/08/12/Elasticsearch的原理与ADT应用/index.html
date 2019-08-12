@@ -1,0 +1,1093 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next mist use-motion" lang="zh-Hans">
+<head><meta name="generator" content="Hexo 3.9.0">
+  <meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform">
+<meta http-equiv="Cache-Control" content="no-siteapp">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css">
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css">
+
+<link href="/css/main.css?v=5.1.4" rel="stylesheet" type="text/css">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=5.1.4">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=5.1.4" color="#222">
+
+
+
+
+
+  <meta name="keywords" content="原理,elasticsearch,elastic,ADT,">
+
+
+
+
+
+
+
+
+
+
+<meta name="description" content="简介 Elasticsearch（简称ES）是一个分布式、可扩展、实时的搜索与数据分析引擎。ES不仅仅只是全文搜索，还支持结构化搜索、数据分析、复杂的语言处理、地理位置和对象间关联关系等。 ES的底层依赖Lucene，Lucene可以说是当下最先进、高性能、全功能的搜索引擎库。但是Lucene仅仅只是一个库。为了充分发挥其功能，你需要使用Java并将Lucene直接集成到应用程序中。更糟糕的是，">
+<meta name="keywords" content="原理,elasticsearch,elastic,ADT">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Elasticsearch的原理与ADT应用">
+<meta property="og:url" content="https://penghongzhan.github.io/2019/08/12/Elasticsearch的原理与ADT应用/index.html">
+<meta property="og:site_name" content="HongMo&#39;s Blog">
+<meta property="og:description" content="简介 Elasticsearch（简称ES）是一个分布式、可扩展、实时的搜索与数据分析引擎。ES不仅仅只是全文搜索，还支持结构化搜索、数据分析、复杂的语言处理、地理位置和对象间关联关系等。 ES的底层依赖Lucene，Lucene可以说是当下最先进、高性能、全功能的搜索引擎库。但是Lucene仅仅只是一个库。为了充分发挥其功能，你需要使用Java并将Lucene直接集成到应用程序中。更糟糕的是，">
+<meta property="og:locale" content="zh-Hans">
+<meta property="og:image" content="http://upload-images.jianshu.io/upload_images/3151600-e27bceb411f83f11.jpg?imageMogr2/auto-orient/strip%7CimageView2/2/w/1080/q/50">
+<meta property="og:image" content="https://upload-images.jianshu.io/upload_images/3151600-e398187e5316f5e8.jpg?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240">
+<meta property="og:image" content="https://upload-images.jianshu.io/upload_images/3151600-c206a6f3bb91ed52.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240">
+<meta property="og:image" content="http://upload-images.jianshu.io/upload_images/3151600-df38fde012faa8c6.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1080/q/50">
+<meta property="og:image" content="http://upload-images.jianshu.io/upload_images/3151600-8d7ac2be300e722c.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1080/q/50">
+<meta property="og:image" content="https://upload-images.jianshu.io/upload_images/3151600-94b64df0f3f797f4.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240">
+<meta property="og:image" content="https://upload-images.jianshu.io/upload_images/3151600-028d7fa806b41f45.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240">
+<meta property="og:image" content="https://upload-images.jianshu.io/upload_images/3151600-da06eb42db47e07b.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240">
+<meta property="og:image" content="http://upload-images.jianshu.io/upload_images/3151600-d5ad4f4d0f0fa0bd.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1080/q/50">
+<meta property="og:image" content="https://upload-images.jianshu.io/upload_images/3151600-d1ef4889a7379f51.jpg?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240">
+<meta property="og:image" content="https://upload-images.jianshu.io/upload_images/3151600-879560f14ff15a72.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240">
+<meta property="og:image" content="http://upload-images.jianshu.io/upload_images/3151600-1154c5e25333e2ff.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1080/q/50">
+<meta property="og:image" content="http://upload-images.jianshu.io/upload_images/3151600-a1b75e2b246dfd33.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1080/q/50">
+<meta property="og:image" content="https://upload-images.jianshu.io/upload_images/3151600-d2436a9c050bd4bf.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240">
+<meta property="og:image" content="https://upload-images.jianshu.io/upload_images/3151600-4b30618461ddb0d1.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240">
+<meta property="og:image" content="https://upload-images.jianshu.io/upload_images/3151600-c3565372719565cf.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240">
+<meta property="og:updated_time" content="2019-08-12T11:20:27.000Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Elasticsearch的原理与ADT应用">
+<meta name="twitter:description" content="简介 Elasticsearch（简称ES）是一个分布式、可扩展、实时的搜索与数据分析引擎。ES不仅仅只是全文搜索，还支持结构化搜索、数据分析、复杂的语言处理、地理位置和对象间关联关系等。 ES的底层依赖Lucene，Lucene可以说是当下最先进、高性能、全功能的搜索引擎库。但是Lucene仅仅只是一个库。为了充分发挥其功能，你需要使用Java并将Lucene直接集成到应用程序中。更糟糕的是，">
+<meta name="twitter:image" content="http://upload-images.jianshu.io/upload_images/3151600-e27bceb411f83f11.jpg?imageMogr2/auto-orient/strip%7CimageView2/2/w/1080/q/50">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Mist',
+    version: '5.1.4',
+    sidebar: {"position":"left","display":"post","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    duoshuo: {
+      userId: '0',
+      author: '博主'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="https://penghongzhan.github.io/2019/08/12/Elasticsearch的原理与ADT应用/">
+
+
+
+
+
+  <title>Elasticsearch的原理与ADT应用 | HongMo's Blog</title>
+  
+
+
+
+
+
+
+
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">HongMo's Blog</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle"></p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br>
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br>
+            
+            标签
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br>
+            
+            分类
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br>
+            
+            归档
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-about">
+          <a href="/about/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-user"></i> <br>
+            
+            关于
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="https://penghongzhan.github.io/2019/08/12/Elasticsearch的原理与ADT应用/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="penghong.zhan">
+      <meta itemprop="description" content>
+      <meta itemprop="image" content="https://upload-images.jianshu.io/upload_images/3151600-ee530fd12e23001d.jpg?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="HongMo's Blog">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">Elasticsearch的原理与ADT应用</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2019-08-12T19:18:23+08:00">
+                2019-08-12
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category">
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/elasticsearch/" itemprop="url" rel="index">
+                    <span itemprop="name">elasticsearch</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <hr>
+<h1 id="简介"><a href="#简介" class="headerlink" title="简介"></a>简介</h1><hr>
+<p>Elasticsearch（简称ES）是一个分布式、可扩展、实时的搜索与数据分析引擎。ES不仅仅只是全文搜索，还支持结构化搜索、数据分析、复杂的语言处理、地理位置和对象间关联关系等。</p>
+<p>ES的底层依赖Lucene，Lucene可以说是当下最先进、高性能、全功能的搜索引擎库。但是Lucene仅仅只是一个库。为了充分发挥其功能，你需要使用Java并将Lucene直接集成到应用程序中。更糟糕的是，您可能需要获得信息检索学位才能了解其工作原理，因为Lucene非常复杂——《ElasticSearch官方权威指南》。</p>
+<p>鉴于lucene如此强大却难以上手的特点，诞生了ES。ES也是使用Java编写的，它的内部使用Lucene做索引与搜索，它的目的是隐藏lucene的复杂性，取而代之的提供一套简单一致的RESTful API。</p>
+<p>总体来说，ES具有如下特点：</p>
+<ul>
+<li>一个分布式的实时文档存储引擎，每个字段都可以被索引与搜索</li>
+<li>一个分布式实时分析搜索引擎，支持各种查询和聚合操作</li>
+<li>能胜任上百个服务节点的扩展，并可以支持PB级别的结构化或者非结构化数据</li>
+</ul>
+<hr>
+<h1 id="架构"><a href="#架构" class="headerlink" title="架构"></a>架构</h1><hr>
+<h2 id="节点类型"><a href="#节点类型" class="headerlink" title="节点类型"></a>节点类型</h2><p>ES的架构很简单，集群的HA不需要依赖任务外部组件（例如zookeeper、HDFS等），master节点的主备依赖于内部自建的选举算法，通过副本分片的方式实现了数据的备份的同时，也提高了并发查询的能力。</p>
+<p>ES集群的服务器分为以下四种角色：</p>
+<ul>
+<li>master节点，负责保存和更新集群的一些元数据信息，之后同步到所有节点，所以每个节点都需要保存全量的元数据信息：<ul>
+<li>集群的配置信息</li>
+<li>集群的节点信息</li>
+<li>模板template设置</li>
+<li>索引以及对应的设置、mapping、分词器和别名</li>
+<li>索引关联到的分片以及分配到的节点</li>
+</ul>
+</li>
+<li>datanode：负责数据存储和查询</li>
+<li>coordinator：<ul>
+<li>路由索引请求</li>
+<li>聚合搜索结果集</li>
+<li>分发批量索引请求</li>
+</ul>
+</li>
+<li>ingestor：<ul>
+<li>类似于logstash，对输入数据进行处理和转换</li>
+</ul>
+</li>
+</ul>
+<h3 id="如何配置节点类型"><a href="#如何配置节点类型" class="headerlink" title="如何配置节点类型"></a>如何配置节点类型</h3><ul>
+<li>一个节点的缺省配置是：主节点+数据节点两属性为一身。对于3-5个节点的小集群来讲，通常让所有节点存储数据和具有获得主节点的资格。</li>
+<li>专用协调节点（也称为client节点或路由节点）从数据节点中消除了聚合/查询的请求解析和最终阶段，随着集群写入以及查询负载的增大，可以通过协调节点减轻数据节点的压力，可以让数据节点更多专注于数据的写入以及查询。</li>
+</ul>
+<h2 id="master选举"><a href="#master选举" class="headerlink" title="master选举"></a>master选举</h2><h3 id="选举策略"><a href="#选举策略" class="headerlink" title="选举策略"></a>选举策略</h3><ul>
+<li>如果集群中存在master，认可该master，加入集群</li>
+<li>如果集群中不存在master，从具有master资格的节点中选id最小的节点作为master</li>
+</ul>
+<h3 id="选举时机"><a href="#选举时机" class="headerlink" title="选举时机"></a>选举时机</h3><ul>
+<li>集群启动：后台启动线程去ping集群中的节点，按照上述策略从具有master资格的节点中选举出master</li>
+<li>现有的master离开集群：后台一直有一个线程定时ping master节点，超过一定次数没有ping成功之后，重新进行master的选举</li>
+</ul>
+<h3 id="选举流程"><a href="#选举流程" class="headerlink" title="选举流程"></a>选举流程</h3><p><img src="http://upload-images.jianshu.io/upload_images/3151600-e27bceb411f83f11.jpg?imageMogr2/auto-orient/strip%7CimageView2/2/w/1080/q/50" alt="ES的master选举流程图"></p>
+<h3 id="避免脑裂"><a href="#避免脑裂" class="headerlink" title="避免脑裂"></a>避免脑裂</h3><p>脑裂问题是采用master-slave模式的分布式集群普遍需要关注的问题，脑裂一旦出现，会导致集群的状态出现不一致，导致数据错误甚至丢失。</p>
+<p>ES避免脑裂的策略：过半原则，可以在ES的集群配置中添加一下配置，避免脑裂的发生</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">#一个节点多久ping一次，默认1s</span><br><span class="line">discovery.zen.fd.ping_interval: 1s</span><br><span class="line">##等待ping返回时间，默认30s</span><br><span class="line">discovery.zen.fd.ping_timeout: 10s</span><br><span class="line">##ping超时重试次数，默认3次</span><br><span class="line">discovery.zen.fd.ping_retries: 3</span><br><span class="line">##选举时需要的节点连接数，N为具有master资格的节点数量</span><br><span class="line">discovery.zen.minimum_master_nodes=N/2+1</span><br></pre></td></tr></table></figure>
+
+<h3 id="注意问题"><a href="#注意问题" class="headerlink" title="注意问题"></a>注意问题</h3><ul>
+<li>配置文件中加入上述避免脑裂的配置，对于网络波动比较大的集群来说，增加ping的时间和ping的次数，一定程度上可以增加集群的稳定性</li>
+<li>动态的字段field可能导致元数据暴涨，新增字段mapping映射需要更新mater节点上维护的字段映射信息，master修改了映射信息之后再同步到集群中所有的节点，这个过程中数据的写入是阻塞的。所以建议关闭自动mapping，没有预先定义的字段mapping会写入失败</li>
+<li>通过定时任务在集群写入的低峰期，将索引以及mapping映射提前创建好</li>
+</ul>
+<h2 id="负载均衡"><a href="#负载均衡" class="headerlink" title="负载均衡"></a>负载均衡</h2><p>ES集群是分布式的，数据分布到集群的不同机器上，对于ES中的一个索引来说，ES通过分片的方式实现数据的分布式和负载均衡。创建索引的时候，需要指定分片的数量，分片会均匀的分布到集群的机器中。分片的数量是需要创建索引的时候就需要设置的，而且设置之后不能更改，虽然ES提供了相应的api来缩减和扩增分片，但是代价是很高的，需要重建整个索引。</p>
+<p>考虑到并发响应以及后续扩展节点的能力，分片的数量不能太少，假如你只有一个分片，随着索引数据量的增大，后续进行了节点的扩充，但是由于一个分片只能分布在一台机器上，所以集群扩容对于该索引来说没有意义了。</p>
+<p>但是分片数量也不能太多，每个分片都相当于一个独立的lucene引擎，太多的分片意味着集群中需要管理的元数据信息增多，master节点有可能成为瓶颈；同时集群中的小文件会增多，内存以及文件句柄的占用量会增大，查询速度也会变慢。</p>
+<h2 id="数据副本"><a href="#数据副本" class="headerlink" title="数据副本"></a>数据副本</h2><p>ES通过副本分片的方式，保证集群数据的高可用，同时增加集群并发处理查询请求的能力，相应的，在数据写入阶段会增大集群的写入压力。</p>
+<p>数据写入的过程中，首先被路由到主分片，写入成功之后，将数据发送到副本分片，为了保证数据不丢失，最好保证至少一个副本分片写入成功以后才返回客户端成功。</p>
+<h3 id="相关配置"><a href="#相关配置" class="headerlink" title="相关配置"></a>相关配置</h3><h4 id="5-0之前通过consistency来设置"><a href="#5-0之前通过consistency来设置" class="headerlink" title="5.0之前通过consistency来设置"></a>5.0之前通过consistency来设置</h4><p>consistency参数的值可以设为 ：</p>
+<ul>
+<li>one ：只要主分片状态ok就允许执行写操作</li>
+<li>all：必须要主分片和所有副本分片的状态没问题才允许执行写操作</li>
+<li>quorum：默认值为quorum，即大多数的分片副本状态没问题就允许执行写操作，副本分片数量计算方式为<code>int( (primary + number_of_replicas) / 2 ) + 1</code></li>
+</ul>
+<h4 id="5-0之后通过wait-for-active-shards参数设置"><a href="#5-0之后通过wait-for-active-shards参数设置" class="headerlink" title="5.0之后通过wait_for_active_shards参数设置"></a>5.0之后通过<code>wait_for_active_shards</code>参数设置</h4><ul>
+<li>索引时增加参数：<code>?wait_for_active_shards=3</code></li>
+<li>给索引增加配置：<code>index.write.wait_for_active_shards=3</code></li>
+</ul>
+<hr>
+<h1 id="数据写入"><a href="#数据写入" class="headerlink" title="数据写入"></a>数据写入</h1><hr>
+<h2 id="写入过程"><a href="#写入过程" class="headerlink" title="写入过程"></a>写入过程</h2><p>几个概念：</p>
+<ul>
+<li>内存buffer</li>
+<li>translog</li>
+<li>文件系统缓冲区</li>
+<li>refresh</li>
+<li>segment（段）</li>
+<li>commit</li>
+<li>flush</li>
+</ul>
+<p><img src="https://upload-images.jianshu.io/upload_images/3151600-e398187e5316f5e8.jpg?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240" alt="ES的数据写入过程(参考ElasticSearch权威指南)"></p>
+<h3 id="translog"><a href="#translog" class="headerlink" title="translog"></a>translog</h3><p>写入ES的数据首先会被写入translog文件，该文件持久化到磁盘，保证服务器宕机的时候数据不会丢失，由于顺序写磁盘，速度也会很快。</p>
+<ul>
+<li>同步写入：每次写入请求执行的时候，translog在fsync到磁盘之后，才会给客户端返回成功</li>
+<li>异步写入：写入请求缓存在内存中，每经过固定时间之后才会fsync到磁盘，写入量很大，对于数据的完整性要求又不是非常严格的情况下，可以开启异步写入</li>
+</ul>
+<h3 id="refresh"><a href="#refresh" class="headerlink" title="refresh"></a>refresh</h3><p>经过固定的时间，或者手动触发之后，将内存中的数据构建索引生成segment，写入文件系统缓冲区</p>
+<h3 id="commit-flush"><a href="#commit-flush" class="headerlink" title="commit/flush"></a>commit/flush</h3><p>超过固定的时间，或者translog文件过大之后，触发flush操作：</p>
+<ul>
+<li>内存的buffer被清空，相当于进行一次refresh</li>
+<li>文件系统缓冲区中所有segment刷写到磁盘</li>
+<li>将一个包含所有段列表的新的提交点写入磁盘<ul>
+<li>启动或重新打开一个索引的过程中使用这个提交点来判断哪些segment隶属于当前分片</li>
+</ul>
+</li>
+<li>删除旧的translog，开启新的translog</li>
+</ul>
+<h3 id="merge"><a href="#merge" class="headerlink" title="merge"></a>merge</h3><p>上面提到，每次refresh的时候，都会在文件系统缓冲区中生成一个segment，后续flush触发的时候持久化到磁盘。所以，随着数据的写入，尤其是refresh的时间设置的很短的时候，磁盘中会生成越来越多的segment：</p>
+<ul>
+<li>segment数目太多会带来较大的麻烦。 每一个segment都会消耗文件句柄、内存和cpu运行周期。</li>
+<li>更重要的是，每个搜索请求都必须轮流检查每个segment，所以segment越多，搜索也就越慢。</li>
+</ul>
+<p>merge的过程大致描述如下：</p>
+<ul>
+<li>磁盘上两个小segment：A和B，内存中又生成了一个小segment：C</li>
+<li>A,B被读取到内存中，与内存中的C进行merge，生成了新的更大的segment：D</li>
+<li>触发commit操作，D被fsync到磁盘</li>
+<li>创建新的提交点，删除A和B，新增D</li>
+<li>删除磁盘中的A和B</li>
+</ul>
+<h2 id="删改操作"><a href="#删改操作" class="headerlink" title="删改操作"></a>删改操作</h2><h3 id="segment的不可变性的好处"><a href="#segment的不可变性的好处" class="headerlink" title="segment的不可变性的好处"></a>segment的不可变性的好处</h3><ul>
+<li>segment的读写不需要加锁</li>
+<li>常驻文件系统缓存（堆外内存）</li>
+<li>查询的filter缓存可以常驻内存（堆内存）</li>
+</ul>
+<h3 id="删除"><a href="#删除" class="headerlink" title="删除"></a>删除</h3><p>磁盘上的每个segment都有一个.del文件与它相关联。当发送删除请求时，该文档未被真正删除，而是在.del文件中标记为已删除。此文档可能仍然能被搜索到，但会从结果中过滤掉。当segment合并时，在.del文件中标记为已删除的文档不会被包括在新的segment中，也就是说merge的时候会真正删除被删除的文档。</p>
+<h3 id="更新"><a href="#更新" class="headerlink" title="更新"></a>更新</h3><p>创建新文档时，Elasticsearch将为该文档分配一个版本号。对文档的每次更改都会产生一个新的版本号。当执行更新时，旧版本在.del文件中被标记为已删除，并且新版本在新的segment中写入索引。旧版本可能仍然与搜索查询匹配，但是从结果中将其过滤掉。</p>
+<h2 id="版本控制"><a href="#版本控制" class="headerlink" title="版本控制"></a>版本控制</h2><p>通过添加版本号的乐观锁机制保证高并发的时候，数据更新不会出现线程安全的问题，避免数据更新被覆盖之类的异常出现。</p>
+<ul>
+<li><p>使用内部版本号：删除或者更新数据的时候，携带<code>_version</code>参数，如果文档的最新版本不是这个版本号，那么操作会失败，这个版本号是ES内部自动生成的，每次操作之后都会递增一。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">PUT /website/blog/1?version=1 </span><br><span class="line">&#123;</span><br><span class="line">  &quot;title&quot;: &quot;My first blog entry&quot;,</span><br><span class="line">  &quot;text&quot;:  &quot;Starting to get the hang of this...&quot;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>使用外部版本号：ES默认采用递增的整数作为版本号，也可以通过外部自定义整数（long类型）作为版本号，例如时间戳。通过添加参数<code>version_type=external</code>，可以使用自定义版本号。内部版本号使用的时候，更新或者删除操作需要携带ES索引当前最新的版本号，匹配上了才能成功操作。但是外部版本号使用的时候，可以将版本号更新为指定的值。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">PUT /website/blog/2?version=5&amp;version_type=external</span><br><span class="line">&#123;</span><br><span class="line">  &quot;title&quot;: &quot;My first external blog entry&quot;,</span><br><span class="line">  &quot;text&quot;:  &quot;Starting to get the hang of this...&quot;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+</li>
+</ul>
+<hr>
+<h1 id="原始文档存储（行式存储）"><a href="#原始文档存储（行式存储）" class="headerlink" title="原始文档存储（行式存储）"></a>原始文档存储（行式存储）</h1><hr>
+<p><img src="https://upload-images.jianshu.io/upload_images/3151600-c206a6f3bb91ed52.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240" alt="原始文档的存储结构"></p>
+<h2 id="fdt文件"><a href="#fdt文件" class="headerlink" title="fdt文件"></a>fdt文件</h2><p>文档内容的物理存储文件，由多个chunk组成，Lucene索引文档时，先缓存文档，缓存大于16KB时，就会把文档压缩存储。</p>
+<p><img src="http://upload-images.jianshu.io/upload_images/3151600-df38fde012faa8c6.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1080/q/50" alt="fdt文件的存储逻辑视图"></p>
+<h2 id="fdx文件"><a href="#fdx文件" class="headerlink" title="fdx文件"></a>fdx文件</h2><p>文档内容的位置索引，由多个block组成：</p>
+<ul>
+<li>1024个chunk归为一个block</li>
+<li>block记录chunk的起始文档ID，以及chunk在fdt中的位置</li>
+</ul>
+<p><img src="http://upload-images.jianshu.io/upload_images/3151600-8d7ac2be300e722c.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1080/q/50" alt="fdx文件的存储逻辑视图"></p>
+<h2 id="fnm文件"><a href="#fnm文件" class="headerlink" title="fnm文件"></a>fnm文件</h2><p>文档元数据信息，包括文档字段的名称、类型、数量等。</p>
+<h2 id="原始文档的查询"><a href="#原始文档的查询" class="headerlink" title="原始文档的查询"></a>原始文档的查询</h2><p><img src="https://upload-images.jianshu.io/upload_images/3151600-94b64df0f3f797f4.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240" alt="原始文档的查询过程"></p>
+<p><strong>注意问题</strong></p>
+<p>lucene对原始文件的存放是行式存储，并且为了提高空间利用率，是多文档一起压缩，因此取文档时需要读入和解压额外文档，因此取文档过程非常依赖CPU以及随机IO。</p>
+<h2 id="相关设置"><a href="#相关设置" class="headerlink" title="相关设置"></a>相关设置</h2><h3 id="压缩方式的设置"><a href="#压缩方式的设置" class="headerlink" title="压缩方式的设置"></a>压缩方式的设置</h3><p>原始文档的存储对应<code>_source</code>字段，是默认开启的，会占用大量的磁盘空间，上面提到的chunk中的文档压缩，ES默认采用的是<code>LZ4</code>，如果想要提高压缩率，可以将设置改成<code>best_compression</code>。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">index.codec: best_compression</span><br></pre></td></tr></table></figure>
+
+<h3 id="特定字段的内容存储"><a href="#特定字段的内容存储" class="headerlink" title="特定字段的内容存储"></a>特定字段的内容存储</h3><p>查询的时候，如果想要获取原始字段，需要在<code>_source</code>中获取，因为所有的字段存储在一起，所以获取完整的文档内容与获取其中某个字段，在资源消耗上几乎相同，只是返回给客户端的时候，减少了一定量的网络IO。</p>
+<p>ES提供了特定字段内容存储的设置，在设置mappings的时候可以开启，默认是false。如果你的文档内容很大，而其中某个字段的内容又需要经常获取，可以设置开启，将该字段的内容单独存储。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line">PUT my_index</span><br><span class="line">&#123;</span><br><span class="line">  &quot;mappings&quot;: &#123;</span><br><span class="line">    &quot;_doc&quot;: &#123;</span><br><span class="line">      &quot;properties&quot;: &#123;</span><br><span class="line">        &quot;title&quot;: &#123;</span><br><span class="line">          &quot;type&quot;: &quot;text&quot;,</span><br><span class="line">          &quot;store&quot;: true </span><br><span class="line">        &#125;</span><br><span class="line">      &#125;</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<hr>
+<h1 id="倒排索引"><a href="#倒排索引" class="headerlink" title="倒排索引"></a>倒排索引</h1><hr>
+<p><img src="https://upload-images.jianshu.io/upload_images/3151600-028d7fa806b41f45.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240" alt="倒排索引-文件结构.png"></p>
+<p>倒排索引中记录的信息主要有：</p>
+<ul>
+<li>文档编号：segment内部文档编号从0开始，最大值为int最大值，文档写入之后会分配这样一个顺序号</li>
+<li>字典：字段内容经过分词、归一化、还原词根等操作之后，得到的所有单词</li>
+<li>单词出现位置：<ul>
+<li>分词字段默认开启，提供对于短语查询的支持</li>
+<li>对于非常常见的词，例如the，位置信息可能占用很大空间，短语查询需要读取的数据量很大，查询速度慢</li>
+</ul>
+</li>
+<li>单词出现次数：单词在文档中出现的次数，作为评分的依据</li>
+<li>单词结束字符到开始字符的偏移量：记录在文档中开始与结束字符的偏移量，提供高亮使用，默认是禁用的</li>
+<li>规范因子：对字段长度进行规范化的因子，给予较短字段更多权重</li>
+</ul>
+<p>倒排索引的查找过程本质上是通过单词找对应的文档列表的过程，因此倒排索引中字典的设计决定了倒排索引的查询速度，字典主要包括前缀索引（.tip文件）和后缀索引（.tim）文件。</p>
+<h2 id="字典前缀索引（-tip文件）"><a href="#字典前缀索引（-tip文件）" class="headerlink" title="字典前缀索引（.tip文件）"></a>字典前缀索引（.tip文件）</h2><p>一个合格的词典结构一般有以下特点：</p>
+<p>-查询速度快<br>-内存占用小<br>-内存+磁盘相结合</p>
+<p><img src="https://upload-images.jianshu.io/upload_images/3151600-da06eb42db47e07b.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240" alt="FST前缀索引"></p>
+<p>Lucene采用的前缀索引数据结构为FST，它的优点有：</p>
+<ul>
+<li>词查找复杂度为O(len(str))</li>
+<li>共享前缀、节省空间、内存占用率低，压缩率高，模糊查询支持好</li>
+<li>内存存放前缀索引，磁盘存放后缀词块</li>
+</ul>
+<p>缺点：结构复杂、输入要求有序、更新不易</p>
+<h2 id="字典后缀（-tim文件）"><a href="#字典后缀（-tim文件）" class="headerlink" title="字典后缀（.tim文件）"></a>字典后缀（.tim文件）</h2><p>后缀词块主要保存了单词后缀，以及对应的文档列表的位置。</p>
+<h2 id="文档列表（-doc文件）"><a href="#文档列表（-doc文件）" class="headerlink" title="文档列表（.doc文件）"></a>文档列表（.doc文件）</h2><p><img src="http://upload-images.jianshu.io/upload_images/3151600-d5ad4f4d0f0fa0bd.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1080/q/50" alt="文档列表的存储结构"></p>
+<p>lucene对文档列表存储进行了很好的压缩，来保证缓存友好：</p>
+<ul>
+<li>差分压缩：每个ID只记录跟前面的ID的差值</li>
+<li>每256个ID放入一个block中</li>
+<li>block的头信息存放block中每个ID占用的bit位数，因为经过上面的差分压缩之后，文档列表中的文档ID都变得不大，占用的bit位数变少</li>
+</ul>
+<p>上图经过压缩之后将6个数字从原先的24bytes压缩到7bytes</p>
+<h3 id="文档列表的合并"><a href="#文档列表的合并" class="headerlink" title="文档列表的合并"></a>文档列表的合并</h3><p><img src="https://upload-images.jianshu.io/upload_images/3151600-d1ef4889a7379f51.jpg?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240" alt="跳表"></p>
+<p>ES的一个重要的查询场景是bool查询，类似于mysql中的and操作，需要将两个条件对应的文档列表进行合并。为了加快文档列表的合并，lucene底层采用了跳表的数据结构，合并过程中，优先遍历较短的链表，去较长的列表中进行查询，如果存在，则该文档符合条件。</p>
+<p><img src="https://upload-images.jianshu.io/upload_images/3151600-879560f14ff15a72.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240" alt="倒排索引-文档列表的合并"></p>
+<h2 id="倒排索引的查询过程"><a href="#倒排索引的查询过程" class="headerlink" title="倒排索引的查询过程"></a>倒排索引的查询过程</h2><p><img src="http://upload-images.jianshu.io/upload_images/3151600-1154c5e25333e2ff.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1080/q/50" alt="倒排索引的查询过程"></p>
+<ul>
+<li>内存加载tip文件，通过FST匹配前缀找到后缀词块位置</li>
+<li>根据词块位置，读取磁盘中tim文件中后缀块并找到后缀和相应的倒排表位置信息</li>
+<li>根据倒排表位置去doc文件中加载倒排表</li>
+<li>借助跳表结构，对多个文档列表进行合并</li>
+</ul>
+<h2 id="filter查询的缓存"><a href="#filter查询的缓存" class="headerlink" title="filter查询的缓存"></a>filter查询的缓存</h2><p>对于filter过滤查询的结果，ES会进行缓存，缓存采用的数据结构是<code>RoaringBitmap</code>，在match查询中配合filter能有效加快查询速度。</p>
+<ul>
+<li>普通bitset的缺点：内存占用大，RoaringBitmap有很好的压缩特性</li>
+<li>分桶：解决文档列表稀疏的情况下，过多的0占用内存，每65536个docid分到一个桶，桶内只记录docid%65536</li>
+<li>桶内压缩：4096作为分界点，小余这个值用short数组，大于这个值用bitset，每个short占两字节，4096个short占用65536bit，所以超过4096个文档id之后，是bitset更节省空间。</li>
+</ul>
+<p><img src="http://upload-images.jianshu.io/upload_images/3151600-a1b75e2b246dfd33.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1080/q/50" alt="filter缓存的数据结构"></p>
+<hr>
+<h1 id="DocValues（正排索引-amp-列式存储）"><a href="#DocValues（正排索引-amp-列式存储）" class="headerlink" title="DocValues（正排索引&amp;列式存储）"></a>DocValues（正排索引&amp;列式存储）</h1><hr>
+<p><img src="https://upload-images.jianshu.io/upload_images/3151600-d2436a9c050bd4bf.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240" alt="DocValues文件结构.png"></p>
+<p>倒排索引保存的是词项到文档的映射，也就是词项存在于哪些文档中，DocValues保存的是文档到词项的映射，也就是文档中有哪些词项。</p>
+<h2 id="相关设置-1"><a href="#相关设置-1" class="headerlink" title="相关设置"></a>相关设置</h2><p><code>keyword</code>字段默认开启</p>
+<h2 id="ES6-0（lucene7-0）之前"><a href="#ES6-0（lucene7-0）之前" class="headerlink" title="ES6.0（lucene7.0）之前"></a>ES6.0（lucene7.0）之前</h2><p>DocValues采用的数据结构是bitset，bitset对于稀疏数据的支持不好：</p>
+<ul>
+<li>对于稀疏的字段来说，绝大部分的空间都被0填充，浪费空间</li>
+<li>由于字段的值之间插入了0，可能本来连续的值被0间隔开来了，不利于数据的压缩</li>
+<li>空间被一堆0占用了，缓存中缓存的有效数据减少，查询效率也会降低</li>
+</ul>
+<p>查询逻辑很简单，类似于数组通过下标进行索引，因为每个value都是固定长度，所以读取文档id为N的value直接从<code>N*固定长度</code>位置开始读取<code>固定长度</code>即可。</p>
+<p><img src="https://upload-images.jianshu.io/upload_images/3151600-4b30618461ddb0d1.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240" alt="ES6.0之前DocValues的数据结构"></p>
+<h2 id="ES6-0（lucene7-0）"><a href="#ES6-0（lucene7-0）" class="headerlink" title="ES6.0（lucene7.0）"></a>ES6.0（lucene7.0）</h2><ul>
+<li>docid的存储的通过分片加快映射到value的查询速度</li>
+<li>value存储的时候不再给空的值分配空间</li>
+</ul>
+<p>因为value存储的时候，空值不再分配空间，所以查询的时候不能通过上述通过文档id直接映射到在bitset中的偏移量来获取对应的value，需要通过获取docid的位置来找到对应的value的位置。</p>
+<p>所以对于DocValues的查找，关键在于DocIDSet中ID的查找，如果按照简单的链表的查找逻辑，那么DocID的查找速度将会很慢。lucene7借用了RoaringBitmap的分片的思想来加快DocIDSet的查找速度：</p>
+<p><img src="https://upload-images.jianshu.io/upload_images/3151600-c3565372719565cf.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240" alt="DocValues的数据结构-lucene7的结构"></p>
+<ul>
+<li>分片容量为2的16次方，最多可以存储65536个docid</li>
+<li>分片包含的信息：<ul>
+<li>分片ID</li>
+<li>存储的docid的个数（值不为空的DocIDSet）</li>
+<li>DocIDSet明细，或者标记分片类型（ALL或者NONE）</li>
+</ul>
+</li>
+<li>根据分片的容量，将分片分为四种不同的类型，不同类型的查找逻辑不通：<ul>
+<li>ALL：该分片内没有不存在值的DocID</li>
+<li>NONE：该分片内所有的DocID都不存在值</li>
+<li>SPARSE：该分片内存在值的DocID的个数不超过4096，DocIDSet以short数组的形式存储，查找的时候，遍历数组，找到对应的ID的位置</li>
+<li>DENSE：该分片内存在值的DocID的个数超过4096，DocIDSet以bitset的形式存储，ID的偏移量也就是在该分片中的位置</li>
+</ul>
+</li>
+</ul>
+<p>最终DocIDSet的查找逻辑为：</p>
+<ul>
+<li>计算DocID/65536，得到所在的分片N</li>
+<li>计算前面N-1个分片的DocID的总数</li>
+<li>找到DocID在分片N内部的位置，从而找到所在位置之前的DocID个数M</li>
+<li>找到N+M位置的value即为该DocID对应的value</li>
+</ul>
+<hr>
+<h1 id="数据查询"><a href="#数据查询" class="headerlink" title="数据查询"></a>数据查询</h1><hr>
+<h2 id="查询过程（query-then-fetch）"><a href="#查询过程（query-then-fetch）" class="headerlink" title="查询过程（query then fetch）"></a>查询过程（query then fetch）</h2><ul>
+<li>协调节点将请求发送给对应分片</li>
+<li>分片查询，返回from+size数量的文档对应的id以及每个id的得分</li>
+<li>汇总所有节点的结果，按照得分获取指定区间的文档id</li>
+<li>根据查询需求，像对应分片发送多个get请求，获取文档的信息</li>
+<li>返回给客户端</li>
+</ul>
+<h3 id="get查询更快"><a href="#get查询更快" class="headerlink" title="get查询更快"></a>get查询更快</h3><p>默认根据id对文档进行路由，所以指定id的查询可以定位到文档所在的分片，只对某个分片进行查询即可。当然非get查询，只要写入和查询的时候指定routing，同样可以达到该效果。</p>
+<h3 id="主分片与副本分片"><a href="#主分片与副本分片" class="headerlink" title="主分片与副本分片"></a>主分片与副本分片</h3><p>ES的分片有主备之分，但是对于查询来说，主备分片的地位完全相同，平等的接收查询请求。这里涉及到一个请求的负载均衡策略，6.0之前采用的是轮询的策略，但是这种策略存在不足，轮询方案只能保证查询数据量在主备分片是均衡的，但是不能保证查询压力在主备分片上是均衡的，可能出现慢查询都路由到了主分片上，导致主分片所在的机器压力过大，影响了整个集群对外提供服务的能力。</p>
+<p>新版本中优化了该策略，采用了基于负载的请求路由，基于队列的耗费时间自动调节队列长度，负载高的节点的队列长度将减少，让其他节点分摊更多的压力，搜索和索引都将基于这种机制。</p>
+<h2 id="get查询的实时性"><a href="#get查询的实时性" class="headerlink" title="get查询的实时性"></a>get查询的实时性</h2><p>ES数据写入之后，要经过一个refresh操作之后，才能够创建索引，进行查询。但是get查询很特殊，数据实时可查。</p>
+<p>ES5.0之前translog可以提供实时的CRUD，get查询会首先检查translog中有没有最新的修改，然后再尝试去segment中对id进行查找。5.0之后，为了减少translog设计的负责性以便于再其他更重要的方面对translog进行优化，所以取消了translog的实时查询功能。</p>
+<p>get查询的实时性，通过每次get查询的时候，如果发现该id还在内存中没有创建索引，那么首先会触发refresh操作，来让id可查。</p>
+<h2 id="查询方式"><a href="#查询方式" class="headerlink" title="查询方式"></a>查询方式</h2><p>两种查询上下文：</p>
+<ul>
+<li>query：例如全文检索，返回的是文档匹配搜索条件的相关性，常用api：match</li>
+<li>filter：例如时间区间的限定，回答的是是否，要么是，要么不是，不存在相似程度的概念，常用api：term、range</li>
+</ul>
+<p>过滤（filter）的目标是减少那些需要进行评分查询（scoring queries）的文档数量。</p>
+<h3 id="分析器-analyzer"><a href="#分析器-analyzer" class="headerlink" title="分析器(analyzer)"></a>分析器(analyzer)</h3><p>当索引一个文档时，它的全文域被分析成词条以用来创建倒排索引。当进行分词字段的搜索的时候，同样需要将查询字符串通过相同的分析过程，以保证搜索的词条格式与索引中的词条格式一致。当查询一个不分词字段时，不会分析查询字符串，而是搜索指定的精确值。</p>
+<p>可以通过下面的命令查看分词结果：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">GET /_analyze</span><br><span class="line">&#123;</span><br><span class="line">  &quot;analyzer&quot;: &quot;standard&quot;,</span><br><span class="line">  &quot;text&quot;: &quot;Text to analyze&quot;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h3 id="相关性"><a href="#相关性" class="headerlink" title="相关性"></a>相关性</h3><p>默认情况下，返回结果是按相关性倒序排列的。每个文档都有相关性评分，用一个正浮点数字段score来表示。score的评分越高，相关性越高。</p>
+<p>ES的相似度算法被定义为检索词频率/反向文档频率(TF/IDF)，包括以下内容：</p>
+<ul>
+<li>检索词频率：检索词在该字段出现的频率，出现频率越高，相关性也越高。字段中出现过5次要比只出现过1次的相关性高。</li>
+<li>反向文档频率：每个检索词在索引中出现的频率，频率越高，相关性越低。检索词出现在多数文档中会比出现在少数文档中的权重更低。</li>
+<li>字段长度准则：字段的长度是多少，长度越长，相关性越低。 检索词出现在一个短的title要比同样的词出现在一个长的content字段权重更大。</li>
+</ul>
+<p>查询的时候可以通过添加<code>?explain</code>参数，查看上述各个算法的评分结果。</p>
+<hr>
+<h1 id="ADT的应用"><a href="#ADT的应用" class="headerlink" title="ADT的应用"></a>ADT的应用</h1><hr>
+<h2 id="日志查询工具"><a href="#日志查询工具" class="headerlink" title="日志查询工具"></a>日志查询工具</h2><p>移动广告监测（ADTracking，简称ADT）的系统会接收媒体发过来的点击数据以及SDK发过来的激活和各种效果点数据，这些数据的处理过程正确与否至关重要，例如，用户的一条激活数据为啥没有归因到点击，这类问题的排查在ADT中很常见，通过将数据流中的各个处理环节的重要日志统一发送到ES，可以很方便的进行查询，客服同学可以通过拼写简单的查询条件排查客户的问题。</p>
+<ul>
+<li><p>索引按天创建：定时关闭历史索引，释放集群资源</p>
+</li>
+<li><p>别名查询：数据量增大之后，可以通过拆分索引减轻写入压力，拆分之后的索引采用相同的别名，查询服务不需要修改代码</p>
+</li>
+<li><p>索引重要的设置：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line">&#123;</span><br><span class="line">    &quot;settings&quot;: &#123;</span><br><span class="line">        &quot;index&quot;: &#123;</span><br><span class="line">            &quot;refresh_interval&quot;: &quot;120s&quot;,</span><br><span class="line">            &quot;number_of_shards&quot;: &quot;12&quot;,</span><br><span class="line">            &quot;translog&quot;: &#123;</span><br><span class="line">                &quot;flush_threshold_size&quot;: &quot;2048mb&quot;</span><br><span class="line">            &#125;,</span><br><span class="line">            &quot;merge&quot;: &#123;</span><br><span class="line">                &quot;scheduler&quot;: &#123;</span><br><span class="line">                    &quot;max_thread_count&quot;: &quot;1&quot;</span><br><span class="line">                &#125;</span><br><span class="line">            &#125;,</span><br><span class="line">            &quot;unassigned&quot;: &#123;</span><br><span class="line">                &quot;node_left&quot;: &#123;</span><br><span class="line">                    &quot;delayed_timeout&quot;: &quot;180m&quot;</span><br><span class="line">                &#125;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>索引mapping的设置</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line">&#123;</span><br><span class="line">    &quot;properties&quot;: &#123;</span><br><span class="line">        &quot;action_content&quot;: &#123;</span><br><span class="line">            &quot;type&quot;: &quot;string&quot;,</span><br><span class="line">            &quot;analyzer&quot;: &quot;standard&quot;</span><br><span class="line">        &#125;,</span><br><span class="line">        &quot;time&quot;: &#123;</span><br><span class="line">            &quot;type&quot;: &quot;long&quot;</span><br><span class="line">        &#125;,</span><br><span class="line">        &quot;trackid&quot;: &#123;</span><br><span class="line">            &quot;type&quot;: &quot;string&quot;,</span><br><span class="line">            &quot;index&quot;: &quot;not_analyzed&quot;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>sql插件，通过拼sql的方式，比起拼json更简单</p>
+</li>
+</ul>
+<h2 id="点击数据存储（kv存储场景）"><a href="#点击数据存储（kv存储场景）" class="headerlink" title="点击数据存储（kv存储场景）"></a>点击数据存储（kv存储场景）</h2><p>ADTracking的点击数据是用户进行广告投放的直接相关数据，应用安装之后，SDK会上报激活事件，我们的系统会去找这个激活事件是否来自于之前用户点击的某个广告，如果是，那么该激活就是一个推广量，也就是用户投放的广告带来的激活。激活后续的效果点数据也都会去查找点击，从点击中获取广告投放的一些信息，所以点击查询在ADTracking的业务中至关重要。</p>
+<p>业务的前期，点击数据是存储在Mysql中的，随着后续点击量的暴增，由于mysql不能横向扩展，所以需要更换为新的存储。由于ES拥有横向扩展和强悍的搜索能力，并且之前日志查询工具中也一直使用ES，所以决定使用ES来进行点击的存储。</p>
+<h3 id="重要的设置"><a href="#重要的设置" class="headerlink" title="重要的设置"></a>重要的设置</h3><ul>
+<li><code>&quot;refresh_interval&quot;: &quot;1s&quot;</code></li>
+<li><code>&quot;translog.flush_threshold_size&quot;: &quot;2048mb&quot;</code></li>
+<li><code>&quot;merge.scheduler.max_thread_count&quot;: 1</code></li>
+<li><code>&quot;unassigned.node_left.delayed_timeout&quot;: &quot;180m&quot;</code></li>
+</ul>
+<h3 id="结合业务进行系统优化"><a href="#结合业务进行系统优化" class="headerlink" title="结合业务进行系统优化"></a>结合业务进行系统优化</h3><h4 id="结合业务定期关闭索引释放资源"><a href="#结合业务定期关闭索引释放资源" class="headerlink" title="结合业务定期关闭索引释放资源"></a>结合业务定期关闭索引释放资源</h4><p>ADTracking的点击数据具有有效期的概念，超过有效期的点击，激活不会去归因。点击有效期最长一个月，所以理论上每天创建的索引在一个月之后才能关闭。</p>
+<p>但是用户配置的点击有效期大部分都是一天，这大部分点击在集群中保存30天是没有意义的，而且会占用大部分的系统资源。所以根据点击的这个业务特点，将每天创建的索引拆分成两个，一个是有效期是一天的点击，一个是超过一天的点击，有效期一天的点击的索引在一天之后就可以关闭，从而保证集群中打开的索引的数据量维持在一个较少的水平。</p>
+<h4 id="结合业务将热点数据单独索引"><a href="#结合业务将热点数据单独索引" class="headerlink" title="结合业务将热点数据单独索引"></a>结合业务将热点数据单独索引</h4><p>激活和效果点数据都需要去ES中查询点击，但是两者对于点击的查询场景是有差异的，因为效果点事件（例如登录、注册等）归因的时候不是去直接查找点击，而是查找激活进而找到点击，效果点要找的点击一定是之前激活归因到的，所以激活归因到的这部分点击也就是热点数据。</p>
+<p>激活归因到点击之后，将这部分点击单独存储到单独的索引中，由于这部分点击量少很多，所以效果点查询的时候很快。</p>
+<h4 id="索引拆分"><a href="#索引拆分" class="headerlink" title="索引拆分"></a>索引拆分</h4><p>ADT的点击数据按天进行存储，但是随着点击量的增大，单天的索引大小持续增大，尤其是晚上的时候，merge需要合并的segment数量以及大小都很大，造成了很高的IO压力，导致集群的写入受限。</p>
+<p>后续采用了拆分索引的方案，每天的索引按照上午9点和下午5点两个时间点将索引拆分成三个，由于索引之间的segment合并是相互独立的，只会在一个索引内部进行segment的合并，所以在每个小索引内部，segment合并的压力就会减少。</p>
+<h2 id="其他调优"><a href="#其他调优" class="headerlink" title="其他调优"></a>其他调优</h2><h3 id="分片的数量"><a href="#分片的数量" class="headerlink" title="分片的数量"></a>分片的数量</h3><p>经验值：</p>
+<ul>
+<li>每个节点的分片数量保持在低于每1GB堆内存对应集群的分片在20-25之间。</li>
+<li>分片大小为50GB通常被界定为适用于各种用例的限制。</li>
+</ul>
+<h3 id="JVM设置"><a href="#JVM设置" class="headerlink" title="JVM设置"></a>JVM设置</h3><ul>
+<li>堆内存设置：不要超过32G，在Java中，对象实例都分配在堆上，并通过一个指针进行引用。64为操作系统而言，默认使用64位指针，指针本身对于空间的占用很大，Java使用一个叫作内存指针压缩（compressed oops）的技术来解决这个问题，简单理解，使用32位指针也可以对对象进行引用，但是一旦堆内存超过32G，这个压缩技术不再生效，实际上失去了更多的内存。</li>
+<li>预留一半内存空间给lucene用，lucene会使用大量的堆外内存空间。</li>
+<li>如果你有一台128G的机器，一半内存也是64G，超过了32G，可以通过一台机器上启动多个ES实例来保证ES的堆内存小于32G。</li>
+<li>ES的配置文件中加入<code>bootstrap.mlockall: true</code>，关闭内存交换。</li>
+</ul>
+<h3 id="通过-cat-api获取任务执行情况"><a href="#通过-cat-api获取任务执行情况" class="headerlink" title="通过_cat api获取任务执行情况"></a>通过<code>_cat</code> api获取任务执行情况</h3><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">GET http://localhost:9201/_cat/thread_pool?v&amp;h=host,search.active,search.rejected,search.completed</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li>完成(completed)</li>
+<li>进行中(active)</li>
+<li>被拒绝(rejected)：需要特别注意，说明已经出现查询请求被拒绝的情况，可能是线程池大小配置的太小，也可能是集群性能瓶颈，需要扩容。</li>
+</ul>
+<h3 id="小技巧"><a href="#小技巧" class="headerlink" title="小技巧"></a>小技巧</h3><ul>
+<li>重建索引或者批量想ES写历史数据的时候，写之前先关闭副本，写入完成之后，再开启副本。</li>
+<li>ES默认用文档id进行路由，所以通过文档id进行查询会更快，因为能直接定位到文档所在的分片，否则需要查询所有的分片。</li>
+<li>使用ES自己生成的文档id写入更快，因为ES不需要验证一次自定义的文档id是否存在</li>
+</ul>
+
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/原理/" rel="tag"># 原理</a>
+          
+            <a href="/tags/elasticsearch/" rel="tag"># elasticsearch</a>
+          
+            <a href="/tags/elastic/" rel="tag"># elastic</a>
+          
+            <a href="/tags/ADT/" rel="tag"># ADT</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2019/08/12/hello-world/" rel="next" title="Hello World">
+                <i class="fa fa-chevron-left"></i> Hello World
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+            
+              <img class="site-author-image" itemprop="image" src="https://upload-images.jianshu.io/upload_images/3151600-ee530fd12e23001d.jpg?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240" alt="penghong.zhan">
+            
+              <p class="site-author-name" itemprop="name">penghong.zhan</p>
+              <p class="site-description motion-element" itemprop="description">一个热爱生活的程序猿</p>
+          </div>
+
+          <nav class="site-state motion-element">
+
+            
+              <div class="site-state-item site-state-posts">
+              
+                <a href="/archives/">
+              
+                  <span class="site-state-item-count">25</span>
+                  <span class="site-state-item-name">日志</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-categories">
+                <a href="/categories/index.html">
+                  <span class="site-state-item-count">12</span>
+                  <span class="site-state-item-name">分类</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-tags">
+                <a href="/tags/index.html">
+                  <span class="site-state-item-count">30</span>
+                  <span class="site-state-item-name">标签</span>
+                </a>
+              </div>
+            
+
+          </nav>
+
+          
+
+          
+
+          
+          
+
+          
+          
+
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#简介"><span class="nav-number">1.</span> <span class="nav-text">简介</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#架构"><span class="nav-number">2.</span> <span class="nav-text">架构</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#节点类型"><span class="nav-number">2.1.</span> <span class="nav-text">节点类型</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#如何配置节点类型"><span class="nav-number">2.1.1.</span> <span class="nav-text">如何配置节点类型</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#master选举"><span class="nav-number">2.2.</span> <span class="nav-text">master选举</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#选举策略"><span class="nav-number">2.2.1.</span> <span class="nav-text">选举策略</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#选举时机"><span class="nav-number">2.2.2.</span> <span class="nav-text">选举时机</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#选举流程"><span class="nav-number">2.2.3.</span> <span class="nav-text">选举流程</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#避免脑裂"><span class="nav-number">2.2.4.</span> <span class="nav-text">避免脑裂</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#注意问题"><span class="nav-number">2.2.5.</span> <span class="nav-text">注意问题</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#负载均衡"><span class="nav-number">2.3.</span> <span class="nav-text">负载均衡</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#数据副本"><span class="nav-number">2.4.</span> <span class="nav-text">数据副本</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#相关配置"><span class="nav-number">2.4.1.</span> <span class="nav-text">相关配置</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#5-0之前通过consistency来设置"><span class="nav-number">2.4.1.1.</span> <span class="nav-text">5.0之前通过consistency来设置</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#5-0之后通过wait-for-active-shards参数设置"><span class="nav-number">2.4.1.2.</span> <span class="nav-text">5.0之后通过wait_for_active_shards参数设置</span></a></li></ol></li></ol></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#数据写入"><span class="nav-number">3.</span> <span class="nav-text">数据写入</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#写入过程"><span class="nav-number">3.1.</span> <span class="nav-text">写入过程</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#translog"><span class="nav-number">3.1.1.</span> <span class="nav-text">translog</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#refresh"><span class="nav-number">3.1.2.</span> <span class="nav-text">refresh</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#commit-flush"><span class="nav-number">3.1.3.</span> <span class="nav-text">commit/flush</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#merge"><span class="nav-number">3.1.4.</span> <span class="nav-text">merge</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#删改操作"><span class="nav-number">3.2.</span> <span class="nav-text">删改操作</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#segment的不可变性的好处"><span class="nav-number">3.2.1.</span> <span class="nav-text">segment的不可变性的好处</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#删除"><span class="nav-number">3.2.2.</span> <span class="nav-text">删除</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#更新"><span class="nav-number">3.2.3.</span> <span class="nav-text">更新</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#版本控制"><span class="nav-number">3.3.</span> <span class="nav-text">版本控制</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#原始文档存储（行式存储）"><span class="nav-number">4.</span> <span class="nav-text">原始文档存储（行式存储）</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#fdt文件"><span class="nav-number">4.1.</span> <span class="nav-text">fdt文件</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#fdx文件"><span class="nav-number">4.2.</span> <span class="nav-text">fdx文件</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#fnm文件"><span class="nav-number">4.3.</span> <span class="nav-text">fnm文件</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#原始文档的查询"><span class="nav-number">4.4.</span> <span class="nav-text">原始文档的查询</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#相关设置"><span class="nav-number">4.5.</span> <span class="nav-text">相关设置</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#压缩方式的设置"><span class="nav-number">4.5.1.</span> <span class="nav-text">压缩方式的设置</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#特定字段的内容存储"><span class="nav-number">4.5.2.</span> <span class="nav-text">特定字段的内容存储</span></a></li></ol></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#倒排索引"><span class="nav-number">5.</span> <span class="nav-text">倒排索引</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#字典前缀索引（-tip文件）"><span class="nav-number">5.1.</span> <span class="nav-text">字典前缀索引（.tip文件）</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#字典后缀（-tim文件）"><span class="nav-number">5.2.</span> <span class="nav-text">字典后缀（.tim文件）</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#文档列表（-doc文件）"><span class="nav-number">5.3.</span> <span class="nav-text">文档列表（.doc文件）</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#文档列表的合并"><span class="nav-number">5.3.1.</span> <span class="nav-text">文档列表的合并</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#倒排索引的查询过程"><span class="nav-number">5.4.</span> <span class="nav-text">倒排索引的查询过程</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#filter查询的缓存"><span class="nav-number">5.5.</span> <span class="nav-text">filter查询的缓存</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#DocValues（正排索引-amp-列式存储）"><span class="nav-number">6.</span> <span class="nav-text">DocValues（正排索引&amp;列式存储）</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#相关设置-1"><span class="nav-number">6.1.</span> <span class="nav-text">相关设置</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#ES6-0（lucene7-0）之前"><span class="nav-number">6.2.</span> <span class="nav-text">ES6.0（lucene7.0）之前</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#ES6-0（lucene7-0）"><span class="nav-number">6.3.</span> <span class="nav-text">ES6.0（lucene7.0）</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#数据查询"><span class="nav-number">7.</span> <span class="nav-text">数据查询</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#查询过程（query-then-fetch）"><span class="nav-number">7.1.</span> <span class="nav-text">查询过程（query then fetch）</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#get查询更快"><span class="nav-number">7.1.1.</span> <span class="nav-text">get查询更快</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#主分片与副本分片"><span class="nav-number">7.1.2.</span> <span class="nav-text">主分片与副本分片</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#get查询的实时性"><span class="nav-number">7.2.</span> <span class="nav-text">get查询的实时性</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#查询方式"><span class="nav-number">7.3.</span> <span class="nav-text">查询方式</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#分析器-analyzer"><span class="nav-number">7.3.1.</span> <span class="nav-text">分析器(analyzer)</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#相关性"><span class="nav-number">7.3.2.</span> <span class="nav-text">相关性</span></a></li></ol></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#ADT的应用"><span class="nav-number">8.</span> <span class="nav-text">ADT的应用</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#日志查询工具"><span class="nav-number">8.1.</span> <span class="nav-text">日志查询工具</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#点击数据存储（kv存储场景）"><span class="nav-number">8.2.</span> <span class="nav-text">点击数据存储（kv存储场景）</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#重要的设置"><span class="nav-number">8.2.1.</span> <span class="nav-text">重要的设置</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#结合业务进行系统优化"><span class="nav-number">8.2.2.</span> <span class="nav-text">结合业务进行系统优化</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#结合业务定期关闭索引释放资源"><span class="nav-number">8.2.2.1.</span> <span class="nav-text">结合业务定期关闭索引释放资源</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#结合业务将热点数据单独索引"><span class="nav-number">8.2.2.2.</span> <span class="nav-text">结合业务将热点数据单独索引</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#索引拆分"><span class="nav-number">8.2.2.3.</span> <span class="nav-text">索引拆分</span></a></li></ol></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#其他调优"><span class="nav-number">8.3.</span> <span class="nav-text">其他调优</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#分片的数量"><span class="nav-number">8.3.1.</span> <span class="nav-text">分片的数量</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#JVM设置"><span class="nav-number">8.3.2.</span> <span class="nav-text">JVM设置</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#通过-cat-api获取任务执行情况"><span class="nav-number">8.3.3.</span> <span class="nav-text">通过_cat api获取任务执行情况</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#小技巧"><span class="nav-number">8.3.4.</span> <span class="nav-text">小技巧</span></a></li></ol></li></ol></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2019</span>
+  <span class="with-love">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">penghong.zhan</span>
+
+  
+</div>
+
+
+  <div class="powered-by">由 <a class="theme-link" target="_blank" href="https://hexo.io">Hexo</a> 强力驱动</div>
+
+
+
+  <span class="post-meta-divider">|</span>
+
+
+
+  <div class="theme-info">主题 &mdash; <a class="theme-link" target="_blank" href="https://github.com/iissnan/hexo-theme-next">NexT.Mist</a> v5.1.4</div>
+
+
+
+
+        
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.4"></script>
+
+
+
+  
+  
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.4"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>

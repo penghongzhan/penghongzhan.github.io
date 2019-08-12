@@ -1,0 +1,827 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next mist use-motion" lang="zh-Hans">
+<head><meta name="generator" content="Hexo 3.9.0">
+  <meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform">
+<meta http-equiv="Cache-Control" content="no-siteapp">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css">
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css">
+
+<link href="/css/main.css?v=5.1.4" rel="stylesheet" type="text/css">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=5.1.4">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=5.1.4" color="#222">
+
+
+
+
+
+  <meta name="keywords" content="hbase,">
+
+
+
+
+
+
+
+
+
+
+<meta name="description" content="原文链接  1. 总览 Apache HBase是一个开源的面向列的数据库。它通常被描述为一个稀疏的，一致的，分布式的，多维排序的Map。 HBase模仿Google的“Bigtable：一种分布式结构化数据存储系统”，它可以容纳数十亿行，X百万列的超大型表格。 HBase是一个no-SQL数据库，它与传统的RDBMS有着不同的范式，传统的RDBMS强调SQL以及数据之间的关系，而HBase存储的">
+<meta name="keywords" content="hbase">
+<meta property="og:type" content="article">
+<meta property="og:title" content="翻译：HBase-Architecture-Analysis-Part1-Logical-Architecture">
+<meta property="og:url" content="https://penghongzhan.github.io/2018/04/19/翻译：HBase-Architecture-Analysis-Part1-Logical-Architecture/index.html">
+<meta property="og:site_name" content="HongMo&#39;s Blog">
+<meta property="og:description" content="原文链接  1. 总览 Apache HBase是一个开源的面向列的数据库。它通常被描述为一个稀疏的，一致的，分布式的，多维排序的Map。 HBase模仿Google的“Bigtable：一种分布式结构化数据存储系统”，它可以容纳数十亿行，X百万列的超大型表格。 HBase是一个no-SQL数据库，它与传统的RDBMS有着不同的范式，传统的RDBMS强调SQL以及数据之间的关系，而HBase存储的">
+<meta property="og:locale" content="zh-Hans">
+<meta property="og:image" content="http://i60.tinypic.com/346rmhh.jpg">
+<meta property="og:image" content="http://i60.tinypic.com/2eezt6x.jpg">
+<meta property="og:image" content="http://i62.tinypic.com/ieff35.jpg">
+<meta property="og:image" content="https://upload-images.jianshu.io/upload_images/3151600-5bec08f551f2c8fa.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240">
+<meta property="og:image" content="https://upload-images.jianshu.io/upload_images/3151600-243d746a3cda3975.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240">
+<meta property="og:image" content="http://i62.tinypic.com/16h0rdk.jpg">
+<meta property="og:image" content="http://i60.tinypic.com/c28l.jpg">
+<meta property="og:image" content="http://i60.tinypic.com/30ml56q.jpg">
+<meta property="og:image" content="http://i58.tinypic.com/7286l0.jpg">
+<meta property="og:image" content="http://i59.tinypic.com/2mw8nky.jpg">
+<meta property="og:updated_time" content="2019-08-12T11:07:34.000Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="翻译：HBase-Architecture-Analysis-Part1-Logical-Architecture">
+<meta name="twitter:description" content="原文链接  1. 总览 Apache HBase是一个开源的面向列的数据库。它通常被描述为一个稀疏的，一致的，分布式的，多维排序的Map。 HBase模仿Google的“Bigtable：一种分布式结构化数据存储系统”，它可以容纳数十亿行，X百万列的超大型表格。 HBase是一个no-SQL数据库，它与传统的RDBMS有着不同的范式，传统的RDBMS强调SQL以及数据之间的关系，而HBase存储的">
+<meta name="twitter:image" content="http://i60.tinypic.com/346rmhh.jpg">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Mist',
+    version: '5.1.4',
+    sidebar: {"position":"left","display":"post","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    duoshuo: {
+      userId: '0',
+      author: '博主'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="https://penghongzhan.github.io/2018/04/19/翻译：HBase-Architecture-Analysis-Part1-Logical-Architecture/">
+
+
+
+
+
+  <title>翻译：HBase-Architecture-Analysis-Part1-Logical-Architecture | HongMo's Blog</title>
+  
+
+
+
+
+
+
+
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">HongMo's Blog</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle"></p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br>
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br>
+            
+            标签
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br>
+            
+            分类
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br>
+            
+            归档
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-about">
+          <a href="/about/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-user"></i> <br>
+            
+            关于
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="https://penghongzhan.github.io/2018/04/19/翻译：HBase-Architecture-Analysis-Part1-Logical-Architecture/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="penghong.zhan">
+      <meta itemprop="description" content>
+      <meta itemprop="image" content="https://upload-images.jianshu.io/upload_images/3151600-ee530fd12e23001d.jpg?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="HongMo's Blog">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">翻译：HBase-Architecture-Analysis-Part1-Logical-Architecture</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2018-04-19T22:34:06+08:00">
+                2018-04-19
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category">
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/hbase/" itemprop="url" rel="index">
+                    <span itemprop="name">hbase</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <p><a href="https://www.cyanny.com/2014/03/13/hbase-architecture-analysis-part1-logical-architecture/" target="_blank" rel="noopener">原文链接</a></p>
+<hr>
+<h1 id="1-总览"><a href="#1-总览" class="headerlink" title="1. 总览"></a>1. 总览</h1><hr>
+<p>Apache HBase是一个开源的面向列的数据库。它通常被描述为一个稀疏的，一致的，分布式的，多维排序的Map。 HBase模仿Google的“Bigtable：一种分布式结构化数据存储系统”，它可以容纳数十亿行，X百万列的超大型表格。</p>
+<p>HBase是一个no-SQL数据库，它与传统的RDBMS有着不同的范式，传统的RDBMS强调SQL以及数据之间的关系，而HBase存储的是具有键值风格的结构化和半结构化数据。 HBase中的每一行都由&lt;Rowkey，Column Family，Column Qualifier，Version&gt;定位。</p>
+<p>HBase的数据存储在分布式的HDFS上，具有很高的可靠性，可扩展性和可用性，但缺点是HDFS将数据拆分成块（64MB或128MB），可以很好地处理大块数据，但对于小块数据和低延迟数据访问却不太好。换句话说，HDFS不适合在线实时读取和写入，这也就是HBase存在的意义。HBase的目标是利用分布式数据存储来实现在线实时数据访问。</p>
+<hr>
+<h1 id="2-使用场景"><a href="#2-使用场景" class="headerlink" title="2. 使用场景"></a>2. 使用场景</h1><hr>
+<p><strong>图2.1 Hbase的使用场景：</strong><img src="http://i60.tinypic.com/346rmhh.jpg" alt="Hbase的使用场景"></p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">Data random online, real time access: HBase provides block cache and index on files for real time queries.</span><br></pre></td></tr></table></figure>
+
+<p>数据随机在线，实时访问：HBase为文件提供块缓存和索引以实时查询。</p>
+<hr>
+<h1 id="3-逻辑架构"><a href="#3-逻辑架构" class="headerlink" title="3. 逻辑架构"></a>3. 逻辑架构</h1><hr>
+<p><strong>图3.1 Hbase架构-HighLevel：</strong><img src="http://i60.tinypic.com/2eezt6x.jpg" alt="Hbase架构-HighLevel"></p>
+<h2 id="1-分层架构"><a href="#1-分层架构" class="headerlink" title="1. 分层架构"></a>1. 分层架构</h2><ul>
+<li>客户端层：各种API</li>
+<li>HBase层：两个重要的组件，HMaster 和 RegionServer</li>
+<li>HDFS：分布式文件存储和备份</li>
+</ul>
+<h2 id="2-主从架构"><a href="#2-主从架构" class="headerlink" title="2. 主从架构"></a>2. 主从架构</h2><p>对于分布式应用程序，如何处理数据块是一个关键点。有两种典型风格：集中式和非集中式。集中式模式非常适用于可扩展性和负载平衡器，但主节点上存在单点失效（SPOF）问题和性能瓶颈。非集中模式没有SPOF问题和性能瓶颈，但负载均衡并不容易，并且存在数据一致性问题。</p>
+<p>HBase采用集中模式：主从风格。顺便说一句，Hadoop也是主从。 Hadoop生态系统中的架构风格是一种一致的主从风格。</p>
+<p><strong>图3.2 Master-Slave架构：</strong><img src="http://i62.tinypic.com/ieff35.jpg" alt="Master-Slave架构"></p>
+<ul>
+<li>HMaster：负责监控RegionServer，region分配，元数据操作，RegionServer故障转移等。在分布式集群中，HMaster在HDFS NameNode上运行。</li>
+<li>RegionServer：负责服务和管理region。在分布式集群中，它在HDFS DataNode上运行。</li>
+<li>Zookeeper：Zookeeper将跟踪RegionServer的状态，其中托管ROOT表，可以查询region在server上的分布。自HBase 0.90.x以来，它引入了与Zookeeper更紧密的集成。</li>
+</ul>
+<hr>
+<h1 id="3-2-Hbase的数据模型"><a href="#3-2-Hbase的数据模型" class="headerlink" title="3.2 Hbase的数据模型"></a>3.2 Hbase的数据模型</h1><hr>
+<p>基于列簇的数据模型：</p>
+<ul>
+<li>kv存储：表中的每个单元格都由四个维度键组成，Rowkey，Column Family，Column Qualifier，Version，表不会像RDBMS那样存储空值，非常适合于存储大型稀疏表格。</li>
+<li>按键排序，只对键创建索引：row key设计是HBase Schema Design中唯一最重要的事情。</li>
+<li>每个cell可以存储不同版本的数据：通过时间戳来区别不同的版本</li>
+<li>列的限定符是无模式的，可以在运行时更改</li>
+<li>列限定符和值按照字节码存储。</li>
+</ul>
+<p><strong>表3.1 数据模型的逻辑视图：</strong><img src="https://upload-images.jianshu.io/upload_images/3151600-5bec08f551f2c8fa.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240" alt="数据模型的逻辑视图"></p>
+<p>如表3.1中所示，列按照列簇来组织，每行都有唯一的键row key，某个row key对应的某个列的值可以有多个版本，默认通过时间戳来标识。</p>
+<p><strong>表3.2 数据模型的物理视图：</strong><img src="https://upload-images.jianshu.io/upload_images/3151600-243d746a3cda3975.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240" alt="数据模型的物理视图"></p>
+<p>如果按照表3.1中的结构进行存储，也就是按照行存储，会保存很多null值，但是在HBase中，通过列示存储，通过kv的形式只保存非空的值。实际的物理存储中，一个表通过列簇被拆分，每个列族被保存在RegionServer的region中的HStore中。</p>
+<hr>
+<h1 id="3-3-HBase的分布式模型"><a href="#3-3-HBase的分布式模型" class="headerlink" title="3.3 HBase的分布式模型"></a>3.3 HBase的分布式模型</h1><hr>
+<p>在实际的分布式存储过程中，HBase的Table被拆分存储在集群中。</p>
+<p><strong>图3.3 Table的拆分：</strong><img src="http://i62.tinypic.com/16h0rdk.jpg" alt="Table的拆分"></p>
+<p>表被拆分成大致相同的region，分布到集群的不同的server中。</p>
+<h2 id="3-3-2-Region-server"><a href="#3-3-2-Region-server" class="headerlink" title="3.3.2 Region server"></a>3.3.2 Region server</h2><p><strong>图3.4 Region Server的架构：</strong><img src="http://i60.tinypic.com/c28l.jpg" alt="Region Server的架构"></p>
+<ul>
+<li>一个 Block Cache：用于数据读取的LRU优先级缓存。</li>
+<li>一个 One WAL(Write Ahead Log)：HBase使用Log-Structured-Merge-Tree(LSM tree)来处理数据，创建索引，数据写到MemStore之前会先写入WAL，WAL会被持久化到HDFS上，这里注意一个Region Server只有一个WAL，不会为每个Table单独创建一个WAL。</li>
+<li>多个HRegions：table被拆分成多个HRegions。</li>
+<li>一个HRegion对应多个HStore：一个HRegion中会按照列簇被拆分成多个HStore。</li>
+<li>一个HStore对应一个MemStore：数据的更改首先在MemStore中执行。</li>
+<li>一个HStore对应一个HFile：不能修改的，从MemStore中flush到HDFS上的文件。</li>
+</ul>
+<h2 id="3-3-3-ROOT-and-META-表"><a href="#3-3-3-ROOT-and-META-表" class="headerlink" title="3.3.3 -ROOT- and .META 表"></a>3.3.3 -ROOT- and .META 表</h2><p>数据被拆分成不同的region，查找数据的时候如何定位到正确的region上，-ROOT- and .META两个目录表就是干这件事。</p>
+<ul>
+<li>.META. 表：保存region的位置信息，region中保存了执行范围的row key的数据，.META. 表会被拆分到不同的region server中。</li>
+<li>-ROOT- 表：保存.META. 表的信息，-ROOT- 表只有一个，不会被拆分。</li>
+</ul>
+<p>总体上讲就是：-ROOT-中保存.META.所在的服务器，.META.中保存region所在的服务器。</p>
+<h2 id="3-3-4-region查找"><a href="#3-3-4-region查找" class="headerlink" title="3.3.4 region查找"></a>3.3.4 region查找</h2><p><strong>图3.6 region查找：</strong><img src="http://i60.tinypic.com/30ml56q.jpg" alt="region查找"></p>
+<p>通过zookeeper来实现region的查找，假设需要找row T10006：</p>
+<ul>
+<li>通过zk找到-ROOT-所在的服务器，假设找到RS1</li>
+<li>到RS1上的-ROOT-找到哪个.META.包含T10006，假设找到META1 on RS2</li>
+<li>到RS2的META1中查找T10006位于哪个region，假设找到Region on RS3</li>
+<li>去RS3的region上找到T10006</li>
+<li>如果该region存在与缓存中，优先从缓存中取</li>
+</ul>
+<hr>
+<h1 id="3-5-Log-Structured-Merge-Trees-LSM-trees"><a href="#3-5-Log-Structured-Merge-Trees-LSM-trees" class="headerlink" title="3.5 Log-Structured Merge-Trees(LSM-trees)"></a>3.5 Log-Structured Merge-Trees(LSM-trees)</h1><hr>
+<p><strong>图3.8 B+树：</strong><img src="http://i58.tinypic.com/7286l0.jpg" alt="B+树"></p>
+<p>NO-SQL数据库通常使用LSM树作为数据存储过程体系结构， HBase也不例外。众所周知，RDBMS采用B树来组织其索引，如Fugure 3.8所示。这些B树通常是3级n向平衡树。 B+树的节点是磁盘上的块，所以对于RDBMS的更新，它可能需要5倍的磁盘操作（B+树查找目标行块1次，目标块读取1次，数据更新1次）。B+树非常适合读取数据，但对数据更新效率不高。考虑到大量的分布式数据，到目前为止，B树并不是LSM树的竞争对手。</p>
+<p><strong>图3.9 LSM树的合并：</strong><img src="http://i59.tinypic.com/2mw8nky.jpg" alt="LSM树的合并"></p>
+<p>LSM树可以被看作n级合并树。它使用日志文件和内存存储将随机写入转换为顺序写入。图3.9显示了LSM-tree的数据写入过程。</p>
+<p>首先将数据顺序写入日志文件，然后写入内存中，数据组织为排序树，如B+树。当内存中的存储已满时，内存中的树将被刷新到磁盘上的存储文件。磁盘上的存储文件像B+树一样排列，如图3.9所示的C1树。但是存储文件针对顺序磁盘访问进行了优化。</p>
+<p>LSM-tree的数据更新在内存中运行，不需要磁盘访问，它比B+树更快。当数据读取总是在最近写入的数据集上时，LSM树将减少磁盘搜索并提高性能。当磁盘IO是我们必须考虑的成本时，LSM树比B+树更合适。</p>
+
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/hbase/" rel="tag"># hbase</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2018/04/13/Druid的segment/" rel="next" title="Druid的segment">
+                <i class="fa fa-chevron-left"></i> Druid的segment
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2018/05/02/Flink的事件时间和watermarks（翻译Flink官方文档）/" rel="prev" title="Flink的事件时间和watermarks（翻译Flink官方文档）">
+                Flink的事件时间和watermarks（翻译Flink官方文档） <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+            
+              <img class="site-author-image" itemprop="image" src="https://upload-images.jianshu.io/upload_images/3151600-ee530fd12e23001d.jpg?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240" alt="penghong.zhan">
+            
+              <p class="site-author-name" itemprop="name">penghong.zhan</p>
+              <p class="site-description motion-element" itemprop="description">一个热爱生活的程序猿</p>
+          </div>
+
+          <nav class="site-state motion-element">
+
+            
+              <div class="site-state-item site-state-posts">
+              
+                <a href="/archives/">
+              
+                  <span class="site-state-item-count">25</span>
+                  <span class="site-state-item-name">日志</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-categories">
+                <a href="/categories/index.html">
+                  <span class="site-state-item-count">12</span>
+                  <span class="site-state-item-name">分类</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-tags">
+                <a href="/tags/index.html">
+                  <span class="site-state-item-count">30</span>
+                  <span class="site-state-item-name">标签</span>
+                </a>
+              </div>
+            
+
+          </nav>
+
+          
+
+          
+
+          
+          
+
+          
+          
+
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#1-总览"><span class="nav-number">1.</span> <span class="nav-text">1. 总览</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#2-使用场景"><span class="nav-number">2.</span> <span class="nav-text">2. 使用场景</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#3-逻辑架构"><span class="nav-number">3.</span> <span class="nav-text">3. 逻辑架构</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#1-分层架构"><span class="nav-number">3.1.</span> <span class="nav-text">1. 分层架构</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#2-主从架构"><span class="nav-number">3.2.</span> <span class="nav-text">2. 主从架构</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#3-2-Hbase的数据模型"><span class="nav-number">4.</span> <span class="nav-text">3.2 Hbase的数据模型</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#3-3-HBase的分布式模型"><span class="nav-number">5.</span> <span class="nav-text">3.3 HBase的分布式模型</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#3-3-2-Region-server"><span class="nav-number">5.1.</span> <span class="nav-text">3.3.2 Region server</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#3-3-3-ROOT-and-META-表"><span class="nav-number">5.2.</span> <span class="nav-text">3.3.3 -ROOT- and .META 表</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#3-3-4-region查找"><span class="nav-number">5.3.</span> <span class="nav-text">3.3.4 region查找</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#3-5-Log-Structured-Merge-Trees-LSM-trees"><span class="nav-number">6.</span> <span class="nav-text">3.5 Log-Structured Merge-Trees(LSM-trees)</span></a></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2019</span>
+  <span class="with-love">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">penghong.zhan</span>
+
+  
+</div>
+
+
+  <div class="powered-by">由 <a class="theme-link" target="_blank" href="https://hexo.io">Hexo</a> 强力驱动</div>
+
+
+
+  <span class="post-meta-divider">|</span>
+
+
+
+  <div class="theme-info">主题 &mdash; <a class="theme-link" target="_blank" href="https://github.com/iissnan/hexo-theme-next">NexT.Mist</a> v5.1.4</div>
+
+
+
+
+        
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.4"></script>
+
+
+
+  
+  
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.4"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>
