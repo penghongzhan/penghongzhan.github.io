@@ -1,0 +1,6 @@
+# 创建新文章
+hexo new "blog name"
+# 本地运行
+hexo g & hexo s
+# 发布
+hexo g & hexo s
