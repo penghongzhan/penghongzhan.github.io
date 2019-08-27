@@ -29,7 +29,7 @@ categories:
 
 # 计算sql
 
-```
+```sql
 SELECT s.spu_code AS spu_code, s.wk AS wk, t.wk AS k_wk
 FROM (
 	SELECT spu_code, wk
