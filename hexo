@@ -3,4 +3,4 @@ hexo new "blog name"
 # 本地运行
 hexo g & hexo s
 # 发布
-hexo g & hexo s
+hexo clean && hexo g && hexo d
