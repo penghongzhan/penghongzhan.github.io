@@ -87,27 +87,27 @@
 <meta property="og:site_name" content="HongMo&#39;s Blog">
 <meta property="og:description" content="目录 [toc]  1 Hbase的应用场景 HBase是一个分布式的、面向列的开源数据库，该技术来源于 Fay Chang 所撰写的Google论文“Bigtable：一个结构化数据的分布式存储系统”。就像Bigtable利用了Google文件系统（File System）所提供的分布式数据存储一样，HBase在Hadoop之上提供了类似于Bigtable的能力。 图：HBase的使用场景 1.">
 <meta property="og:locale" content="zh-Hans">
-<meta property="og:image" content="https://upload-images.jianshu.io/upload_images/3151600-0e21a154005cb221.jpg?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240">
-<meta property="og:image" content="https://upload-images.jianshu.io/upload_images/3151600-dcdeee461be28e88.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240">
-<meta property="og:image" content="https://upload-images.jianshu.io/upload_images/3151600-3ebe61d7f9d82f28.jpg?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240">
-<meta property="og:image" content="https://upload-images.jianshu.io/upload_images/3151600-83d206f69f1705d6.jpg?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240">
-<meta property="og:image" content="https://upload-images.jianshu.io/upload_images/3151600-6c3f6a2385ca9ac3.jpg?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240">
-<meta property="og:image" content="https://upload-images.jianshu.io/upload_images/3151600-8802e6a1e2983dab.jpg?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240">
-<meta property="og:image" content="https://upload-images.jianshu.io/upload_images/3151600-9568289e924e9a4b.jpg?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240">
-<meta property="og:image" content="https://upload-images.jianshu.io/upload_images/3151600-c5be11d52a138dcd.jpg?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240">
-<meta property="og:image" content="https://upload-images.jianshu.io/upload_images/3151600-e4662832a50d56fb.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240">
-<meta property="og:image" content="http://upload-images.jianshu.io/upload_images/3151600-dc65568890288d16.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240">
-<meta property="og:image" content="http://upload-images.jianshu.io/upload_images/3151600-10144b5d8fb2c0fe.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240">
-<meta property="og:image" content="https://upload-images.jianshu.io/upload_images/3151600-ef223206721e523e.jpg?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240">
-<meta property="og:image" content="https://upload-images.jianshu.io/upload_images/3151600-b6863426090ee72e.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240">
-<meta property="og:image" content="https://upload-images.jianshu.io/upload_images/3151600-c149d69039c638e2.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240">
-<meta property="og:image" content="https://upload-images.jianshu.io/upload_images/3151600-d693d62f7a4b815b.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240">
-<meta property="og:image" content="https://upload-images.jianshu.io/upload_images/3151600-2d07791fb2ec64b5.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240">
-<meta property="og:updated_time" content="2019-08-12T11:07:34.000Z">
+<meta property="og:image" content="https://penghongzhan.github.io/2019/04/03/Hbase的原理以及在ADT的应用/HBase%E7%9A%84%E4%BD%BF%E7%94%A8%E5%9C%BA%E6%99%AF.jpg">
+<meta property="og:image" content="https://penghongzhan.github.io/2019/04/03/Hbase的原理以及在ADT的应用/Hbase%E7%9A%84%E5%9F%BA%E6%9C%AC%E6%9E%B6%E6%9E%84.png">
+<meta property="og:image" content="https://penghongzhan.github.io/2019/04/03/Hbase的原理以及在ADT的应用/%E6%95%B0%E6%8D%AE%E7%9A%84%E5%86%99%E5%85%A5%E6%A6%82%E8%A7%88.jpg">
+<meta property="og:image" content="https://penghongzhan.github.io/2019/04/03/Hbase的原理以及在ADT的应用/%E6%95%B0%E6%8D%AE%E7%9A%84%E5%86%99%E5%85%A5%E8%BF%87%E7%A8%8B.jpg">
+<meta property="og:image" content="https://penghongzhan.github.io/2019/04/03/Hbase的原理以及在ADT的应用/HBase%E7%9A%84%E5%AD%98%E5%82%A8%E6%A6%82%E5%BF%B5%E6%A8%A1%E5%9E%8B.jpg">
+<meta property="og:image" content="https://penghongzhan.github.io/2019/04/03/Hbase的原理以及在ADT的应用/HBase%E7%9A%84%E5%AD%98%E5%82%A8%E7%BB%93%E6%9E%84.jpg">
+<meta property="og:image" content="https://penghongzhan.github.io/2019/04/03/Hbase的原理以及在ADT的应用/mysql%E7%9A%84B+%E6%A0%91.jpg">
+<meta property="og:image" content="https://penghongzhan.github.io/2019/04/03/Hbase的原理以及在ADT的应用/LSM%E6%A0%91%E7%9A%84%E5%90%88%E5%B9%B6.jpg">
+<meta property="og:image" content="https://penghongzhan.github.io/2019/04/03/Hbase的原理以及在ADT的应用/Hfile%E7%9A%84%E5%AD%98%E5%82%A8%E7%BB%93%E6%9E%84.png">
+<meta property="og:image" content="https://penghongzhan.github.io/2019/04/03/Hbase的原理以及在ADT的应用/%E6%97%A0%E5%8E%8B%E7%BC%A9%E7%9A%84KV%E5%AD%98%E5%82%A8.png">
+<meta property="og:image" content="https://penghongzhan.github.io/2019/04/03/Hbase的原理以及在ADT的应用/%E5%89%8D%E7%BC%80%E5%8E%8B%E7%BC%A9.png">
+<meta property="og:image" content="https://penghongzhan.github.io/2019/04/03/Hbase的原理以及在ADT的应用/region%E7%9A%84%E6%9F%A5%E6%89%BE%E8%BF%87%E7%A8%8B.jpg">
+<meta property="og:image" content="https://penghongzhan.github.io/2019/04/03/Hbase的原理以及在ADT的应用/HFile%E6%9F%A5%E8%AF%A2.png">
+<meta property="og:image" content="https://penghongzhan.github.io/2019/04/03/Hbase的原理以及在ADT的应用/rowkey%E8%AE%BE%E8%AE%A1%E6%96%B9%E5%BC%8F-%E5%8A%A0%E7%9B%90.png">
+<meta property="og:image" content="https://penghongzhan.github.io/2019/04/03/Hbase的原理以及在ADT的应用/rowkey%E8%AE%BE%E8%AE%A1%E6%96%B9%E5%BC%8F-%E5%93%88%E5%B8%8C.png">
+<meta property="og:image" content="https://penghongzhan.github.io/2019/04/03/Hbase的原理以及在ADT的应用/rowkey%E8%AE%BE%E8%AE%A1%E6%96%B9%E5%BC%8F-%E5%8F%8D%E8%BD%AC.png">
+<meta property="og:updated_time" content="2019-09-03T06:51:21.000Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="Hbase的原理以及在ADT的应用">
 <meta name="twitter:description" content="目录 [toc]  1 Hbase的应用场景 HBase是一个分布式的、面向列的开源数据库，该技术来源于 Fay Chang 所撰写的Google论文“Bigtable：一个结构化数据的分布式存储系统”。就像Bigtable利用了Google文件系统（File System）所提供的分布式数据存储一样，HBase在Hadoop之上提供了类似于Bigtable的能力。 图：HBase的使用场景 1.">
-<meta name="twitter:image" content="https://upload-images.jianshu.io/upload_images/3151600-0e21a154005cb221.jpg?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240">
+<meta name="twitter:image" content="https://penghongzhan.github.io/2019/04/03/Hbase的原理以及在ADT的应用/HBase%E7%9A%84%E4%BD%BF%E7%94%A8%E5%9C%BA%E6%99%AF.jpg">
 
 
 
@@ -374,7 +374,7 @@
 <hr>
 <h1 id="1-Hbase的应用场景"><a href="#1-Hbase的应用场景" class="headerlink" title="1 Hbase的应用场景"></a>1 Hbase的应用场景</h1><hr>
 <p>HBase是一个分布式的、面向列的开源数据库，该技术来源于 Fay Chang 所撰写的Google论文“Bigtable：一个结构化数据的分布式存储系统”。就像Bigtable利用了Google文件系统（File System）所提供的分布式数据存储一样，HBase在Hadoop之上提供了类似于Bigtable的能力。</p>
-<p><strong>图：HBase的使用场景</strong><img src="https://upload-images.jianshu.io/upload_images/3151600-0e21a154005cb221.jpg?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240" alt="HBase的使用场景.jpg"></p>
+<p><strong>图：HBase的使用场景</strong><img src="HBase%E7%9A%84%E4%BD%BF%E7%94%A8%E5%9C%BA%E6%99%AF.jpg" alt="HBase的使用场景.jpg"></p>
 <h2 id="1-1-对比Mysql"><a href="#1-1-对比Mysql" class="headerlink" title="1.1 对比Mysql"></a>1.1 对比Mysql</h2><p>KV存储，通过rowkey进行查询，类似于mysql的唯一主键，这种简单的查询场景下，可以理解为分布式的mysql，由于hbase的数据预排序以及其内部的索引结构，决定了Hbase对于rowkey的随机查询和范围查询，速度都很快。但是没有mysql那么强大的功能，例如聚合，各种联合索引，事务等。</p>
 <p>hbase是为大数据而生的，支持千万并发，PB存储，它内部采用列式存储，决定他适合存储以下类型的数据：</p>
 <ul>
@@ -383,7 +383,7 @@
 </ul>
 <hr>
 <h1 id="2-架构"><a href="#2-架构" class="headerlink" title="2 架构"></a>2 架构</h1><hr>
-<p><strong>图：Hbase的基本架构</strong><img src="https://upload-images.jianshu.io/upload_images/3151600-dcdeee461be28e88.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240" alt="hbase基本架构.png"></p>
+<p><strong>图：Hbase的基本架构</strong><img src="Hbase%E7%9A%84%E5%9F%BA%E6%9C%AC%E6%9E%B6%E6%9E%84.png" alt="hbase基本架构.png"></p>
 <ul>
 <li>master：<ul>
 <li>表的操作，例如修改列族配置等</li>
@@ -401,17 +401,17 @@
 </ul>
 <hr>
 <h1 id="3-数据的写入"><a href="#3-数据的写入" class="headerlink" title="3 数据的写入"></a>3 数据的写入</h1><hr>
-<h2 id="3-1-数据的写入过程"><a href="#3-1-数据的写入过程" class="headerlink" title="3.1 数据的写入过程"></a>3.1 数据的写入过程</h2><p><strong>图：数据的写入概览</strong><img src="https://upload-images.jianshu.io/upload_images/3151600-3ebe61d7f9d82f28.jpg?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240" alt="数据的写入概览.jpg"></p>
+<h2 id="3-1-数据的写入过程"><a href="#3-1-数据的写入过程" class="headerlink" title="3.1 数据的写入过程"></a>3.1 数据的写入过程</h2><p><strong>图：数据的写入概览</strong><img src="%E6%95%B0%E6%8D%AE%E7%9A%84%E5%86%99%E5%85%A5%E6%A6%82%E8%A7%88.jpg" alt="数据的写入概览.jpg"></p>
 <ul>
 <li>WAL：write ahead log，数据首先写入log，保证数据不丢失，该log也是保存在hdfs上</li>
 <li>MemStore：数据进入内存，按照rowkey进行排序</li>
 <li>HFile：MemStore中的数据到达一定量或者一定时间，创建HFile落盘</li>
 </ul>
-<p><strong>图：数据的写入过程</strong><img src="https://upload-images.jianshu.io/upload_images/3151600-83d206f69f1705d6.jpg?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240" alt="数据的写入过程.jpg"></p>
+<p><strong>图：数据的写入过程</strong><img src="%E6%95%B0%E6%8D%AE%E7%9A%84%E5%86%99%E5%85%A5%E8%BF%87%E7%A8%8B.jpg" alt="数据的写入过程.jpg"></p>
 <h2 id="3-2-数据格式"><a href="#3-2-数据格式" class="headerlink" title="3.2 数据格式"></a>3.2 数据格式</h2><p>HBase存储的所有内容都是byte数组，所以只要能转化成byte数组的数据都可以存储在HBase中。</p>
 <hr>
 <h1 id="4-存储模型"><a href="#4-存储模型" class="headerlink" title="4 存储模型"></a>4 存储模型</h1><hr>
-<p><strong>图：HBase的存储概念模型</strong><img src="https://upload-images.jianshu.io/upload_images/3151600-6c3f6a2385ca9ac3.jpg?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240" alt="HBase的存储概念模型.jpg"></p>
+<p><strong>图：HBase的存储概念模型</strong><img src="HBase%E7%9A%84%E5%AD%98%E5%82%A8%E6%A6%82%E5%BF%B5%E6%A8%A1%E5%9E%8B.jpg" alt="HBase的存储概念模型.jpg"></p>
 <ul>
 <li>表</li>
 <li>行：每一行都有唯一主键rowkey</li>
@@ -421,7 +421,7 @@
 </ul>
 <hr>
 <h1 id="5-存储实现"><a href="#5-存储实现" class="headerlink" title="5 存储实现"></a>5 存储实现</h1><hr>
-<p><strong>图：HBase的存储结构</strong><img src="https://upload-images.jianshu.io/upload_images/3151600-8802e6a1e2983dab.jpg?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240" alt="数据存储结构.jpg"></p>
+<p><strong>图：HBase的存储结构</strong><img src="HBase%E7%9A%84%E5%AD%98%E5%82%A8%E7%BB%93%E6%9E%84.jpg" alt="数据存储结构.jpg"></p>
 <h2 id="5-1-region"><a href="#5-1-region" class="headerlink" title="5.1 region"></a>5.1 region</h2><p>Table的数据以region的形式分布在所有的服务器上。region的存在是为了解决横向扩展问题。</p>
 <h3 id="5-1-1-region的拆分"><a href="#5-1-1-region的拆分" class="headerlink" title="5.1.1 region的拆分"></a>5.1.1 region的拆分</h3><p>通过将数据均衡的分布到所有机器上，可以充分利用各个服务器的能力，提高查询速度。随着数据的不断写入，region会不断增大，region太大会影响查询性能，所以hbase会自动对region进行拆分。</p>
 <p>region的拆分策略：</p>
@@ -440,9 +440,9 @@
 <h2 id="5-2-store"><a href="#5-2-store" class="headerlink" title="5.2 store"></a>5.2 store</h2><p>一个region内部有多个store，store是列族级别的概念，一个表有三个列族，那么在一台服务器上的region中会有三个store。</p>
 <h3 id="5-2-1-MemStore"><a href="#5-2-1-MemStore" class="headerlink" title="5.2.1 MemStore"></a>5.2.1 MemStore</h3><p>每个列族/store对应一个独立的MemStore，也就是一块内存空间，数据写入之后，列族的内容进入对应的MemStore，会按照rowkey进行排序，并创建类似于Btree的索引——LMS-Tree。</p>
 <h4 id="LMS-Tree"><a href="#LMS-Tree" class="headerlink" title="LMS-Tree"></a>LMS-Tree</h4><p>LMS-Tree（Log-Structured Merge Tree）理解为merge tree即可。</p>
-<p><strong>图：mysql的B+树：</strong><img src="https://upload-images.jianshu.io/upload_images/3151600-9568289e924e9a4b.jpg?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240" alt="mysql的B+树"></p>
+<p><strong>图：mysql的B+树：</strong><img src="mysql%E7%9A%84B+%E6%A0%91.jpg" alt="mysql的B+树"></p>
 <p>B+tree能有效的提高mysql的查询性能，但是对于高并发大数据量的写入场景，面对大量的随机写，性能无法满足要求。因此产生了LSM-Tree，LSM树采用的索引结构与B+Tree相同，而且通过批量存储技术规避磁盘随机写入问题，因为数据过来之后，首先会在内存中进行排序，构建索引，当到达一定的量的时候，flush到磁盘中，随着磁盘中的小文件的增多，后台进行会自动进行合并，过多的小文件合并为一个大文件，能够有效加快查询速度。</p>
-<p><strong>图：LSM树的合并：</strong><img src="https://upload-images.jianshu.io/upload_images/3151600-c5be11d52a138dcd.jpg?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240" alt="LSM树的合并"></p>
+<p><strong>图：LSM树的合并：</strong><img src="LSM%E6%A0%91%E7%9A%84%E5%90%88%E5%B9%B6.jpg" alt="LSM树的合并"></p>
 <h4 id="flush时机"><a href="#flush时机" class="headerlink" title="flush时机"></a>flush时机</h4><ul>
 <li>大小达到刷写阀值</li>
 <li>整个RegionServer的memstore总和达到阀值</li>
@@ -451,7 +451,7 @@
 <li>手动触发flush</li>
 </ul>
 <h3 id="5-2-2-HFile"><a href="#5-2-2-HFile" class="headerlink" title="5.2.2 HFile"></a>5.2.2 HFile</h3><p>Hbase的数据文件，Hbase的所有数据都保存在HFile中，查询的时候也是从HFile中进行查询。</p>
-<h4 id="HFile的结构"><a href="#HFile的结构" class="headerlink" title="HFile的结构"></a>HFile的结构</h4><p><strong>图：Hfile的存储结构</strong><img src="https://upload-images.jianshu.io/upload_images/3151600-e4662832a50d56fb.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240" alt="Hfile的存储结构.png"></p>
+<h4 id="HFile的结构"><a href="#HFile的结构" class="headerlink" title="HFile的结构"></a>HFile的结构</h4><p><strong>图：Hfile的存储结构</strong><img src="Hfile%E7%9A%84%E5%AD%98%E5%82%A8%E7%BB%93%E6%9E%84.png" alt="Hfile的存储结构.png"></p>
 <ul>
 <li>scan block：scan查询的时候需要读取的部分<ul>
 <li>data block：数据KV存储</li>
@@ -473,10 +473,10 @@
 </li>
 <li>trailer：记录上面各个部分的偏移量，HFile读取的时候首先读取该部分，然后获取其他部分所在的位置</li>
 </ul>
-<h4 id="data-block的物理结构"><a href="#data-block的物理结构" class="headerlink" title="data block的物理结构"></a>data block的物理结构</h4><p><strong>图：无压缩的KV存储</strong><img src="http://upload-images.jianshu.io/upload_images/3151600-dc65568890288d16.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240" alt="无压缩的KV存储"></p>
+<h4 id="data-block的物理结构"><a href="#data-block的物理结构" class="headerlink" title="data block的物理结构"></a>data block的物理结构</h4><p><strong>图：无压缩的KV存储</strong><img src="%E6%97%A0%E5%8E%8B%E7%BC%A9%E7%9A%84KV%E5%AD%98%E5%82%A8.png" alt="无压缩的KV存储"></p>
 <p>由于key经过排序并且通常非常相似，因此可以设计比通用压缩算法能够做得更好的压缩方式。</p>
 <p><strong>前缀压缩</strong></p>
-<p><strong>图：前缀压缩</strong><img src="http://upload-images.jianshu.io/upload_images/3151600-10144b5d8fb2c0fe.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240" alt="前缀压缩"></p>
+<p><strong>图：前缀压缩</strong><img src="%E5%89%8D%E7%BC%80%E5%8E%8B%E7%BC%A9.png" alt="前缀压缩"></p>
 <p>前缀编码的主要思想是只存储一次公共前缀，因为行被排序，所以开始部分通常是相同的。</p>
 <h4 id="Hfile的合并"><a href="#Hfile的合并" class="headerlink" title="Hfile的合并"></a>Hfile的合并</h4><p>每次memstore的刷写都会产生一个新的HFile，而HFile毕竟是存储在硬盘上的东西，凡是读取存储在硬盘上的东西都涉及一个操作：寻址，如果是传统硬盘那就是磁头的移动寻址，这是一个很慢的动作。当HFile一多，你每次读取数据的时候寻址的动作就多了，效率就低了。所以为了防止寻址的动作过多，我们要适当地减少碎片文件，所以需要继续合并操作。</p>
 <p>合并分类：</p>
@@ -505,7 +505,7 @@
 </li>
 <li>[2] region -&gt; memstore + hfile：通过hbase的元数据表，找到需要查询的rowkey所在的region server，从而定位到memstore和hfile</li>
 </ul>
-<h2 id="6-2-region的查找过程"><a href="#6-2-region的查找过程" class="headerlink" title="6.2 region的查找过程"></a>6.2 region的查找过程</h2><p><strong>图：region的查找过程</strong><img src="https://upload-images.jianshu.io/upload_images/3151600-ef223206721e523e.jpg?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240" alt="region的查找过程.jpg"></p>
+<h2 id="6-2-region的查找过程"><a href="#6-2-region的查找过程" class="headerlink" title="6.2 region的查找过程"></a>6.2 region的查找过程</h2><p><strong>图：region的查找过程</strong><img src="region%E7%9A%84%E6%9F%A5%E6%89%BE%E8%BF%87%E7%A8%8B.jpg" alt="region的查找过程.jpg"></p>
 <p>一个表有多个region，分布在不同机器上，需要一定的机制来确定需要查找的region</p>
 <ul>
 <li>通过zk找到meta所在的sever：meta表的位置保存在zk中，meta中保存了每个region的rowkey范围，以及region所在的位置</li>
@@ -518,7 +518,7 @@
 <li>数据索引btree：最多三层节点</li>
 <li>布隆：用于快速的排除不存在的数据</li>
 </ul>
-<p><strong>图：HFile查询：</strong><img src="https://upload-images.jianshu.io/upload_images/3151600-b6863426090ee72e.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240" alt="HFile查询"></p>
+<p><strong>图：HFile查询：</strong><img src="HFile%E6%9F%A5%E8%AF%A2.png" alt="HFile查询"></p>
 <p>root index在HFile解析的时候直接被加载到内存中。查询的时候：</p>
 <ul>
 <li>在内存中的root index中通过二分查找快速定位到某个row key对应的下一级节点intermediate index所在的block</li>
@@ -553,19 +553,19 @@
 </ol>
 </li>
 </ul>
-<h2 id="7-1-rowkey设计方式-加盐"><a href="#7-1-rowkey设计方式-加盐" class="headerlink" title="7.1 rowkey设计方式-加盐"></a>7.1 rowkey设计方式-加盐</h2><p><strong>图：rowkey设计方式-加盐</strong><img src="https://upload-images.jianshu.io/upload_images/3151600-c149d69039c638e2.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240" alt="rowkey设计-加盐.png"></p>
+<h2 id="7-1-rowkey设计方式-加盐"><a href="#7-1-rowkey设计方式-加盐" class="headerlink" title="7.1 rowkey设计方式-加盐"></a>7.1 rowkey设计方式-加盐</h2><p><strong>图：rowkey设计方式-加盐</strong><img src="rowkey%E8%AE%BE%E8%AE%A1%E6%96%B9%E5%BC%8F-%E5%8A%A0%E7%9B%90.png" alt="rowkey设计-加盐.png"></p>
 <p>使用固定的随机前缀：</p>
 <ul>
 <li>优点：数据均衡</li>
 <li>缺点：因为前缀是随机的，所以无法快速get；scan的速度还可以</li>
 </ul>
-<h2 id="7-2-rowkey设计方式-hash"><a href="#7-2-rowkey设计方式-hash" class="headerlink" title="7.2 rowkey设计方式-hash"></a>7.2 rowkey设计方式-hash</h2><p><strong>图：rowkey设计方式-哈希</strong><img src="https://upload-images.jianshu.io/upload_images/3151600-d693d62f7a4b815b.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240" alt="rowkey设计-hash.png"></p>
+<h2 id="7-2-rowkey设计方式-hash"><a href="#7-2-rowkey设计方式-hash" class="headerlink" title="7.2 rowkey设计方式-hash"></a>7.2 rowkey设计方式-hash</h2><p><strong>图：rowkey设计方式-哈希</strong><img src="rowkey%E8%AE%BE%E8%AE%A1%E6%96%B9%E5%BC%8F-%E5%93%88%E5%B8%8C.png" alt="rowkey设计-hash.png"></p>
 <p>rowkey hash之后取md5的前五位：</p>
 <ul>
 <li>优点：打散数据，前缀在查询的时候能通过rowkey得到，可以很快get</li>
 <li>缺点：相同前缀的rowkey被打散，scan变慢</li>
 </ul>
-<h2 id="7-3-rowkey设计方式-反转"><a href="#7-3-rowkey设计方式-反转" class="headerlink" title="7.3 rowkey设计方式-反转"></a>7.3 rowkey设计方式-反转</h2><p><strong>图：rowkey设计方式-反转</strong><img src="https://upload-images.jianshu.io/upload_images/3151600-2d07791fb2ec64b5.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240" alt="rowkey设计-翻转.png"></p>
+<h2 id="7-3-rowkey设计方式-反转"><a href="#7-3-rowkey设计方式-反转" class="headerlink" title="7.3 rowkey设计方式-反转"></a>7.3 rowkey设计方式-反转</h2><p><strong>图：rowkey设计方式-反转</strong><img src="rowkey%E8%AE%BE%E8%AE%A1%E6%96%B9%E5%BC%8F-%E5%8F%8D%E8%BD%AC.png" alt="rowkey设计-翻转.png"></p>
 <p>反转一段固定长度的rowkey，或者整个反转。上图中三个网址属于相同域名下的，但是如果不反转，会完全分散到不同的region中，不利于查询。</p>
 <hr>
 <h1 id="ADT应用场景"><a href="#ADT应用场景" class="headerlink" title="ADT应用场景"></a>ADT应用场景</h1><hr>
