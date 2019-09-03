@@ -19,7 +19,7 @@ categories:
 
 HBase是一个分布式的、面向列的开源数据库，该技术来源于 Fay Chang 所撰写的Google论文“Bigtable：一个结构化数据的分布式存储系统”。就像Bigtable利用了Google文件系统（File System）所提供的分布式数据存储一样，HBase在Hadoop之上提供了类似于Bigtable的能力。
 
-**图：HBase的使用场景**![HBase的使用场景.jpg](https://upload-images.jianshu.io/upload_images/3151600-0e21a154005cb221.jpg?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+**图：HBase的使用场景**![HBase的使用场景.jpg](HBase的使用场景.jpg)
 
 ## 1.1 对比Mysql
 
@@ -34,7 +34,7 @@ hbase是为大数据而生的，支持千万并发，PB存储，它内部采用�
 # 2 架构
 ---
 
-**图：Hbase的基本架构**![hbase基本架构.png](https://upload-images.jianshu.io/upload_images/3151600-dcdeee461be28e88.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+**图：Hbase的基本架构**![hbase基本架构.png](Hbase的基本架构.png)
 
 - master：
    - 表的操作，例如修改列族配置等
@@ -52,13 +52,13 @@ hbase是为大数据而生的，支持千万并发，PB存储，它内部采用�
 
 ## 3.1 数据的写入过程
 
-**图：数据的写入概览**![数据的写入概览.jpg](https://upload-images.jianshu.io/upload_images/3151600-3ebe61d7f9d82f28.jpg?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+**图：数据的写入概览**![数据的写入概览.jpg](数据的写入概览.jpg)
 
 - WAL：write ahead log，数据首先写入log，保证数据不丢失，该log也是保存在hdfs上
 - MemStore：数据进入内存，按照rowkey进行排序
 - HFile：MemStore中的数据到达一定量或者一定时间，创建HFile落盘
 
-**图：数据的写入过程**![数据的写入过程.jpg](https://upload-images.jianshu.io/upload_images/3151600-83d206f69f1705d6.jpg?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+**图：数据的写入过程**![数据的写入过程.jpg](数据的写入过程.jpg)
 
 ## 3.2 数据格式
 
@@ -68,7 +68,7 @@ HBase存储的所有内容都是byte数组，所以只要能转化成byte数组�
 # 4 存储模型
 ---
 
-**图：HBase的存储概念模型**![HBase的存储概念模型.jpg](https://upload-images.jianshu.io/upload_images/3151600-6c3f6a2385ca9ac3.jpg?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+**图：HBase的存储概念模型**![HBase的存储概念模型.jpg](HBase的存储概念模型.jpg)
 
 
 - 表
@@ -81,7 +81,7 @@ HBase存储的所有内容都是byte数组，所以只要能转化成byte数组�
 # 5 存储实现
 ---
 
-**图：HBase的存储结构**![数据存储结构.jpg](https://upload-images.jianshu.io/upload_images/3151600-8802e6a1e2983dab.jpg?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+**图：HBase的存储结构**![数据存储结构.jpg](HBase的存储结构.jpg)
 
 ## 5.1 region
 
@@ -120,12 +120,12 @@ region的合并英文为`merge`，不要跟后续的HFile的合并混淆，HFile
 
 LMS-Tree（Log-Structured Merge Tree）理解为merge tree即可。
 
-**图：mysql的B+树：**![mysql的B+树](https://upload-images.jianshu.io/upload_images/3151600-9568289e924e9a4b.jpg?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+**图：mysql的B+树：**![mysql的B+树](mysql的B+树.jpg)
 
 
 B+tree能有效的提高mysql的查询性能，但是对于高并发大数据量的写入场景，面对大量的随机写，性能无法满足要求。因此产生了LSM-Tree，LSM树采用的索引结构与B+Tree相同，而且通过批量存储技术规避磁盘随机写入问题，因为数据过来之后，首先会在内存中进行排序，构建索引，当到达一定的量的时候，flush到磁盘中，随着磁盘中的小文件的增多，后台进行会自动进行合并，过多的小文件合并为一个大文件，能够有效加快查询速度。
 
-**图：LSM树的合并：**![LSM树的合并](https://upload-images.jianshu.io/upload_images/3151600-c5be11d52a138dcd.jpg?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+**图：LSM树的合并：**![LSM树的合并](LSM树的合并.jpg)
 
 
 #### flush时机
@@ -142,7 +142,7 @@ Hbase的数据文件，Hbase的所有数据都保存在HFile中，查询的时�
 
 #### HFile的结构
 
-**图：Hfile的存储结构**![Hfile的存储结构.png](https://upload-images.jianshu.io/upload_images/3151600-e4662832a50d56fb.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+**图：Hfile的存储结构**![Hfile的存储结构.png](Hfile的存储结构.png)
 
 
 - scan block：scan查询的时候需要读取的部分
@@ -161,13 +161,13 @@ Hbase的数据文件，Hbase的所有数据都保存在HFile中，查询的时�
 
 #### data block的物理结构
 
-**图：无压缩的KV存储**![无压缩的KV存储](http://upload-images.jianshu.io/upload_images/3151600-dc65568890288d16.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+**图：无压缩的KV存储**![无压缩的KV存储](无压缩的KV存储.png)
 
 由于key经过排序并且通常非常相似，因此可以设计比通用压缩算法能够做得更好的压缩方式。
 
 **前缀压缩**
 
-**图：前缀压缩**![前缀压缩](http://upload-images.jianshu.io/upload_images/3151600-10144b5d8fb2c0fe.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+**图：前缀压缩**![前缀压缩](前缀压缩.png)
 
 前缀编码的主要思想是只存储一次公共前缀，因为行被排序，所以开始部分通常是相同的。
 
@@ -202,7 +202,7 @@ Hbase的数据文件，Hbase的所有数据都保存在HFile中，查询的时�
 
 ## 6.2 region的查找过程
 
-**图：region的查找过程**![region的查找过程.jpg](https://upload-images.jianshu.io/upload_images/3151600-ef223206721e523e.jpg?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+**图：region的查找过程**![region的查找过程.jpg](region的查找过程.jpg)
 
 一个表有多个region，分布在不同机器上，需要一定的机制来确定需要查找的region
 
@@ -219,7 +219,7 @@ hfile中有两种数据结构，能够加快查询
 - 数据索引btree：最多三层节点
 - 布隆：用于快速的排除不存在的数据
 
-**图：HFile查询：**![HFile查询](https://upload-images.jianshu.io/upload_images/3151600-b6863426090ee72e.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+**图：HFile查询：**![HFile查询](HFile查询.png)
 
 root index在HFile解析的时候直接被加载到内存中。查询的时候：
 
@@ -252,7 +252,7 @@ root index在HFile解析的时候直接被加载到内存中。查询的时候�
 
 ## 7.1 rowkey设计方式-加盐
 
-**图：rowkey设计方式-加盐**![rowkey设计-加盐.png](https://upload-images.jianshu.io/upload_images/3151600-c149d69039c638e2.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+**图：rowkey设计方式-加盐**![rowkey设计-加盐.png](rowkey设计方式-加盐.png)
 
 
 使用固定的随机前缀：
@@ -262,7 +262,7 @@ root index在HFile解析的时候直接被加载到内存中。查询的时候�
 
 ## 7.2 rowkey设计方式-hash
 
-**图：rowkey设计方式-哈希**![rowkey设计-hash.png](https://upload-images.jianshu.io/upload_images/3151600-d693d62f7a4b815b.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+**图：rowkey设计方式-哈希**![rowkey设计-hash.png](rowkey设计方式-哈希.png)
 
 rowkey hash之后取md5的前五位：
 
@@ -271,7 +271,7 @@ rowkey hash之后取md5的前五位：
 
 ## 7.3 rowkey设计方式-反转
 
-**图：rowkey设计方式-反转**![rowkey设计-翻转.png](https://upload-images.jianshu.io/upload_images/3151600-2d07791fb2ec64b5.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+**图：rowkey设计方式-反转**![rowkey设计-翻转.png](rowkey设计方式-反转.png)
 
 
 反转一段固定长度的rowkey，或者整个反转。上图中三个网址属于相同域名下的，但是如果不反转，会完全分散到不同的region中，不利于查询。
