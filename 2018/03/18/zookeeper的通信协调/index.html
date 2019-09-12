@@ -383,11 +383,11 @@
 <p>zk启动的时候，会初始化一个起始的sessionid，后续客户端连到zk创建会话的时候，会基于这个其实的sessionid递增。</p>
 <h2 id="sessionid"><a href="#sessionid" class="headerlink" title="sessionid"></a>sessionid</h2><p><strong>起始的sessionid生成方案：</strong></p>
 <p>sessionid的初始值会根据当前server的id和创建时的时间戳来生成。</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">sid_ = (System.currentTimeMillis() &lt;&lt; 24 ) &gt;&gt;&gt; 8;</span><br><span class="line">sid = sid_ | (serverid &lt;&lt; 56);</span><br></pre></td></tr></table></figure>
+<figure class="highlight ini"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">sid_</span> = (System.currentTimeMillis() &lt;&lt; <span class="number">24</span> ) &gt;&gt;&gt; <span class="number">8</span><span class="comment">;</span></span><br><span class="line"><span class="attr">sid</span> = sid_ | (serverid &lt;&lt; <span class="number">56</span>)<span class="comment">;</span></span><br></pre></td></tr></table></figure>
 
 <h2 id="ticktime"><a href="#ticktime" class="headerlink" title="ticktime"></a>ticktime</h2><p>为了高效低耗的实现会话的超时检查和清理，zookeeper为每个会话标记下一次会话超时时间点，zookeeper会定时在这个时间点检查会话是否超时。</p>
 <p>假设在时间点T1客户端跟zk创建了会话，同时会携带一个client定义的超时时间T2，那么简单的讲，可以在T1+T2时间点上检查该会话是否超时，但是通过这种策略无法实现分桶的方案。因此zookeeper的下次检查的时间为：</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">((T1 + T2) / ticktime + 1) * ticktime</span><br></pre></td></tr></table></figure>
+<figure class="highlight lisp"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">((<span class="name">T1</span> + T2) / ticktime + <span class="number">1</span>) * ticktime</span><br></pre></td></tr></table></figure>
 
 <p>所以下次的检查时间一定是ticktime的倍数，也就是基于这样的倍数，倍数的时间点上会有一个桶的概念，相同时间点的会话会放在这个桶中。</p>
 <p>定时任务会定期检查某个时间点的桶中的会话，如果已经超时，那么从桶中移除。</p>
