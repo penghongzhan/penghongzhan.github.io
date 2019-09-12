@@ -1,0 +1,908 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next mist use-motion" lang="zh-Hans">
+<head><meta name="generator" content="Hexo 3.9.0">
+  <meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform">
+<meta http-equiv="Cache-Control" content="no-siteapp">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css">
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css">
+
+<link href="/css/main.css?v=5.1.4" rel="stylesheet" type="text/css">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=5.1.4">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=5.1.4" color="#222">
+
+
+
+
+
+  <meta name="keywords" content="mysql,索引,聚合,预聚合,aggregate,aggregation,">
+
+
+
+
+
+
+
+
+
+
+<meta name="description" content="这里需要注意，mysql中存储的数据不光具有明细数据，还具有经过etl聚合完成之后的数据，也就是说查询某个维度的聚合结果的时候，不需要实时的group by，可以直接查询预聚合完成的结果。 什么样的索引是最合适的 因为维度很多，所以需要使用联合索引 联合索引最需要关注的是索引的字段顺序 如果是实时聚合，那么最粗的维度需要最左 针对已经预聚合完成的结果，最细粒度的结果应该最左  明细数据的样例：表中">
+<meta name="keywords" content="mysql,索引,聚合,预聚合,aggregate,aggregation">
+<meta property="og:type" content="article">
+<meta property="og:title" content="mysql预聚合结果查询与索引设计">
+<meta property="og:url" content="https://penghongzhan.github.io/2019/09/12/mysql预聚合结果查询与索引设计/index.html">
+<meta property="og:site_name" content="HongMo&#39;s Blog">
+<meta property="og:description" content="这里需要注意，mysql中存储的数据不光具有明细数据，还具有经过etl聚合完成之后的数据，也就是说查询某个维度的聚合结果的时候，不需要实时的group by，可以直接查询预聚合完成的结果。 什么样的索引是最合适的 因为维度很多，所以需要使用联合索引 联合索引最需要关注的是索引的字段顺序 如果是实时聚合，那么最粗的维度需要最左 针对已经预聚合完成的结果，最细粒度的结果应该最左  明细数据的样例：表中">
+<meta property="og:locale" content="zh-Hans">
+<meta property="og:updated_time" content="2019-09-12T13:33:43.000Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="mysql预聚合结果查询与索引设计">
+<meta name="twitter:description" content="这里需要注意，mysql中存储的数据不光具有明细数据，还具有经过etl聚合完成之后的数据，也就是说查询某个维度的聚合结果的时候，不需要实时的group by，可以直接查询预聚合完成的结果。 什么样的索引是最合适的 因为维度很多，所以需要使用联合索引 联合索引最需要关注的是索引的字段顺序 如果是实时聚合，那么最粗的维度需要最左 针对已经预聚合完成的结果，最细粒度的结果应该最左  明细数据的样例：表中">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Mist',
+    version: '5.1.4',
+    sidebar: {"position":"left","display":"post","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    duoshuo: {
+      userId: '0',
+      author: '博主'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="https://penghongzhan.github.io/2019/09/12/mysql预聚合结果查询与索引设计/">
+
+
+
+
+
+  <title>mysql预聚合结果查询与索引设计 | HongMo's Blog</title>
+  
+
+
+
+
+
+
+
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">HongMo's Blog</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle"></p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br>
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br>
+            
+            标签
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br>
+            
+            分类
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br>
+            
+            归档
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-about">
+          <a href="/about/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-user"></i> <br>
+            
+            关于
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="https://penghongzhan.github.io/2019/09/12/mysql预聚合结果查询与索引设计/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="penghong.zhan">
+      <meta itemprop="description" content>
+      <meta itemprop="image" content="https://upload-images.jianshu.io/upload_images/3151600-ee530fd12e23001d.jpg?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="HongMo's Blog">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">mysql预聚合结果查询与索引设计</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2019-09-12T21:29:19+08:00">
+                2019-09-12
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category">
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/mysql/" itemprop="url" rel="index">
+                    <span itemprop="name">mysql</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <p>这里需要注意，mysql中存储的数据不光具有明细数据，<mark>还具有经过etl聚合完成之后的数据</mark>，也就是说查询某个维度的聚合结果的时候，不需要实时的group by，可以直接查询预聚合完成的结果。</p>
+<h1 id="什么样的索引是最合适的"><a href="#什么样的索引是最合适的" class="headerlink" title="什么样的索引是最合适的"></a>什么样的索引是最合适的</h1><ul>
+<li>因为维度很多，所以需要使用联合索引</li>
+<li>联合索引最需要关注的是索引的字段顺序</li>
+<li>如果是实时聚合，那么最粗的维度需要最左</li>
+<li>针对已经预聚合完成的结果，最细粒度的结果应该最左</li>
+</ul>
+<p>明细数据的样例：<mark>表中的列从左到右粒度一次降低，存在维度由粗到细的层级关系</mark></p>
+<table>
+<thead>
+<tr>
+<th>bu_id</th>
+<th>cat1_id</th>
+<th>cat2_id</th>
+<th>cat3_id</th>
+<th>spu_code</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>1</td>
+<td>1</td>
+<td>2</td>
+<td>3</td>
+<td>1001</td>
+</tr>
+<tr>
+<td>1</td>
+<td>1</td>
+<td>2</td>
+<td>5</td>
+<td>1002</td>
+</tr>
+<tr>
+<td>2</td>
+<td>1</td>
+<td>2</td>
+<td>3</td>
+<td>1001</td>
+</tr>
+</tbody></table>
+<p>明细+预聚合数据的样例</p>
+<table>
+<thead>
+<tr>
+<th>bu_id</th>
+<th>cat1_id</th>
+<th>cat2_id</th>
+<th>cat3_id</th>
+<th>spu_code</th>
+<th>count</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>1</td>
+<td>1</td>
+<td>2</td>
+<td>3</td>
+<td>1001</td>
+<td>1</td>
+</tr>
+<tr>
+<td>1</td>
+<td>1</td>
+<td>2</td>
+<td>5</td>
+<td>1002</td>
+<td>1</td>
+</tr>
+<tr>
+<td>2</td>
+<td>1</td>
+<td>2</td>
+<td>3</td>
+<td>1001</td>
+<td>1</td>
+</tr>
+<tr>
+<td>1</td>
+<td>1</td>
+<td>2</td>
+<td>3</td>
+<td>-1</td>
+<td>1</td>
+</tr>
+<tr>
+<td>1</td>
+<td>1</td>
+<td>2</td>
+<td>5</td>
+<td>-1</td>
+<td>1</td>
+</tr>
+<tr>
+<td>2</td>
+<td>1</td>
+<td>2</td>
+<td>3</td>
+<td>-1</td>
+<td>1</td>
+</tr>
+<tr>
+<td>1</td>
+<td>1</td>
+<td>2</td>
+<td>-1</td>
+<td>-1</td>
+<td>2</td>
+</tr>
+<tr>
+<td>2</td>
+<td>1</td>
+<td>2</td>
+<td>-1</td>
+<td>-1</td>
+<td>1</td>
+</tr>
+<tr>
+<td>1</td>
+<td>1</td>
+<td>-1</td>
+<td>-1</td>
+<td>-1</td>
+<td>2</td>
+</tr>
+<tr>
+<td>2</td>
+<td>1</td>
+<td>-1</td>
+<td>-1</td>
+<td>-1</td>
+<td>1</td>
+</tr>
+<tr>
+<td>1</td>
+<td>-1</td>
+<td>-1</td>
+<td>-1</td>
+<td>-1</td>
+<td>2</td>
+</tr>
+<tr>
+<td>2</td>
+<td>-1</td>
+<td>-1</td>
+<td>-1</td>
+<td>-1</td>
+<td>1</td>
+</tr>
+</tbody></table>
+<p>可以发现，聚合之后的数据对比聚合之前的数据，明显多了很多冗余，但是查询速度会快很多，针对两个表的聚合查询的sql如下：</p>
+<ul>
+<li>明细表：<code>select brand_name, sum(count) from table group by brand_name</code></li>
+<li>明细+预聚合表：<code>select brand_name, count from table where cat1_id=-1 and cat2_id=-1 and cat3_id=-1 and spu_code = -1</code></li>
+</ul>
+<p>第一种查询，因为需要使用group by，所以brand_name需要是索引中最左的，否则速度很慢：<code>bu_id,cat1_id,cat2_id,cat3_id,spu_code</code></p>
+<p>第二种查询，看似需要group by，实际只需要查询预聚合的结果，因为查询预聚合结果需要将被聚合字段的值设置为-1，所以即使不查询最细维度的明细，最细维度也需要添加where匹配，所以对于这种预聚合的查询来说，最细的维度作为最左索引反而是更合适的：<code>spu_code,cat3_id,cat2_id,cat1_id,bu_id</code></p>
+<h1 id="预聚合的效果"><a href="#预聚合的效果" class="headerlink" title="预聚合的效果"></a>预聚合的效果</h1><p>让实时的大量明细聚合转变成预聚合结果中的少量记录查询，所以速度快很多。</p>
+<h1 id="到ES的联想"><a href="#到ES的联想" class="headerlink" title="到ES的联想"></a>到ES的联想</h1><p>es对于聚合排序取top的结果，存在准确性的问题，比如说如果es中保存的是明细，查询bu_id字段的分组集合结果的时候：</p>
+<ul>
+<li>比如说对bu_id聚合的结果取top5</li>
+<li>每个分片的查询，都是对bu_id的聚合结果取top5</li>
+<li>对于每个分片来说，可能都有bu_id=1这条记录，但是在分片1中bu_id=1排在第一位，但是在分片2中bu_id=1却排在倒数第一位，所以分片2返回结果给协调节点的时候，不会包含bu_id=1这个结果</li>
+<li>但是最终汇总到协调节点的时候，bu_id=1的最终结果排名第一，返回给了客户端，但是这个聚合结果是不准确的，因为缺少了分片2中的那少部分结果</li>
+</ul>
+<p>针对上面这种场景，如果采用预聚合的结果，实际上就是查询明细，也就是说对于bu_id=1这个值的聚合结果就是一条记录，只会存在一个分片中，最终到汇总节点的时候也就是bu_id=1的完整的聚合结果，所以直接用es存储也成为了可能</p>
+
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/mysql/" rel="tag"># mysql</a>
+          
+            <a href="/tags/索引/" rel="tag"># 索引</a>
+          
+            <a href="/tags/聚合/" rel="tag"># 聚合</a>
+          
+            <a href="/tags/预聚合/" rel="tag"># 预聚合</a>
+          
+            <a href="/tags/aggregate/" rel="tag"># aggregate</a>
+          
+            <a href="/tags/aggregation/" rel="tag"># aggregation</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2019/09/12/spark-es-bitmap实现离线排重指标计算/" rel="next" title="spark+es+bitmap实现离线排重指标计算">
+                <i class="fa fa-chevron-left"></i> spark+es+bitmap实现离线排重指标计算
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+            
+              <img class="site-author-image" itemprop="image" src="https://upload-images.jianshu.io/upload_images/3151600-ee530fd12e23001d.jpg?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240" alt="penghong.zhan">
+            
+              <p class="site-author-name" itemprop="name">penghong.zhan</p>
+              <p class="site-description motion-element" itemprop="description">一个热爱生活的程序猿</p>
+          </div>
+
+          <nav class="site-state motion-element">
+
+            
+              <div class="site-state-item site-state-posts">
+              
+                <a href="/archives/">
+              
+                  <span class="site-state-item-count">34</span>
+                  <span class="site-state-item-name">日志</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-categories">
+                <a href="/categories/index.html">
+                  <span class="site-state-item-count">14</span>
+                  <span class="site-state-item-name">分类</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-tags">
+                <a href="/tags/index.html">
+                  <span class="site-state-item-count">57</span>
+                  <span class="site-state-item-name">标签</span>
+                </a>
+              </div>
+            
+
+          </nav>
+
+          
+
+          
+
+          
+          
+
+          
+          
+
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#什么样的索引是最合适的"><span class="nav-number">1.</span> <span class="nav-text">什么样的索引是最合适的</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#预聚合的效果"><span class="nav-number">2.</span> <span class="nav-text">预聚合的效果</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#到ES的联想"><span class="nav-number">3.</span> <span class="nav-text">到ES的联想</span></a></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2019</span>
+  <span class="with-love">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">penghong.zhan</span>
+
+  
+</div>
+
+
+  <div class="powered-by">由 <a class="theme-link" target="_blank" href="https://hexo.io">Hexo</a> 强力驱动</div>
+
+
+
+  <span class="post-meta-divider">|</span>
+
+
+
+  <div class="theme-info">主题 &mdash; <a class="theme-link" target="_blank" href="https://github.com/iissnan/hexo-theme-next">NexT.Mist</a> v5.1.4</div>
+
+
+
+
+        
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.4"></script>
+
+
+
+  
+  
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.4"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>
