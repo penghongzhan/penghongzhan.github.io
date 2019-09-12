@@ -14,7 +14,7 @@ categories:
 
 # 最简单的懒加载
 
-```
+```java
 // Single threaded version
 class Foo { 
   private Helper helper = null;
@@ -31,7 +31,7 @@ class Foo {
 
 # Double-Checked Locking 解决上述问题
 
-```
+```java
 // Broken multithreaded version
 // "Double-Checked Locking" idiom
 class Foo { 
@@ -72,7 +72,7 @@ double-check的作用：
 
 # 通过内部类实现多线程环境中的单例模式 
 
-```
+```java
 public class Singleton{        
     private Singleton(){        
         …        
@@ -90,7 +90,7 @@ JVM内部的机制能够保证当一个类被加载的时候，这个类的加�
 
 # 在新的JAVA内存模型中 volatile 的使用
 
-```
+```java
 // Single threaded version
 class Foo { 
   private volatile Helper helper = null;
