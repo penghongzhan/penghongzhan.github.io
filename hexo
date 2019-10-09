@@ -4,3 +4,4 @@ hexo new "blog name"
 hexo g & hexo s
 # 发布
 hexo clean && hexo g && hexo d
+# config
