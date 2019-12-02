@@ -1,0 +1,763 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next mist use-motion" lang="zh-Hans">
+<head><meta name="generator" content="Hexo 3.9.0">
+  <meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform">
+<meta http-equiv="Cache-Control" content="no-siteapp">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css">
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css">
+
+<link href="/css/main.css?v=5.1.4" rel="stylesheet" type="text/css">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=5.1.4">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=5.1.4" color="#222">
+
+
+
+
+
+  <meta name="keywords" content="jvm,linux,swap,内存,">
+
+
+
+
+
+
+
+
+
+
+<meta name="description" content="swap是Linux的一种内存管理机制，为了避免由于物理内存不足造成的OOM，在物理内存不足的时候，操作系统会将物理内存中一部分空间释放出来，这部分空间中的内容移动到磁盘中，释放出来的空间分配给需要内存的进程使用。 哪部分物理内存中的内容需要移动出来，这个系统有一定的机制，没有非常详细的研究过，不过感觉很少被使用的内存应该会优先进行swap。 Linux进行内存分配的时候不是直接分配物理内存，而">
+<meta name="keywords" content="jvm,linux,swap,内存">
+<meta property="og:type" content="article">
+<meta property="og:title" content="JVM与Linux的swap">
+<meta property="og:url" content="https://penghongzhan.github.io/2019/11/19/JVM与Linux的swap/index.html">
+<meta property="og:site_name" content="HongMo&#39;s Blog">
+<meta property="og:description" content="swap是Linux的一种内存管理机制，为了避免由于物理内存不足造成的OOM，在物理内存不足的时候，操作系统会将物理内存中一部分空间释放出来，这部分空间中的内容移动到磁盘中，释放出来的空间分配给需要内存的进程使用。 哪部分物理内存中的内容需要移动出来，这个系统有一定的机制，没有非常详细的研究过，不过感觉很少被使用的内存应该会优先进行swap。 Linux进行内存分配的时候不是直接分配物理内存，而">
+<meta property="og:locale" content="zh-Hans">
+<meta property="og:image" content="https://penghongzhan.github.io/2019/11/19/JVM与Linux的swap/linux%E5%86%85%E5%AD%98%E7%A9%BA%E9%97%B4.jpg">
+<meta property="og:image" content="https://penghongzhan.github.io/2019/11/19/JVM与Linux的swap/jvm%E5%86%85%E5%AD%98%E7%BB%93%E6%9E%84.jpg">
+<meta property="og:updated_time" content="2019-11-19T03:48:06.000Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="JVM与Linux的swap">
+<meta name="twitter:description" content="swap是Linux的一种内存管理机制，为了避免由于物理内存不足造成的OOM，在物理内存不足的时候，操作系统会将物理内存中一部分空间释放出来，这部分空间中的内容移动到磁盘中，释放出来的空间分配给需要内存的进程使用。 哪部分物理内存中的内容需要移动出来，这个系统有一定的机制，没有非常详细的研究过，不过感觉很少被使用的内存应该会优先进行swap。 Linux进行内存分配的时候不是直接分配物理内存，而">
+<meta name="twitter:image" content="https://penghongzhan.github.io/2019/11/19/JVM与Linux的swap/linux%E5%86%85%E5%AD%98%E7%A9%BA%E9%97%B4.jpg">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Mist',
+    version: '5.1.4',
+    sidebar: {"position":"left","display":"post","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    duoshuo: {
+      userId: '0',
+      author: '博主'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="https://penghongzhan.github.io/2019/11/19/JVM与Linux的swap/">
+
+
+
+
+
+  <title>JVM与Linux的swap | HongMo's Blog</title>
+  
+
+
+
+
+
+
+
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">HongMo's Blog</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle"></p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br>
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br>
+            
+            标签
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br>
+            
+            分类
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br>
+            
+            归档
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-about">
+          <a href="/about/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-user"></i> <br>
+            
+            关于
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="https://penghongzhan.github.io/2019/11/19/JVM与Linux的swap/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="penghong.zhan">
+      <meta itemprop="description" content>
+      <meta itemprop="image" content="/images/我的头像.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="HongMo's Blog">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">JVM与Linux的swap</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2019-11-19T11:32:31+08:00">
+                2019-11-19
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category">
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/linux/" itemprop="url" rel="index">
+                    <span itemprop="name">linux</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <p><img src="linux%E5%86%85%E5%AD%98%E7%A9%BA%E9%97%B4.jpg" alt="linux内存结构，引自『JVM 与 Linux 的内存关系详解』" title="linux内存结构，引自『JVM 与 Linux 的内存关系详解』"></p>
+<p>swap是Linux的一种内存管理机制，为了避免由于物理内存不足造成的OOM，在物理内存不足的时候，操作系统会将物理内存中一部分空间释放出来，这部分空间中的内容移动到磁盘中，释放出来的空间分配给需要内存的进程使用。</p>
+<p>哪部分物理内存中的内容需要移动出来，这个系统有一定的机制，没有非常详细的研究过，不过感觉很少被使用的内存应该会优先进行swap。</p>
+<p>Linux进行内存分配的时候不是直接分配物理内存，而是分配虚拟内存空间给进程，进程运行的时候，随着需要存储的对象的增多，系统会开辟更多物理内存给进程使用。</p>
+<p>Linux服务器上运行JAVA服务的时候，首先启动的是JVM，jvm本质上是一个c写的程序，启动的时候，系统本身会为jvm分配内存。只不过对于用户来说，并不关心jvm本身占用的内存，而最多关心的是jvm管理的堆内存空间，这部分空间大大小可以通过<code>-Xmx&amp;-Xms</code>进行设置。</p>
+<p><img src="jvm%E5%86%85%E5%AD%98%E7%BB%93%E6%9E%84.jpg" alt="jvm内存结构，引自『JVM 与 Linux 的内存关系详解』" title="jvm内存结构，引自『JVM 与 Linux 的内存关系详解』"></p>
+<p>上面提到linux为进程分配的内存是虚拟内存，真正使用的时候才回去分配物理内存，所以我们通过上面的<code>-Xms</code>设置最小堆大小的时候，假设1G，查看进程占用的内存会发现，刚开始启动的时候，内存并没有占用到1G，这也有效的说明了，linux为jvm分配的内存是虚拟内存，不过对于jvm来说，可以通过参数<code>-XX:+AlwaysPreTouch</code>，让jvm分配的堆内存真正分配到物理内存中，配置<code>-XX:+AlwaysPreTouch</code>参数后，JVM将<code>-Xms</code>指定的堆内存中每个字节都写入’0’，这样的话，除了在虚拟内存中以内部数据结构保留之外，还会在物理内存中分配。</p>
+<h2 id="swap对jvm内存回收的影响"><a href="#swap对jvm内存回收的影响" class="headerlink" title="swap对jvm内存回收的影响"></a>swap对jvm内存回收的影响</h2><p>上面提到，java进程运行的时候，虽然内存占用主要是在堆内存，但是实际上是不止这些的，包括：栈内存、方法区内存、jvm本身运行需要的内存、程序运行过程中使用的堆外内存；系统运行过程中，还会为文件系统的buffer开辟内存、网络传输的buffer开辟内存缓存等。</p>
+<p>所以经常会发现，我们一台8G的机器，运行一个java进程，堆内存分配4G，最终java进程占用的内存超过4G，并且系统已经开始进行swap。</p>
+<p>swap对于jvm的垃圾回收的影响还是很严重的，因为内存中的数据是被交换到了磁盘，那么这部分数据再次被读取的时候，需要从磁盘读取加载到内存中，这个速度是很慢的。</p>
+<p>想像这样一种场景：</p>
+<p>犹豫系统内存不足，进行swap操作，将jvm堆内存中的部分冷数据swap到了磁盘中，后续进行垃圾回收的时候，jvm需要回收被swap的这部分内存，那么jvm需要将磁盘中的数据加载到内存，这个过程很慢，更严重的，很有此时物理内存不足以加载被swap到磁盘中的这部分数据，系统又将jvm另一部分内存swap到磁盘，释放物理内存，后续jvm回收那部分内存的时候，又需要去磁盘中进行加载，整个gc的速度会慢非常多，甚至导致进程对外无响应了。</p>
+<p>所以说当系统swap内存较多的时候，需要提高警惕，分析当前程序是否有滥用内存的情况，如果程序设计正常，那么需要考虑增加机器的内存了。</p>
+<hr>
+<h3 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h3><ul>
+<li><a href="https://mp.weixin.qq.com/s?__biz=MzI3ODcxMzQzMw==&mid=2247489331&idx=2&sn=a0d882c6e329673bf908403ecde668fd&chksm=eb539205dc241b13d67f77c1d5d10eb103163f6ef2c0c105effc359be03c50f6309a7a657b16&mpshare=1&scene=1&srcid=1114OeMKnLZ1CLoO5za7h4iS&sharer_sharetime=1573737039343&sharer_shareid=1ae678c291a3eb4241d4c1df7585ff72%23rd" target="_blank" rel="noopener">JVM 与 Linux 的内存关系详解</a></li>
+</ul>
+
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/jvm/" rel="tag"># jvm</a>
+          
+            <a href="/tags/linux/" rel="tag"># linux</a>
+          
+            <a href="/tags/swap/" rel="tag"># swap</a>
+          
+            <a href="/tags/内存/" rel="tag"># 内存</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2019/11/08/spring动态代理的小坑/" rel="next" title="spring动态代理的小坑">
+                <i class="fa fa-chevron-left"></i> spring动态代理的小坑
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2019/12/02/热烈庆祝Mac版有道云笔记升级/" rel="prev" title="热烈庆祝Mac版有道云笔记升级">
+                热烈庆祝Mac版有道云笔记升级 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+            
+              <img class="site-author-image" itemprop="image" src="/images/我的头像.jpg" alt="penghong.zhan">
+            
+              <p class="site-author-name" itemprop="name">penghong.zhan</p>
+              <p class="site-description motion-element" itemprop="description">一个热爱生活的程序猿</p>
+          </div>
+
+          <nav class="site-state motion-element">
+
+            
+              <div class="site-state-item site-state-posts">
+              
+                <a href="/archives/">
+              
+                  <span class="site-state-item-count">48</span>
+                  <span class="site-state-item-name">日志</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-categories">
+                <a href="/categories/index.html">
+                  <span class="site-state-item-count">19</span>
+                  <span class="site-state-item-name">分类</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-tags">
+                <a href="/tags/index.html">
+                  <span class="site-state-item-count">102</span>
+                  <span class="site-state-item-name">标签</span>
+                </a>
+              </div>
+            
+
+          </nav>
+
+          
+
+          
+
+          
+          
+
+          
+          
+
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#swap对jvm内存回收的影响"><span class="nav-number">1.</span> <span class="nav-text">swap对jvm内存回收的影响</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#参考"><span class="nav-number">1.1.</span> <span class="nav-text">参考</span></a></li></ol></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2019</span>
+  <span class="with-love">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">penghong.zhan</span>
+
+  
+</div>
+
+
+  <div class="powered-by">由 <a class="theme-link" target="_blank" href="https://hexo.io">Hexo</a> 强力驱动</div>
+
+
+
+  <span class="post-meta-divider">|</span>
+
+
+
+  <div class="theme-info">主题 &mdash; <a class="theme-link" target="_blank" href="https://github.com/iissnan/hexo-theme-next">NexT.Mist</a> v5.1.4</div>
+
+
+
+
+        
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.4"></script>
+
+
+
+  
+  
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.4"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>
