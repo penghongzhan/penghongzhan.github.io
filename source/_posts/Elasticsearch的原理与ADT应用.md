@@ -69,7 +69,7 @@ ES集群的服务器分为以下四种角色：
 
 ### 选举流程
 
-![ES的master选举流程图](http://upload-images.jianshu.io/upload_images/3151600-e27bceb411f83f11.jpg?imageMogr2/auto-orient/strip%7CimageView2/2/w/1080/q/50)
+![ES的master选举流程图](ES的master选举流程图.jpg)
 
 ### 避免脑裂
 
@@ -139,7 +139,7 @@ consistency参数的值可以设为 ：
 - commit
 - flush
 
-![ES的数据写入过程(参考ElasticSearch权威指南)](https://upload-images.jianshu.io/upload_images/3151600-e398187e5316f5e8.jpg?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+![ES的数据写入过程(参考ElasticSearch权威指南)](ES的数据写入过程_参考ElasticSearch权威指南.jpg)
 
 ### translog
 
@@ -218,13 +218,13 @@ PUT /website/blog/2?version=5&version_type=external
 # 原始文档存储（行式存储）
 ---
 
-![原始文档的存储结构](https://upload-images.jianshu.io/upload_images/3151600-c206a6f3bb91ed52.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+![原始文档的存储结构](原始文档的存储结构.png)
 
 ## fdt文件
 
 文档内容的物理存储文件，由多个chunk组成，Lucene索引文档时，先缓存文档，缓存大于16KB时，就会把文档压缩存储。
 
-![fdt文件的存储逻辑视图](http://upload-images.jianshu.io/upload_images/3151600-df38fde012faa8c6.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1080/q/50)
+![fdt文件的存储逻辑视图](fdt文件的存储逻辑视图.png)
 
 ## fdx文件
 
@@ -233,7 +233,7 @@ PUT /website/blog/2?version=5&version_type=external
 - 1024个chunk归为一个block
 - block记录chunk的起始文档ID，以及chunk在fdt中的位置
 
-![fdx文件的存储逻辑视图](http://upload-images.jianshu.io/upload_images/3151600-8d7ac2be300e722c.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1080/q/50)
+![fdx文件的存储逻辑视图](fdx文件的存储逻辑视图.png)
 
 ## fnm文件
 
@@ -241,7 +241,7 @@ PUT /website/blog/2?version=5&version_type=external
 
 ## 原始文档的查询
 
-![原始文档的查询过程](https://upload-images.jianshu.io/upload_images/3151600-94b64df0f3f797f4.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+![原始文档的查询过程](原始文档的查询过程.png)
 
 **注意问题**
 
@@ -283,7 +283,7 @@ PUT my_index
 # 倒排索引
 ---
 
-![倒排索引-文件结构.png](https://upload-images.jianshu.io/upload_images/3151600-028d7fa806b41f45.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+![倒排索引-文件结构](倒排索引-文件结构.png)
 
 倒排索引中记录的信息主要有：
 
@@ -306,7 +306,7 @@ PUT my_index
 -内存占用小
 -内存+磁盘相结合
 
-![FST前缀索引](https://upload-images.jianshu.io/upload_images/3151600-da06eb42db47e07b.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+![FST前缀索引](FST前缀索引.png)
 
 Lucene采用的前缀索引数据结构为FST，它的优点有：
 
@@ -322,7 +322,7 @@ Lucene采用的前缀索引数据结构为FST，它的优点有：
 
 ## 文档列表（.doc文件）
 
-![文档列表的存储结构](http://upload-images.jianshu.io/upload_images/3151600-d5ad4f4d0f0fa0bd.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1080/q/50)
+![文档列表的存储结构](文档列表的存储结构.png)
 
 lucene对文档列表存储进行了很好的压缩，来保证缓存友好：
 
@@ -334,15 +334,15 @@ lucene对文档列表存储进行了很好的压缩，来保证缓存友好：
 
 ### 文档列表的合并
 
-![跳表](https://upload-images.jianshu.io/upload_images/3151600-d1ef4889a7379f51.jpg?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+![跳表](跳表.jpg)
 
 ES的一个重要的查询场景是bool查询，类似于mysql中的and操作，需要将两个条件对应的文档列表进行合并。为了加快文档列表的合并，lucene底层采用了跳表的数据结构，合并过程中，优先遍历较短的链表，去较长的列表中进行查询，如果存在，则该文档符合条件。
 
-![倒排索引-文档列表的合并](https://upload-images.jianshu.io/upload_images/3151600-879560f14ff15a72.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+![倒排索引-文档列表的合并](倒排索引-文档列表的合并.png)
 
 ## 倒排索引的查询过程
 
-![倒排索引的查询过程](http://upload-images.jianshu.io/upload_images/3151600-1154c5e25333e2ff.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1080/q/50)
+![倒排索引的查询过程](倒排索引的查询过程.png)
 
 - 内存加载tip文件，通过FST匹配前缀找到后缀词块位置
 - 根据词块位置，读取磁盘中tim文件中后缀块并找到后缀和相应的倒排表位置信息
@@ -357,13 +357,13 @@ ES的一个重要的查询场景是bool查询，类似于mysql中的and操作，
 - 分桶：解决文档列表稀疏的情况下，过多的0占用内存，每65536个docid分到一个桶，桶内只记录docid%65536
 - 桶内压缩：4096作为分界点，小余这个值用short数组，大于这个值用bitset，每个short占两字节，4096个short占用65536bit，所以超过4096个文档id之后，是bitset更节省空间。
 
-![filter缓存的数据结构](http://upload-images.jianshu.io/upload_images/3151600-a1b75e2b246dfd33.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1080/q/50)
+![filter缓存的数据结构](filter缓存的数据结构.png)
 
 ---
 # DocValues（正排索引&列式存储）
 ---
 
-![DocValues文件结构.png](https://upload-images.jianshu.io/upload_images/3151600-d2436a9c050bd4bf.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+![DocValues文件结构](DocValues文件结构.png)
 
 倒排索引保存的是词项到文档的映射，也就是词项存在于哪些文档中，DocValues保存的是文档到词项的映射，也就是文档中有哪些词项。
 
@@ -381,7 +381,7 @@ DocValues采用的数据结构是bitset，bitset对于稀疏数据的支持不�
 
 查询逻辑很简单，类似于数组通过下标进行索引，因为每个value都是固定长度，所以读取文档id为N的value直接从`N*固定长度`位置开始读取`固定长度`即可。
 
-![ES6.0之前DocValues的数据结构](https://upload-images.jianshu.io/upload_images/3151600-4b30618461ddb0d1.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+![ES6.0之前DocValues的数据结构](ES6.0之前DocValues的数据结构.png)
 
 ## ES6.0（lucene7.0）
 
@@ -392,7 +392,7 @@ DocValues采用的数据结构是bitset，bitset对于稀疏数据的支持不�
 
 所以对于DocValues的查找，关键在于DocIDSet中ID的查找，如果按照简单的链表的查找逻辑，那么DocID的查找速度将会很慢。lucene7借用了RoaringBitmap的分片的思想来加快DocIDSet的查找速度：
 
-![DocValues的数据结构-lucene7的结构](https://upload-images.jianshu.io/upload_images/3151600-c3565372719565cf.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+![DocValues的数据结构-lucene7的结构](DocValues的数据结构-lucene7的结构.png)
 
 - 分片容量为2的16次方，最多可以存储65536个docid
 - 分片包含的信息：
