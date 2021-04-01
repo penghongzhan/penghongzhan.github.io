@@ -87,7 +87,7 @@
 <meta property="og:site_name" content="HongMo&#39;s Blog">
 <meta property="og:description" content="针对聚合模型的分析  列式存储，每个列单独存储 数据排序，每个列的数据都根据agg key的顺序进行存储 前缀索引，将agg key组合到一起，取前36个字节，创建一个前缀索引  为什么每一列都需要按照agg key进行排序最左匹配的时候查找很快，比如说agg key的组合是：bu_id、cat1_id，输入条件where bu_id=1 and cat1_id=102的时候：  先通过最左的bu">
 <meta property="og:locale" content="zh-Hans">
-<meta property="og:updated_time" content="2021-03-31T12:47:18.000Z">
+<meta property="og:updated_time" content="2021-04-01T08:09:39.000Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="Doris存储与索引模型">
 <meta name="twitter:description" content="针对聚合模型的分析  列式存储，每个列单独存储 数据排序，每个列的数据都根据agg key的顺序进行存储 前缀索引，将agg key组合到一起，取前36个字节，创建一个前缀索引  为什么每一列都需要按照agg key进行排序最左匹配的时候查找很快，比如说agg key的组合是：bu_id、cat1_id，输入条件where bu_id=1 and cat1_id=102的时候：  先通过最左的bu">
@@ -503,7 +503,7 @@
 </tr>
 </tbody></table>
 <p>通过前缀索引查询bu_id=1 and cat1_id=102，直接一次查询就能找到文档编号3。</p>
-<h1 id="一个有趣的现象"><a href="#一个有趣的现象" class="headerlink" title="一个有趣的现象"></a>一个有趣的现象</h1><p>最近在做一个数据源的改造，将es的查询迁移到doris，迁移之后发现，原来doris的索引占用空间有10几个G，但是迁移到doris之后，只占用了不到2个G，为什么差异会如此之大？</p>
+<h1 id="一个有趣的现象"><a href="#一个有趣的现象" class="headerlink" title="一个有趣的现象"></a>一个有趣的现象</h1><p>最近在做一个数据源的改造，将es的查询迁移到doris，迁移之后发现，原来es的索引占用空间有10几个G，但是迁移到doris之后，只占用了不到2个G，为什么差异会如此之大？</p>
 <p>其实，了解了es和doris的底层储存原理之后，可以很容易发现其中的原因：</p>
 <p>es的底层存储结构包括</p>
 <ul>
