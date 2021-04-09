@@ -87,7 +87,7 @@
 <meta property="og:site_name" content="HongMo&#39;s Blog">
 <meta property="og:description" content="doris分区partitionrange分区，根据时间范围进行分区，这种分区是物理隔离的，可以理解成单独的一张小表，删除、查询等操作非常快 bucket在Doris的存储引擎中，用户数据被水平划分为若干个数据分片（Tablet，也称作数据分桶）。每个Tablet包含若干数据行。各个Tablet之间的数据没有交集，并且在物理上是独立存储的。 多个Tablet在逻辑上归属于不同的分区（Partiti">
 <meta property="og:locale" content="zh-Hans">
-<meta property="og:updated_time" content="2021-03-23T05:30:00.000Z">
+<meta property="og:updated_time" content="2021-04-06T07:20:39.000Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="Doris小知识点">
 <meta name="twitter:description" content="doris分区partitionrange分区，根据时间范围进行分区，这种分区是物理隔离的，可以理解成单独的一张小表，删除、查询等操作非常快 bucket在Doris的存储引擎中，用户数据被水平划分为若干个数据分片（Tablet，也称作数据分桶）。每个Tablet包含若干数据行。各个Tablet之间的数据没有交集，并且在物理上是独立存储的。 多个Tablet在逻辑上归属于不同的分区（Partiti">
@@ -364,6 +364,18 @@
 <li><a href="http://doris.apache.org/master/zh-CN/getting-started/data-model-rollup.html#rollup" target="_blank" rel="noopener">http://doris.apache.org/master/zh-CN/getting-started/data-model-rollup.html#rollup</a></li>
 <li><a href="https://km.sankuai.com/page/28276900" target="_blank" rel="noopener">https://km.sankuai.com/page/28276900</a></li>
 </ul>
+<h1 id="doris本地join"><a href="#doris本地join" class="headerlink" title="doris本地join"></a>doris本地join</h1><ul>
+<li>本地join的时候，两个表的查询都不能有group by</li>
+<li>如果是两个事实表，如果想使用本地join，那么最好两张表的维度是一致的，这种情况下，两个表可以直接join，不需要先group by之后再join；假设有一张表是到类目维度，另一张表到事业部维度，计算销售额占比等指标，类目表可以直接关联事业部表，因为本身的计算就是需要两张表的维度不一样</li>
+<li>如果是事实表和维表，例如一个事实表和时间维表，可以直接本地join</li>
+</ul>
+<h1 id="doris的分区查询"><a href="#doris的分区查询" class="headerlink" title="doris的分区查询"></a>doris的分区查询</h1><figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">select</span> dim.dt,</span><br><span class="line">       vendor_id,</span><br><span class="line">       bitmap_union_count(temp_bu_id) </span><br><span class="line"><span class="keyword">from</span> (<span class="keyword">select</span> * <span class="keyword">from</span> time_dim <span class="keyword">where</span> nature_mo = <span class="number">202103</span>) dim <span class="keyword">inner</span> <span class="keyword">join</span> app_vendor_board_basesku_day sku <span class="keyword">on</span> dim.dt = sku.dt</span><br><span class="line"><span class="keyword">group</span> <span class="keyword">by</span> vendor_id,</span><br><span class="line">    dim.dt;</span><br><span class="line"><span class="comment">#####</span></span><br><span class="line"><span class="keyword">select</span> dt,</span><br><span class="line">       vendor_id,</span><br><span class="line">       bitmap_union_count(temp_bu_id)</span><br><span class="line"><span class="keyword">from</span> app_vendor_board_basesku_day <span class="keyword">where</span> dt <span class="keyword">in</span> (<span class="keyword">select</span> dt <span class="keyword">from</span> time_dim <span class="keyword">where</span> nature_mo = <span class="number">202103</span>)</span><br><span class="line"><span class="keyword">group</span> <span class="keyword">by</span> vendor_id,</span><br><span class="line">    dt;</span><br><span class="line"><span class="comment">#####</span></span><br><span class="line"><span class="keyword">select</span> dim.dt,</span><br><span class="line">       tt1.vendor_id,</span><br><span class="line">       tt1.bitmap_union_count(temp_bu_id)</span><br><span class="line"><span class="keyword">from</span> app_vendor_board_basesku_day <span class="keyword">as</span> tt1 <span class="keyword">left</span> <span class="keyword">join</span> time_dim <span class="keyword">as</span> dim <span class="keyword">on</span> tt1.dt=time_dim.dt</span><br><span class="line"><span class="keyword">where</span> time_dim.nature_mo = <span class="number">202103</span></span><br><span class="line"><span class="keyword">group</span> <span class="keyword">by</span> vendor_id,</span><br><span class="line">    dt;</span><br></pre></td></tr></table></figure>
+
+<p>上面的这三种方式都无法走分区查询，最难理解的就是第二种，但是这个是doris的机制，如果想要走分区查询，那么需要查询两次：</p>
+<ul>
+<li>从维表中查询日期的list</li>
+<li>事实表的dt查询in这个list</li>
+</ul>
 
       
     </div>
@@ -489,7 +501,7 @@
               
                 <a href="/archives/">
               
-                  <span class="site-state-item-count">56</span>
+                  <span class="site-state-item-count">57</span>
                   <span class="site-state-item-name">日志</span>
                 </a>
               </div>
@@ -511,7 +523,7 @@
               
               <div class="site-state-item site-state-tags">
                 <a href="/tags/index.html">
-                  <span class="site-state-item-count">114</span>
+                  <span class="site-state-item-count">116</span>
                   <span class="site-state-item-name">标签</span>
                 </a>
               </div>
@@ -544,7 +556,7 @@
             
 
             
-              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#doris分区"><span class="nav-number">1.</span> <span class="nav-text">doris分区</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#partition"><span class="nav-number">1.1.</span> <span class="nav-text">partition</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#bucket"><span class="nav-number">1.2.</span> <span class="nav-text">bucket</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#doris查询条件"><span class="nav-number">2.</span> <span class="nav-text">doris查询条件</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#doris前缀索引"><span class="nav-number">3.</span> <span class="nav-text">doris前缀索引</span></a></li></ol></div>
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#doris分区"><span class="nav-number">1.</span> <span class="nav-text">doris分区</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#partition"><span class="nav-number">1.1.</span> <span class="nav-text">partition</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#bucket"><span class="nav-number">1.2.</span> <span class="nav-text">bucket</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#doris查询条件"><span class="nav-number">2.</span> <span class="nav-text">doris查询条件</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#doris前缀索引"><span class="nav-number">3.</span> <span class="nav-text">doris前缀索引</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#doris本地join"><span class="nav-number">4.</span> <span class="nav-text">doris本地join</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#doris的分区查询"><span class="nav-number">5.</span> <span class="nav-text">doris的分区查询</span></a></li></ol></div>
             
 
           </div>

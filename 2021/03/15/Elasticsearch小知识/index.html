@@ -79,18 +79,18 @@
 
 
 
-<meta name="description" content="elastic5.6.3集群中只要有一台节点fullgc了，那么cat api会卡住，无法通过cat api获取集群的一些状态；好像任何一台机器fullgc之后，都会导致这样的情况，感觉不是非常合理。 限制es的查询节点，查询中添加preference，rest client中指定的机器，需要排除有问题的机器">
+<meta name="description" content="elastic5.6.3集群中只要有一台节点fullgc了，那么cat api会卡住，无法通过cat api获取集群的一些状态；好像任何一台机器fullgc之后，都会导致这样的情况，感觉不是非常合理。 限制es的查询节点，查询中添加preference，rest client中指定的机器，需要排除有问题的机器  es集群稳定性需要关注的点 segment太多，定时需要merge 索引的查询qps">
 <meta name="keywords" content="elastic,elasticsearch,小知识">
 <meta property="og:type" content="article">
 <meta property="og:title" content="Elasticsearch小知识">
 <meta property="og:url" content="https://penghongzhan.github.io/2021/03/15/Elasticsearch小知识/index.html">
 <meta property="og:site_name" content="HongMo&#39;s Blog">
-<meta property="og:description" content="elastic5.6.3集群中只要有一台节点fullgc了，那么cat api会卡住，无法通过cat api获取集群的一些状态；好像任何一台机器fullgc之后，都会导致这样的情况，感觉不是非常合理。 限制es的查询节点，查询中添加preference，rest client中指定的机器，需要排除有问题的机器">
+<meta property="og:description" content="elastic5.6.3集群中只要有一台节点fullgc了，那么cat api会卡住，无法通过cat api获取集群的一些状态；好像任何一台机器fullgc之后，都会导致这样的情况，感觉不是非常合理。 限制es的查询节点，查询中添加preference，rest client中指定的机器，需要排除有问题的机器  es集群稳定性需要关注的点 segment太多，定时需要merge 索引的查询qps">
 <meta property="og:locale" content="zh-Hans">
-<meta property="og:updated_time" content="2021-03-15T06:50:26.000Z">
+<meta property="og:updated_time" content="2021-04-06T07:47:40.000Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="Elasticsearch小知识">
-<meta name="twitter:description" content="elastic5.6.3集群中只要有一台节点fullgc了，那么cat api会卡住，无法通过cat api获取集群的一些状态；好像任何一台机器fullgc之后，都会导致这样的情况，感觉不是非常合理。 限制es的查询节点，查询中添加preference，rest client中指定的机器，需要排除有问题的机器">
+<meta name="twitter:description" content="elastic5.6.3集群中只要有一台节点fullgc了，那么cat api会卡住，无法通过cat api获取集群的一些状态；好像任何一台机器fullgc之后，都会导致这样的情况，感觉不是非常合理。 限制es的查询节点，查询中添加preference，rest client中指定的机器，需要排除有问题的机器  es集群稳定性需要关注的点 segment太多，定时需要merge 索引的查询qps">
 
 
 
@@ -356,6 +356,12 @@
 <li>elastic5.6.3集群中只要有一台节点fullgc了，那么cat api会卡住，无法通过cat api获取集群的一些状态；好像任何一台机器fullgc之后，都会导致这样的情况，感觉不是非常合理。</li>
 <li>限制es的查询节点，查询中添加preference，rest client中指定的机器，需要排除有问题的机器</li>
 </ul>
+<h1 id="es集群稳定性需要关注的点"><a href="#es集群稳定性需要关注的点" class="headerlink" title="es集群稳定性需要关注的点"></a>es集群稳定性需要关注的点</h1><ul>
+<li>segment太多，定时需要merge</li>
+<li>索引的查询qps，是不是某个索引的查询量非常大</li>
+<li>索引的删除文档数量，删除的文档，如果没有merge的情况下，删除的数据也会占用磁盘和内存</li>
+<li>别名下的索引太多，是不是也会影响查询性能</li>
+</ul>
 
       
     </div>
@@ -454,8 +460,17 @@
       
 
       
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            站点概览
+          </li>
+        </ul>
+      
 
-      <section class="site-overview-wrap sidebar-panel sidebar-panel-active">
+      <section class="site-overview-wrap sidebar-panel">
         <div class="site-overview">
           <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
             
@@ -472,7 +487,7 @@
               
                 <a href="/archives/">
               
-                  <span class="site-state-item-count">56</span>
+                  <span class="site-state-item-count">57</span>
                   <span class="site-state-item-name">日志</span>
                 </a>
               </div>
@@ -494,7 +509,7 @@
               
               <div class="site-state-item site-state-tags">
                 <a href="/tags/index.html">
-                  <span class="site-state-item-count">114</span>
+                  <span class="site-state-item-count">116</span>
                   <span class="site-state-item-name">标签</span>
                 </a>
               </div>
@@ -517,6 +532,22 @@
         </div>
       </section>
 
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#es集群稳定性需要关注的点"><span class="nav-number">1.</span> <span class="nav-text">es集群稳定性需要关注的点</span></a></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
       
 
       
