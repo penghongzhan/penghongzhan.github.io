@@ -33,3 +33,40 @@ range分区，根据时间范围进行分区，这种分区是物理隔离的，
 
 - http://doris.apache.org/master/zh-CN/getting-started/data-model-rollup.html#rollup
 - https://km.sankuai.com/page/28276900
+
+# doris本地join
+
+- 本地join的时候，两个表的查询都不能有group by
+- 如果是两个事实表，如果想使用本地join，那么最好两张表的维度是一致的，这种情况下，两个表可以直接join，不需要先group by之后再join；假设有一张表是到类目维度，另一张表到事业部维度，计算销售额占比等指标，类目表可以直接关联事业部表，因为本身的计算就是需要两张表的维度不一样
+- 如果是事实表和维表，例如一个事实表和时间维表，可以直接本地join
+
+# doris的分区查询
+
+```sql
+select dim.dt,
+       vendor_id,
+       bitmap_union_count(temp_bu_id) 
+from (select * from time_dim where nature_mo = 202103) dim inner join app_vendor_board_basesku_day sku on dim.dt = sku.dt
+group by vendor_id,
+    dim.dt;
+#####
+select dt,
+       vendor_id,
+       bitmap_union_count(temp_bu_id)
+from app_vendor_board_basesku_day where dt in (select dt from time_dim where nature_mo = 202103)
+group by vendor_id,
+    dt;
+#####
+select dim.dt,
+       tt1.vendor_id,
+       tt1.bitmap_union_count(temp_bu_id)
+from app_vendor_board_basesku_day as tt1 left join time_dim as dim on tt1.dt=time_dim.dt
+where time_dim.nature_mo = 202103
+group by vendor_id,
+    dt;
+```
+
+上面的这三种方式都无法走分区查询，最难理解的就是第二种，但是这个是doris的机制，如果想要走分区查询，那么需要查询两次：
+
+- 从维表中查询日期的list
+- 事实表的dt查询in这个list
