@@ -90,7 +90,7 @@
 <meta property="og:image" content="https://penghongzhan.github.io/2021/04/12/elasticsearch-bkdtree学习笔记/bkd_tree%E7%AE%80%E5%8D%95%E7%A4%BA%E6%84%8F%E5%9B%BE.png">
 <meta property="og:image" content="https://penghongzhan.github.io/2021/04/12/elasticsearch-bkdtree学习笔记/%E4%BA%8C%E7%BB%B4bdk_tree%E7%A4%BA%E6%84%8F%E5%9B%BE.png">
 <meta property="og:image" content="https://penghongzhan.github.io/2021/04/12/elasticsearch-bkdtree学习笔记/bkd_tree%E7%AE%80%E5%8D%95%E7%A4%BA%E6%84%8F%E5%9B%BE.png">
-<meta property="og:updated_time" content="2021-04-13T00:27:52.000Z">
+<meta property="og:updated_time" content="2021-04-13T00:31:54.000Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="elasticsearch bkdtree学习笔记">
 <meta name="twitter:description" content="为什么需要bdk tree普通的字符串类型的term，倒排索引采用的数据结构是FST前缀索引和后缀词块，针对某个term的查询能够很快的定位到对应的文档列表；但是该数据结构不适合于数字类型的字段的range查询，早期的es对于这种查询，也是转化成范围内的所有term的查询，比如说range[1，50]，它实际上是转换成了bool中的or，就像（1 or 2 or 3 or 4 … or 50）。；">
@@ -374,6 +374,7 @@
 <h3 id="参考文档"><a href="#参考文档" class="headerlink" title="参考文档"></a>参考文档</h3><ul>
 <li><a href="https://blog.csdn.net/xiaoyu_BD/article/details/82706190" target="_blank" rel="noopener">Elasticsearch干货（三）：对于数值类型索引优化</a></li>
 <li><a href="https://segmentfault.com/a/1190000014480912?utm_medium=referral&utm_source=tuicool" target="_blank" rel="noopener">lucene查询原理</a></li>
+<li><a href="https://www.elastic.co/cn/blog/better-query-planning-for-range-queries-in-elasticsearch" target="_blank" rel="noopener">Better Query Planning for Range Queries in Elasticsearch</a></li>
 </ul>
 
       
