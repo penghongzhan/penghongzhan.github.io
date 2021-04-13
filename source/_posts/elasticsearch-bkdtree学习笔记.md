@@ -49,4 +49,4 @@ es的前缀索引+后缀词块的方式，可以很快定位到term对应的文�
 
 - [Elasticsearch干货（三）：对于数值类型索引优化](https://blog.csdn.net/xiaoyu_BD/article/details/82706190)
 - [lucene查询原理](https://segmentfault.com/a/1190000014480912?utm_medium=referral&utm_source=tuicool)
-
+- [Better Query Planning for Range Queries in Elasticsearch](https://www.elastic.co/cn/blog/better-query-planning-for-range-queries-in-elasticsearch)
