@@ -16,13 +16,13 @@ categories:
 
 bdk tree既然被称为树，对于范围查询一定是友好的，因为树的一大特性就是节点之间是有顺序的，这也是采用bdk tree的最根本的原因。一个简单的bkd tree如下图所示：
 
-![bkd tree简单示意图](elasticsearch-bkdtree学习笔记/bkd tree简单示意图.png)
+![bkd tree简单示意图](bkd_tree简单示意图.png)
 
 比如说我要查询范围在1-50的文档，可以通过树二分查找，快速定位到所有的文档列表。
 
 上图展示的是一个简单的一维的bkdtree，在es中或者说在lucene中，针对地理位置的经纬度等信息会存储成二维的bkdtree，下图展示的是针对二维坐标系(x,y)的一个bkd tree：
 
-![二维bdk tree示意图](elasticsearch-bkdtree学习笔记/二维bdk tree示意图.png)
+![二维bdk tree示意图](二维bdk_tree示意图.png)
 
 # bdk tree的优势和劣势是啥
 
@@ -34,7 +34,7 @@ es的前缀索引+后缀词块的方式，可以很快定位到term对应的文�
 
 我们回头看bdk tree的示意图：
 
-![bkd tree简单示意图](elasticsearch-bkdtree学习笔记/bkd tree简单示意图.png)
+![bkd tree简单示意图](bkd_tree简单示意图.png)
 
 可以发现，范围1-50拿到的文档列表并不是有序的，因为tree是按照term排序的，也就是1-50这个范围内的数字是有序的，但是term对应的文档列表就变成无序的了，带来的一个问题就是，多个列表进行合并的时候，无法像跳表那样二分查找高效完成。因此需要在合并之前对于bkd tree返回的文档列表进行特殊处理。
 
