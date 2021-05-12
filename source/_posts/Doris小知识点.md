@@ -31,6 +31,8 @@ range分区，根据时间范围进行分区，这种分区是物理隔离的，
 
 # doris前缀索引
 
+我们将一行数据的前 36 个字节 作为这行数据的前缀索引。当遇到 VARCHAR 类型时，前缀索引会直接截断
+
 - http://doris.apache.org/master/zh-CN/getting-started/data-model-rollup.html#rollup
 - https://km.sankuai.com/page/28276900
 
@@ -70,3 +72,109 @@ group by vendor_id,
 
 - 从维表中查询日期的list
 - 事实表的dt查询in这个list
+
+# doris前缀索引数序
+
+一个unique模型的表，begin_date作为分区字段，date_scale是真正的时间维度的时间字段
+
+**第一种前缀索引的顺序：**
+
+- 因为date_scale是各种时间类型的时间值，必须是字符串类型，但是字符串类型的字段会截断前缀索引，后续的字段不会构建在前缀索引中了，所以想着把其他必查的字段放到前面
+
+```sql
+CREATE TABLE kldp_data_stat.app_management_dashboard_product_with3p_merge_test (
+  `business_type` INT NULL COMMENT "业务类型 ：-1 全部 ， 1 KA ， 2 中小B",
+  `time_tag` INT NULL COMMENT "时间标记，0:日1:自然周2:自然月3:周WTD4:月MTD 5:近7D 6:每天月MTD",
+  `cat1_id` BIGINT NULL COMMENT "后台一级类目 -1 全部类目",
+  `cat2_id` BIGINT NULL COMMENT "后台二级类目 -1 全部类目",
+  `cat3_id` BIGINT NULL COMMENT "后台三级类目 -1 全部类目",
+  `cat4_id` BIGINT NULL COMMENT "后台四级类目 -1 全部类目",
+  `bu_id` BIGINT NULL COMMENT "买家事业部ID",
+  `org_tag` INT NULL COMMENT "维度标记，0:全国1:管理城市",
+  `date_scale` VARCHAR(64) NULL COMMENT "日周月W-1W-2M-1M-2MTD-20191223",
+  `begin_date` INT NULL COMMENT "时间周期的起始日期",
+  `bu_name` VARCHAR(255) NULL COMMENT "买家事业部名称",
+  `catering_arranged_amt` DECIMAL(27,6) NULL COMMENT "餐饮销售额"
+) ENGINE = OLAP
+UNIQUE KEY(`business_type`, `time_tag`, `cat1_id`, `cat2_id`, `cat3_id`, `cat4_id`, `bu_id`, `org_tag`, `date_scale`, `begin_date`)
+COMMENT "测试表-勿用！！！"
+PARTITION BY RANGE(`begin_date`)
+(
+  PARTITION p20210423 VALUES  [("20210422"),("20210423"))
+)
+DISTRIBUTED BY HASH(`date_scale`) BUCKETS 3
+PROPERTIES (
+"storage_format" = "v2")
+```
+
+**第二种前缀索引顺序：**
+
+- date_scale放在前面其实也有好处，因为我们的查询条件中并没有添加分区字段，在扫描所有分区的时候，不在因为date_scale在最前，所以没有匹配到的日期的分区可以很快过滤掉
+- 但是每个分区中都会有其他字段的各种信息，如果其他字段放在最前面，需要扫很多列才能扫到date_scale列，猜测这部分时间是比较长的
+
+```sql
+CREATE TABLE kldp_data_stat.app_management_dashboard_product_with3p_merge (
+  `date_scale` VARCHAR(64) NULL COMMENT "日周月W-1W-2M-1M-2MTD-20191223",
+  `cat1_id` BIGINT NULL COMMENT "后台一级类目 -1 全部类目",
+  `cat2_id` BIGINT NULL COMMENT "后台二级类目 -1 全部类目",
+  `cat3_id` BIGINT NULL COMMENT "后台三级类目 -1 全部类目",
+  `bu_id` BIGINT NULL COMMENT "事业部iD",
+  `time_tag` INT NULL COMMENT "时间标记，0:日1:自然周2:自然月3:周WTD4:月MTD 5:近7D 6:每天月MTD",
+  `cat4_id` BIGINT NULL COMMENT "后台四级类目 -1 全部类目",
+  `business_type` INT NULL COMMENT "业务类型 ：-1 全部 ， 1 KA ， 2 中小B",
+  `org_tag` INT NULL COMMENT "维度标记，0:全国1:管理城市",
+  `begin_date` INT NULL COMMENT "时间周期的起始日期",
+  `bu_name` VARCHAR(255) NULL COMMENT "管理城市名称",
+  `catering_arranged_amt` DECIMAL(27,6) NULL COMMENT "餐饮销售额"
+) ENGINE = OLAP
+UNIQUE KEY(`date_scale`, `cat1_id`, `cat2_id`, `cat3_id`, `bu_id`, `time_tag`, `cat4_id`, `business_type`, `org_tag`, `begin_date`)
+COMMENT "经营大盘-商品主题"
+PARTITION BY RANGE(`begin_date`)
+(
+  PARTITION p20210423 VALUES  [("20210422"),("20210423"))
+)
+DISTRIBUTED BY HASH(`date_scale`) BUCKETS 3
+PROPERTIES (
+"storage_format" = "v2")
+```
+
+**测试性能的sql：**
+
+```sql
+select *
+  from app_management_dashboard_product_with3p_merge
+ where 1 = 1
+   and time_tag=0
+   and cat1_id = -1
+   and cat2_id = -1
+   and cat3_id = -1
+   and cat4_id = -1
+   and date_scale in ('20210421', '20210420', '20210419', '20210418', '20210417', '20210416', '20210415', '20210414', '20210414')
+   and bu_id =-1
+   and org_tag != 2
+   and business_type = -1
+ order by date_scale asc;
+```
+
+发现两个表的查询时间基本一样，都是200ms左右，可能跟这个表结构比较简单有关系，如果数据量比较大，可能会有差异的比较明显，但是从这个表的测试看，两种情况基本相同
+
+**效果最明显的还是添加分区字段到查询条件中，表中的begin_date：**
+
+```
+select *
+  from app_management_dashboard_product_with3p_merge
+ where 1 = 1
+   and time_tag=0
+   and cat1_id = -1
+   and cat2_id = -1
+   and cat3_id = -1
+   and cat4_id = -1
+   and date_scale in ('20210421', '20210420', '20210419', '20210418', '20210417', '20210416', '20210415', '20210414', '20210414')
+   and begin_date in (20210421, 20210420, 20210419, 20210418, 20210417, 20210416, 20210415, 20210414, 20210414)
+   and bu_id =-1
+   and org_tag != 2
+   and business_type = -1
+ order by date_scale asc;
+```
+
+加上分区条件，查询时间到了几十ms，效果十分明显~
