@@ -347,3 +347,47 @@ SELECT t44923_0.`dt` `dt`,
 
 比如说销售额占比这个指标，公式是：当前所选类目销售额除以事业部总的销售额；这种如何动态生成sql
 
+# duplicate模型与rollup
+
+duplicate模型也可以创建rollup，但是作用跟聚合模型的rollup不太相同：
+
+- 聚合模型的指标列会进行聚合计算，但是duplicate模型不会有指标列的概念，更不会进行聚合运算
+- duplicate模型创建的rollup也可以选部分列，但是只相当于是二级索引，rollup中的数据条数是跟base表完全一样的，只是列发生了变化
+
+一个创建rollup的例子：
+
+```sql
+CREATE TABLE kldp_data_stat_test_stage.doris_sm_star_pa_org_area (
+  `dt` BIGINT NULL COMMENT "取数时间分区",
+  `bu_id` BIGINT NULL COMMENT "事业部ID",
+  `cat_type` BIGINT NULL COMMENT "商户类型1餐饮 2流通 0 全量",
+  `org_id` BIGINT NULL COMMENT "销售组ID",
+  `area_id` BIGINT NULL COMMENT "分区ID",
+  `type` VARCHAR(32) NULL COMMENT "时间分区 day 日 wk 7日 mo 月",
+  `area_name` VARCHAR(256) NULL COMMENT "分区名称",
+  `bu_name` VARCHAR(256) NULL COMMENT "事业部名称",
+  `city_id` BIGINT NULL COMMENT "城市ID",
+  `last_day_sale_amt` DECIMAL(27,6) NULL COMMENT "上期销售额",
+  `total_new_byr_amt` DECIMAL(27,6) NULL COMMENT "新客销售额",
+  `total_old_byr_amt` DECIMAL(27,6) NULL COMMENT "老客销售额",
+  `total_byr_cnt_daily` BIGINT NULL COMMENT "日均合作商户数",
+  `gross_rate` DECIMAL(27,6) NULL COMMENT "毛利率",
+  `gross_amt` DECIMAL(27,6) NULL COMMENT "毛利额"
+) ENGINE = OLAP
+DUPLICATE KEY(`dt`, `bu_id`, `cat_type`, `org_id`, `area_id`, `type`)
+COMMENT "人效主题-BD人效-小组汇总指标"
+PARTITION BY RANGE(`dt`)
+(
+  PARTITION p20210713 VALUES  [("19700101"),("2018")),
+  PARTITION p20210714 VALUES  [("20210713"),("20210714"))
+)
+DISTRIBUTED BY HASH(`type`) BUCKETS 3
+rollup ( 
+xxx_rollup( bu_id,org_id,area_id,gross_amt,gross_rate)
+)
+PROPERTIES (
+"storage_format" = "v2")
+```
+
+
+
