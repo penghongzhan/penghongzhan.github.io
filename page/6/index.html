@@ -262,7 +262,7 @@
   
   
   <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="https://penghongzhan.github.io/2018/03/20/mybatis-springboot配置多数据源/">
+    <link itemprop="mainEntityOfPage" href="https://penghongzhan.github.io/2019/08/30/ES查询性能分析之profile/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="name" content="penghong.zhan">
@@ -281,7 +281,7 @@
         
           <h1 class="post-title" itemprop="name headline">
                 
-                <a class="post-title-link" href="/2018/03/20/mybatis-springboot配置多数据源/" itemprop="url">mybatis+springboot配置多数据源</a></h1>
+                <a class="post-title-link" href="/2019/08/30/ES查询性能分析之profile/" itemprop="url">ES查询性能分析之profile</a></h1>
         
 
         <div class="post-meta">
@@ -293,8 +293,8 @@
               
                 <span class="post-meta-item-text">发表于</span>
               
-              <time title="创建于" itemprop="dateCreated datePublished" datetime="2018-03-20T22:48:22+08:00">
-                2018-03-20
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2019-08-30T15:34:05+08:00">
+                2019-08-30
               </time>
             
 
@@ -316,8 +316,8 @@
               
               
                 <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/mybatis/" itemprop="url" rel="index">
-                    <span itemprop="name">mybatis</span>
+                  <a href="/categories/elasticsearch/" itemprop="url" rel="index">
+                    <span itemprop="name">elasticsearch</span>
                   </a>
                 </span>
 
@@ -355,14 +355,19 @@
       
         
           
-          
-遇到的问题
-无法使用类型别名的包扫描按照文档中的说明，只需要在sprinboot的配置文件中添加：mybatis.type-aliases-package=com.example.domain.model即可，但是自己的项目中的配置就不是不起作用。
-问题分析官方文档中说的配置是针对mybatis自
+          重要指标query
+type：查询类型
+time：查询消耗的时间
+
+breakdownquery的详细信息，单位是纳秒
+
+create_weight：创建用于查询的临时上下文
+build_scorer：构建用户评分的评分器
+next_doc：统计得到的查询下一个文档id需要的时间，这个不太懂啥意思，
           ...
           <!--noindex-->
           <div class="post-button text-center">
-            <a class="btn" href="/2018/03/20/mybatis-springboot配置多数据源/#more" rel="contents">
+            <a class="btn" href="/2019/08/30/ES查询性能分析之profile/#more" rel="contents">
               阅读全文 &raquo;
             </a>
           </div>
@@ -413,7 +418,7 @@
   
   
   <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="https://penghongzhan.github.io/2018/03/20/spring aop与动态代理/">
+    <link itemprop="mainEntityOfPage" href="https://penghongzhan.github.io/2019/08/27/explain命令的使用/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="name" content="penghong.zhan">
@@ -432,7 +437,7 @@
         
           <h1 class="post-title" itemprop="name headline">
                 
-                <a class="post-title-link" href="/2018/03/20/spring aop与动态代理/" itemprop="url">spring aop与动态代理</a></h1>
+                <a class="post-title-link" href="/2019/08/27/explain命令的使用/" itemprop="url">explain命令的使用</a></h1>
         
 
         <div class="post-meta">
@@ -444,8 +449,8 @@
               
                 <span class="post-meta-item-text">发表于</span>
               
-              <time title="创建于" itemprop="dateCreated datePublished" datetime="2018-03-20T22:30:22+08:00">
-                2018-03-20
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2019-08-27T20:13:05+08:00">
+                2019-08-27
               </time>
             
 
@@ -467,8 +472,8 @@
               
               
                 <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/spring/" itemprop="url" rel="index">
-                    <span itemprop="name">spring</span>
+                  <a href="/categories/mysql/" itemprop="url" rel="index">
+                    <span itemprop="name">mysql</span>
                   </a>
                 </span>
 
@@ -506,16 +511,16 @@
       
         
           
-          
-aspectj
-AspectJ是静态代理的增强，所谓的静态代理就是AOP框架会在编译阶段生成AOP代理类，因此也称为编译时增强。
-相比于动态代理，aspectJ有更好的性能，但是需要特定的编译器，编译之后生成的class相比于java的编译器生成的class，会添加代理相关的逻辑。
+          准备条件创建表
 
-java的动
+user_info：name字段有索引，sname字段有唯一索引
+order_info：user_id、product_name、productor三个字段的联合索引
+
+12345678910111213141516171819202122232425262728293031323
           ...
           <!--noindex-->
           <div class="post-button text-center">
-            <a class="btn" href="/2018/03/20/spring aop与动态代理/#more" rel="contents">
+            <a class="btn" href="/2019/08/27/explain命令的使用/#more" rel="contents">
               阅读全文 &raquo;
             </a>
           </div>
@@ -566,7 +571,7 @@ java的动
   
   
   <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="https://penghongzhan.github.io/2018/03/18/zookeeper的通信协调/">
+    <link itemprop="mainEntityOfPage" href="https://penghongzhan.github.io/2019/08/27/mysql离线计算留存/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="name" content="penghong.zhan">
@@ -585,7 +590,7 @@ java的动
         
           <h1 class="post-title" itemprop="name headline">
                 
-                <a class="post-title-link" href="/2018/03/18/zookeeper的通信协调/" itemprop="url">zookeeper的通信协调</a></h1>
+                <a class="post-title-link" href="/2019/08/27/mysql离线计算留存/" itemprop="url">mysql离线计算留存</a></h1>
         
 
         <div class="post-meta">
@@ -597,8 +602,8 @@ java的动
               
                 <span class="post-meta-item-text">发表于</span>
               
-              <time title="创建于" itemprop="dateCreated datePublished" datetime="2018-03-18T15:47:22+08:00">
-                2018-03-18
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2019-08-27T17:38:42+08:00">
+                2019-08-27
               </time>
             
 
@@ -620,8 +625,8 @@ java的动
               
               
                 <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/zookeeper/" itemprop="url" rel="index">
-                    <span itemprop="name">zookeeper</span>
+                  <a href="/categories/mysql/" itemprop="url" rel="index">
+                    <span itemprop="name">mysql</span>
                   </a>
                 </span>
 
@@ -659,14 +664,69 @@ java的动
       
         
           
-          
-observer服务器
-observer不需要将事务持久化到磁盘，一旦observer被重启，需要从leader重新同步整个名字空间。
-依据Observer的特点。我们能够使用Observer做跨数据中心部署。假设把Leader和Follower分散到多个数据中心的话，由于数据中心之间的网络的延迟
+          表结构
+
+
+id
+spu_code
+wk
+
+
+
+1
+1
+1
+
+
+2
+1
+2
+
+
+3
+1
+3
+
+
+4
+1
+1
+
+
+5
+1
+2
+
+
+6
+1
+7
+
+
+7
+1
+11
+
+
+8
+2
+7
+
+
+9
+1
+11
+
+
+
+唯一标识：spu_code
+时间字段：wk
+
+计算sql123456789101112131415SE
           ...
           <!--noindex-->
           <div class="post-button text-center">
-            <a class="btn" href="/2018/03/18/zookeeper的通信协调/#more" rel="contents">
+            <a class="btn" href="/2019/08/27/mysql离线计算留存/#more" rel="contents">
               阅读全文 &raquo;
             </a>
           </div>
@@ -717,7 +777,7 @@ observer不需要将事务持久化到磁盘，一旦observer被重启，需要�
   
   
   <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="https://penghongzhan.github.io/2018/03/18/druid基础架构/">
+    <link itemprop="mainEntityOfPage" href="https://penghongzhan.github.io/2019/08/26/java垃圾回收之各种GC/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="name" content="penghong.zhan">
@@ -736,7 +796,7 @@ observer不需要将事务持久化到磁盘，一旦observer被重启，需要�
         
           <h1 class="post-title" itemprop="name headline">
                 
-                <a class="post-title-link" href="/2018/03/18/druid基础架构/" itemprop="url">Druid基础架构</a></h1>
+                <a class="post-title-link" href="/2019/08/26/java垃圾回收之各种GC/" itemprop="url">java垃圾回收之各种GC</a></h1>
         
 
         <div class="post-meta">
@@ -748,8 +808,8 @@ observer不需要将事务持久化到磁盘，一旦observer被重启，需要�
               
                 <span class="post-meta-item-text">发表于</span>
               
-              <time title="创建于" itemprop="dateCreated datePublished" datetime="2018-03-18T12:47:22+08:00">
-                2018-03-18
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2019-08-26T20:33:10+08:00">
+                2019-08-26
               </time>
             
 
@@ -771,8 +831,8 @@ observer不需要将事务持久化到磁盘，一旦observer被重启，需要�
               
               
                 <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/druid/" itemprop="url" rel="index">
-                    <span itemprop="name">druid</span>
+                  <a href="/categories/java/" itemprop="url" rel="index">
+                    <span itemprop="name">java</span>
                   </a>
                 </span>
 
@@ -810,22 +870,17 @@ observer不需要将事务持久化到磁盘，一旦observer被重启，需要�
       
         
           
-          
-重要概念
-
-dimension: 维度列
-metrics: 指标列
-
-
-
-集群角色
-Historical历史节点，从deep storage中加载数据，并且创建索引
-deep storage数据存储，例如HDFS
-broker接收client过来的查询请求，路由到Historical节点和Real
+          新生代回收算法通过复制算法实现垃圾的回收，将标记被使用的对象复制到一个未存放对象的空间，然后清空当前空间中的剩余对象。因此复制清除算法需要一块单独的空闲空间用于对象的复制。
+可用GC
+串行GC
+parallel scavenge(PS)：并行回收
+采用复制算法
+扫描和复制都是多线程执行
+根据新生代回
           ...
           <!--noindex-->
           <div class="post-button text-center">
-            <a class="btn" href="/2018/03/18/druid基础架构/#more" rel="contents">
+            <a class="btn" href="/2019/08/26/java垃圾回收之各种GC/#more" rel="contents">
               阅读全文 &raquo;
             </a>
           </div>
@@ -876,7 +931,7 @@ broker接收client过来的查询请求，路由到Historical节点和Real
   
   
   <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="https://penghongzhan.github.io/2018/03/17/Hexo的使用技巧/">
+    <link itemprop="mainEntityOfPage" href="https://penghongzhan.github.io/2019/08/12/Elasticsearch的原理与ADT应用/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="name" content="penghong.zhan">
@@ -895,7 +950,7 @@ broker接收client过来的查询请求，路由到Historical节点和Real
         
           <h1 class="post-title" itemprop="name headline">
                 
-                <a class="post-title-link" href="/2018/03/17/Hexo的使用技巧/" itemprop="url">Hexo的使用技巧</a></h1>
+                <a class="post-title-link" href="/2019/08/12/Elasticsearch的原理与ADT应用/" itemprop="url">Elasticsearch的原理与ADT应用</a></h1>
         
 
         <div class="post-meta">
@@ -907,8 +962,8 @@ broker接收client过来的查询请求，路由到Historical节点和Real
               
                 <span class="post-meta-item-text">发表于</span>
               
-              <time title="创建于" itemprop="dateCreated datePublished" datetime="2018-03-17T14:47:22+08:00">
-                2018-03-17
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2019-08-12T19:18:23+08:00">
+                2019-08-12
               </time>
             
 
@@ -930,8 +985,8 @@ broker接收client过来的查询请求，路由到Historical节点和Real
               
               
                 <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/Hexo/" itemprop="url" rel="index">
-                    <span itemprop="name">Hexo</span>
+                  <a href="/categories/elasticsearch/" itemprop="url" rel="index">
+                    <span itemprop="name">elasticsearch</span>
                   </a>
                 </span>
 
@@ -970,21 +1025,13 @@ broker接收client过来的查询请求，路由到Historical节点和Real
         
           
           
-添加分类和标签
-参考博客：
-Hexo使用攻略-添加分类及标签
-
-主页显示文章摘要
-针对next主题进行设置
-
-进入hexo博客项目的themes/next目录
-用文本编辑器打开_config.yml文件
-
-12345# Automatically Excerpt. Not recommand.# 
+简介
+Elasticsearch（简称ES）是一个分布式、可扩展、实时的搜索与数据分析引擎。ES不仅仅只是全文搜索，还支持结构化搜索、数据分析、复杂的语言处理、地理位置和对象间关联关系等。
+ES的底层依赖Lucene，Lucene可以说是当下最先进、高性能、全功能的搜索引擎库。但是Lucene仅仅
           ...
           <!--noindex-->
           <div class="post-button text-center">
-            <a class="btn" href="/2018/03/17/Hexo的使用技巧/#more" rel="contents">
+            <a class="btn" href="/2019/08/12/Elasticsearch的原理与ADT应用/#more" rel="contents">
               阅读全文 &raquo;
             </a>
           </div>
@@ -1035,7 +1082,7 @@ Hexo使用攻略-添加分类及标签
   
   
   <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="https://penghongzhan.github.io/2018/03/17/GitHub访问慢解决方案/">
+    <link itemprop="mainEntityOfPage" href="https://penghongzhan.github.io/2019/04/03/Hbase的原理以及在ADT的应用/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="name" content="penghong.zhan">
@@ -1054,7 +1101,7 @@ Hexo使用攻略-添加分类及标签
         
           <h1 class="post-title" itemprop="name headline">
                 
-                <a class="post-title-link" href="/2018/03/17/GitHub访问慢解决方案/" itemprop="url">GitHub访问慢解决方案</a></h1>
+                <a class="post-title-link" href="/2019/04/03/Hbase的原理以及在ADT的应用/" itemprop="url">Hbase的原理以及在ADT的应用</a></h1>
         
 
         <div class="post-meta">
@@ -1066,8 +1113,8 @@ Hexo使用攻略-添加分类及标签
               
                 <span class="post-meta-item-text">发表于</span>
               
-              <time title="创建于" itemprop="dateCreated datePublished" datetime="2018-03-17T13:47:22+08:00">
-                2018-03-17
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2019-04-03T09:00:00+08:00">
+                2019-04-03
               </time>
             
 
@@ -1089,8 +1136,8 @@ Hexo使用攻略-添加分类及标签
               
               
                 <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/github/" itemprop="url" rel="index">
-                    <span itemprop="name">github</span>
+                  <a href="/categories/hbase/" itemprop="url" rel="index">
+                    <span itemprop="name">hbase</span>
                   </a>
                 </span>
 
@@ -1128,16 +1175,15 @@ Hexo使用攻略-添加分类及标签
       
         
           
-          
-GitHub访问慢
-windows系统中：
-编辑host文件，将GitHub的域名和实际的ip配置上。查询域名对应的ip通过下文章提到的网站进行查询。
-编辑host文件C:\Windows\System32\drivers\etc\hosts
-查询域名对应的iphttps://www.ipaddr
+          目录
+[toc]
+
+1 Hbase的应用场景
+HBase是一个分布式的、面向列的开源数据库，该技术来源于 Fay Chang 所撰写的Google论文“Bigtable：一个结构化数据的分布式存储系统”。就像Bigtable利用了Google文件系统（File System）所提供的分布式数据存储一
           ...
           <!--noindex-->
           <div class="post-button text-center">
-            <a class="btn" href="/2018/03/17/GitHub访问慢解决方案/#more" rel="contents">
+            <a class="btn" href="/2019/04/03/Hbase的原理以及在ADT的应用/#more" rel="contents">
               阅读全文 &raquo;
             </a>
           </div>
@@ -1188,7 +1234,7 @@ windows系统中：
   
   
   <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="https://penghongzhan.github.io/2018/03/17/通过GitHub和hexo部署自己的博客/">
+    <link itemprop="mainEntityOfPage" href="https://penghongzhan.github.io/2018/05/20/Hbase学习笔记/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="name" content="penghong.zhan">
@@ -1207,7 +1253,7 @@ windows系统中：
         
           <h1 class="post-title" itemprop="name headline">
                 
-                <a class="post-title-link" href="/2018/03/17/通过GitHub和hexo部署自己的博客/" itemprop="url">通过GitHub和hexo部署自己的博客</a></h1>
+                <a class="post-title-link" href="/2018/05/20/Hbase学习笔记/" itemprop="url">Hbase学习笔记</a></h1>
         
 
         <div class="post-meta">
@@ -1219,8 +1265,8 @@ windows系统中：
               
                 <span class="post-meta-item-text">发表于</span>
               
-              <time title="创建于" itemprop="dateCreated datePublished" datetime="2018-03-17T11:47:22+08:00">
-                2018-03-17
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2018-05-20T22:39:32+08:00">
+                2018-05-20
               </time>
             
 
@@ -1242,8 +1288,8 @@ windows系统中：
               
               
                 <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/Hexo/" itemprop="url" rel="index">
-                    <span itemprop="name">Hexo</span>
+                  <a href="/categories/hbase/" itemprop="url" rel="index">
+                    <span itemprop="name">hbase</span>
                   </a>
                 </span>
 
@@ -1282,19 +1328,12 @@ windows系统中：
         
           
           
-参照博客
-搭建个人博客-hexo+github详细完整步骤–简书
-搭建hexo博客并简单的实现多终端同步
-如何解决github+Hexo的博客多终端同步问题
-
-注意问题
-
-最好在git-bash中执行命令，不要在window的控制台中执行
-创建GitHub的远程仓库的时候，名字需要使用自己的Git
+Hbase的架构
+zookeeperHBase利用ZooKeeper维护集群中服务器的状态并协调分布式系统的工作。ZooKeeper维护服务器（例如master节点和region server节点）是否存活、是否可访问的状态并提供服务器故障/宕机的通知。ZooKeeper同时还使用一致性算法来保证
           ...
           <!--noindex-->
           <div class="post-button text-center">
-            <a class="btn" href="/2018/03/17/通过GitHub和hexo部署自己的博客/#more" rel="contents">
+            <a class="btn" href="/2018/05/20/Hbase学习笔记/#more" rel="contents">
               阅读全文 &raquo;
             </a>
           </div>
@@ -1345,7 +1384,7 @@ windows系统中：
   
   
   <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="https://penghongzhan.github.io/2018/02/23/hello-world/">
+    <link itemprop="mainEntityOfPage" href="https://penghongzhan.github.io/2018/05/19/Apache-HBase-IO-–-HFile（翻译）/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="name" content="penghong.zhan">
@@ -1364,7 +1403,7 @@ windows系统中：
         
           <h1 class="post-title" itemprop="name headline">
                 
-                <a class="post-title-link" href="/2018/02/23/hello-world/" itemprop="url">Hexo Hello World</a></h1>
+                <a class="post-title-link" href="/2018/05/19/Apache-HBase-IO-–-HFile（翻译）/" itemprop="url">Apache HBase IO – HFile（翻译）</a></h1>
         
 
         <div class="post-meta">
@@ -1376,8 +1415,8 @@ windows系统中：
               
                 <span class="post-meta-item-text">发表于</span>
               
-              <time title="创建于" itemprop="dateCreated datePublished" datetime="2018-02-23T08:23:23+08:00">
-                2018-02-23
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2018-05-19T14:19:22+08:00">
+                2018-05-19
               </time>
             
 
@@ -1399,8 +1438,8 @@ windows系统中：
               
               
                 <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/Hexo/" itemprop="url" rel="index">
-                    <span itemprop="name">Hexo</span>
+                  <a href="/categories/hbase/" itemprop="url" rel="index">
+                    <span itemprop="name">hbase</span>
                   </a>
                 </span>
 
@@ -1438,13 +1477,324 @@ windows系统中：
       
         
           
-          emoji: ♦️  🚙
-yellow back highlight
-Welcome to Hexo! This is your very first post. Check documentation for more info. If you get any problems when usi
+          原文链接
+
+介绍
+Apache HBase是Hadoop开源，分布式，版本化的存储管理器，非常适合随机，实时读/写访问。
+等等？随机的、实时的读写？
+怎么可能？Hadoop不仅仅是一个连续的读/写批处理系统吗？
+是的，我们在谈论同样的事情，在接下来的几段中，我将向您解释HBase如何实现随机I / 
           ...
           <!--noindex-->
           <div class="post-button text-center">
-            <a class="btn" href="/2018/02/23/hello-world/#more" rel="contents">
+            <a class="btn" href="/2018/05/19/Apache-HBase-IO-–-HFile（翻译）/#more" rel="contents">
+              阅读全文 &raquo;
+            </a>
+          </div>
+          <!--/noindex-->
+        
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+    
+      
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="https://penghongzhan.github.io/2018/05/19/E-3-HBase-file-format-with-inline-blocks-version-2-（翻译）/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="penghong.zhan">
+      <meta itemprop="description" content>
+      <meta itemprop="image" content="/images/我的头像.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="HongMo's Blog">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+                
+                <a class="post-title-link" href="/2018/05/19/E-3-HBase-file-format-with-inline-blocks-version-2-（翻译）/" itemprop="url">E.3. HBase file format with inline blocks (version 2)（翻译）</a></h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2018-05-19T13:40:01+08:00">
+                2018-05-19
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category">
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/hbase/" itemprop="url" rel="index">
+                    <span itemprop="name">hbase</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+          原文链接
+
+Overview
+A version 2 HFile is structured as follows:
+
+
+Unified version 2 block format
+在版本2中，数据部分中的每个块都包含以下字段：
+(1) 8字节字节序列，用于标识块类型，这个字节序列相当于版本1的”
+          ...
+          <!--noindex-->
+          <div class="post-button text-center">
+            <a class="btn" href="/2018/05/19/E-3-HBase-file-format-with-inline-blocks-version-2-（翻译）/#more" rel="contents">
+              阅读全文 &raquo;
+            </a>
+          </div>
+          <!--/noindex-->
+        
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+    
+      
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="https://penghongzhan.github.io/2018/05/19/B-Tree和B-Tree学习笔记/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="penghong.zhan">
+      <meta itemprop="description" content>
+      <meta itemprop="image" content="/images/我的头像.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="HongMo's Blog">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+                
+                <a class="post-title-link" href="/2018/05/19/B-Tree和B-Tree学习笔记/" itemprop="url">B-Tree和B+Tree学习笔记</a></h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2018-05-19T13:34:40+08:00">
+                2018-05-19
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category">
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/数据结构/" itemprop="url" rel="index">
+                    <span itemprop="name">数据结构</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+          
+索引的基本概念
+MySQL官方对索引的定义为：索引（Index）是帮助MySQL高效获取数据的数据结构。提取句子主干，就可以得到索引的本质：索引是一种数据结构。
+在数据之外，数据库系统还维护着满足特定查找算法的数据结构。这些数据结构以某种方式引用（指向）数据，这样就可以在这些数据结构上实现高级查找
+          ...
+          <!--noindex-->
+          <div class="post-button text-center">
+            <a class="btn" href="/2018/05/19/B-Tree和B-Tree学习笔记/#more" rel="contents">
               阅读全文 &raquo;
             </a>
           </div>
@@ -1486,7 +1836,7 @@ Welcome to Hexo! This is your very first post. Check documentation for more info
 
   
   <nav class="pagination">
-    <a class="extend prev" rel="prev" href="/page/5/"><i class="fa fa-angle-left"></i></a><a class="page-number" href="/">1</a><span class="space">&hellip;</span><a class="page-number" href="/page/5/">5</a><span class="page-number current">6</span>
+    <a class="extend prev" rel="prev" href="/page/5/"><i class="fa fa-angle-left"></i></a><a class="page-number" href="/">1</a><span class="space">&hellip;</span><a class="page-number" href="/page/5/">5</a><span class="page-number current">6</span><a class="page-number" href="/page/7/">7</a><a class="page-number" href="/page/8/">8</a><a class="extend next" rel="next" href="/page/7/"><i class="fa fa-angle-right"></i></a>
   </nav>
 
 
@@ -1534,7 +1884,7 @@ Welcome to Hexo! This is your very first post. Check documentation for more info
               
                 <a href="/archives/">
               
-                  <span class="site-state-item-count">58</span>
+                  <span class="site-state-item-count">79</span>
                   <span class="site-state-item-name">日志</span>
                 </a>
               </div>
@@ -1545,7 +1895,7 @@ Welcome to Hexo! This is your very first post. Check documentation for more info
               
               <div class="site-state-item site-state-categories">
                 <a href="/categories/index.html">
-                  <span class="site-state-item-count">22</span>
+                  <span class="site-state-item-count">34</span>
                   <span class="site-state-item-name">分类</span>
                 </a>
               </div>
@@ -1556,7 +1906,7 @@ Welcome to Hexo! This is your very first post. Check documentation for more info
               
               <div class="site-state-item site-state-tags">
                 <a href="/tags/index.html">
-                  <span class="site-state-item-count">117</span>
+                  <span class="site-state-item-count">150</span>
                   <span class="site-state-item-name">标签</span>
                 </a>
               </div>

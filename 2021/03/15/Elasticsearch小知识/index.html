@@ -87,7 +87,7 @@
 <meta property="og:site_name" content="HongMo&#39;s Blog">
 <meta property="og:description" content="elastic5.6.3集群中只要有一台节点fullgc了，那么cat api会卡住，无法通过cat api获取集群的一些状态；好像任何一台机器fullgc之后，都会导致这样的情况，感觉不是非常合理。 限制es的查询节点，查询中添加preference，rest client中指定的机器，需要排除有问题的机器  es集群稳定性需要关注的点 segment太多，定时需要merge 索引的查询qps">
 <meta property="og:locale" content="zh-Hans">
-<meta property="og:updated_time" content="2021-04-06T07:47:40.000Z">
+<meta property="og:updated_time" content="2021-05-10T07:26:06.000Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="Elasticsearch小知识">
 <meta name="twitter:description" content="elastic5.6.3集群中只要有一台节点fullgc了，那么cat api会卡住，无法通过cat api获取集群的一些状态；好像任何一台机器fullgc之后，都会导致这样的情况，感觉不是非常合理。 限制es的查询节点，查询中添加preference，rest client中指定的机器，需要排除有问题的机器  es集群稳定性需要关注的点 segment太多，定时需要merge 索引的查询qps">
@@ -362,6 +362,23 @@
 <li>索引的删除文档数量，删除的文档，如果没有merge的情况下，删除的数据也会占用磁盘和内存</li>
 <li>别名下的索引太多，是不是也会影响查询性能</li>
 </ul>
+<h1 id="es增加-amp-删除master节点注意事项"><a href="#es增加-amp-删除master节点注意事项" class="headerlink" title="es增加&amp;删除master节点注意事项"></a>es增加&amp;删除master节点注意事项</h1><p>核心是要注意新增删除节点的时候，需要动态的修改集群的minus_master的配置，否在会有问题</p>
+<ul>
+<li>比如说，原来有5个master，设置的最小节点数为3，现在修改成2个master，如果不修改这个配置，那么master选举会出现异常</li>
+<li>修改配置的方式可以通过提交命令动态修改，修改配置文件是没有用的</li>
+</ul>
+<figure class="highlight json"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">// PUT /_cluster/settings</span><br><span class="line">&#123;</span><br><span class="line">  <span class="attr">"transient"</span>: &#123;</span><br><span class="line">    <span class="attr">"discovery.zen.minimum_master_nodes"</span>: <span class="number">3</span></span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h1 id="bool查询的filter和should"><a href="#bool查询的filter和should" class="headerlink" title="bool查询的filter和should"></a>bool查询的filter和should</h1><p>filter和should并列在bool查询中，should条件跟没有一样，should中的条件即使一个也没有命中，也算是匹配的，如果想要命中，需要给bool查询添加一个参数：</p>
+<blockquote>
+<p>“minimum_should_match”: 1</p>
+</blockquote>
+<h1 id="search-after查询"><a href="#search-after查询" class="headerlink" title="search after查询"></a>search after查询</h1><p>对比：普通的from+size分页查询</p>
+<ul>
+<li>search after性能更好，不用每次全量的查了再排序，获取某一部分数据</li>
+<li>查询局限性：不支持随机的页数查询，只支持一页接一页的查询，因为需要提供上一次查询的最后一个值</li>
+</ul>
+<p>参考文档：<a href="https://www.elastic.co/guide/en/elasticsearch/reference/5.6/search-request-search-after.html" target="_blank" rel="noopener">https://www.elastic.co/guide/en/elasticsearch/reference/5.6/search-request-search-after.html</a></p>
 
       
     </div>
@@ -487,7 +504,7 @@
               
                 <a href="/archives/">
               
-                  <span class="site-state-item-count">58</span>
+                  <span class="site-state-item-count">79</span>
                   <span class="site-state-item-name">日志</span>
                 </a>
               </div>
@@ -498,7 +515,7 @@
               
               <div class="site-state-item site-state-categories">
                 <a href="/categories/index.html">
-                  <span class="site-state-item-count">22</span>
+                  <span class="site-state-item-count">34</span>
                   <span class="site-state-item-name">分类</span>
                 </a>
               </div>
@@ -509,7 +526,7 @@
               
               <div class="site-state-item site-state-tags">
                 <a href="/tags/index.html">
-                  <span class="site-state-item-count">117</span>
+                  <span class="site-state-item-count">150</span>
                   <span class="site-state-item-name">标签</span>
                 </a>
               </div>
@@ -542,7 +559,7 @@
             
 
             
-              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#es集群稳定性需要关注的点"><span class="nav-number">1.</span> <span class="nav-text">es集群稳定性需要关注的点</span></a></li></ol></div>
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#es集群稳定性需要关注的点"><span class="nav-number">1.</span> <span class="nav-text">es集群稳定性需要关注的点</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#es增加-amp-删除master节点注意事项"><span class="nav-number">2.</span> <span class="nav-text">es增加&amp;删除master节点注意事项</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#bool查询的filter和should"><span class="nav-number">3.</span> <span class="nav-text">bool查询的filter和should</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#search-after查询"><span class="nav-number">4.</span> <span class="nav-text">search after查询</span></a></li></ol></div>
             
 
           </div>

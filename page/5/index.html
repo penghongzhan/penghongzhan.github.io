@@ -262,7 +262,7 @@
   
   
   <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="https://penghongzhan.github.io/2018/05/09/scylladb-architecture（翻译官方文档）/">
+    <link itemprop="mainEntityOfPage" href="https://penghongzhan.github.io/2019/10/16/倒排索引保存的信息/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="name" content="penghong.zhan">
@@ -281,7 +281,7 @@
         
           <h1 class="post-title" itemprop="name headline">
                 
-                <a class="post-title-link" href="/2018/05/09/scylladb-architecture（翻译官方文档）/" itemprop="url">scylla architecture（翻译官方文档）</a></h1>
+                <a class="post-title-link" href="/2019/10/16/倒排索引保存的信息/" itemprop="url">倒排索引保存的信息</a></h1>
         
 
         <div class="post-meta">
@@ -293,8 +293,8 @@
               
                 <span class="post-meta-item-text">发表于</span>
               
-              <time title="创建于" itemprop="dateCreated datePublished" datetime="2018-05-09T22:46:24+08:00">
-                2018-05-09
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2019-10-16T21:05:31+08:00">
+                2019-10-16
               </time>
             
 
@@ -316,8 +316,8 @@
               
               
                 <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/scylladb/" itemprop="url" rel="index">
-                    <span itemprop="name">scylladb</span>
+                  <a href="/categories/elasticsearch/" itemprop="url" rel="index">
+                    <span itemprop="name">elasticsearch</span>
                   </a>
                 </span>
 
@@ -355,28 +355,15 @@
       
         
           
-          原文链接
-
-架构对比
-Scylla是NoSQL数据存储设计的新方法，针对现代化硬件进行了优化
-传统堆栈
-
-锁竞争
-缓存竞争
-NUMA（非统一内存访问）不友好
-
-seastar的共享堆栈
-
-没有竞争
-线性扩展
-NUMA友好
-
-架构对比：
-传统的nosql数据存储包括一个建立在linux操作系统之上的J
+          需要记录的信息
+词在文档中出现的频率：文档列表中每个文档id对应一个值
+出现该次的文档的数量：文档列表的长度
+高亮搜索结果：词在文档中的偏移信息(offset)，包括起始位置和长度
+短语查询：记录没个词的position信息，如果查询brown fox，还是会按照分词的term（brown和fox）
           ...
           <!--noindex-->
           <div class="post-button text-center">
-            <a class="btn" href="/2018/05/09/scylladb-architecture（翻译官方文档）/#more" rel="contents">
+            <a class="btn" href="/2019/10/16/倒排索引保存的信息/#more" rel="contents">
               阅读全文 &raquo;
             </a>
           </div>
@@ -427,7 +414,7 @@ NUMA友好
   
   
   <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="https://penghongzhan.github.io/2018/05/09/scylladb-overview（翻译官方文档）/">
+    <link itemprop="mainEntityOfPage" href="https://penghongzhan.github.io/2019/10/16/elasticsearch查询与缓存/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="name" content="penghong.zhan">
@@ -446,7 +433,7 @@ NUMA友好
         
           <h1 class="post-title" itemprop="name headline">
                 
-                <a class="post-title-link" href="/2018/05/09/scylladb-overview（翻译官方文档）/" itemprop="url">scylladb overview（翻译官方文档）</a></h1>
+                <a class="post-title-link" href="/2019/10/16/elasticsearch查询与缓存/" itemprop="url">elasticsearch查询与缓存</a></h1>
         
 
         <div class="post-meta">
@@ -458,8 +445,8 @@ NUMA友好
               
                 <span class="post-meta-item-text">发表于</span>
               
-              <time title="创建于" itemprop="dateCreated datePublished" datetime="2018-05-09T22:37:07+08:00">
-                2018-05-09
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2019-10-16T20:59:38+08:00">
+                2019-10-16
               </time>
             
 
@@ -481,8 +468,8 @@ NUMA友好
               
               
                 <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/scylladb/" itemprop="url" rel="index">
-                    <span itemprop="name">scylladb</span>
+                  <a href="/categories/elasticsearch/" itemprop="url" rel="index">
+                    <span itemprop="name">elasticsearch</span>
                   </a>
                 </span>
 
@@ -520,16 +507,12 @@ NUMA友好
       
         
           
-          原文链接
-
-实时的大数据存储
-Scylla以不到1毫秒的延迟时间为您的应用程序提供1,000,000次OPS
-Scylla是一款入门级的Apache Cassandra替代产品，可为您的应用提供超低延迟和极高的吞吐量。
-利用Apache Cassandra在高可用性，容错性和丰富的生态系统方面的优势
+          在【转载】Elasticsearch2.x Filter执行流程及缓存原理一文中提到：filter查询上下文中对应的查询的结果会以bitmap的方式进行缓存，后续再进行查询的时候，直接通过内存中的bitmap进行文档id的过滤。
+bool查询中must和filter比较像，其中都会经常用到term和
           ...
           <!--noindex-->
           <div class="post-button text-center">
-            <a class="btn" href="/2018/05/09/scylladb-overview（翻译官方文档）/#more" rel="contents">
+            <a class="btn" href="/2019/10/16/elasticsearch查询与缓存/#more" rel="contents">
               阅读全文 &raquo;
             </a>
           </div>
@@ -580,7 +563,7 @@ Scylla是一款入门级的Apache Cassandra替代产品，可为您的应用提�
   
   
   <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="https://penghongzhan.github.io/2018/05/02/Flink的事件时间和watermarks（翻译Flink官方文档）/">
+    <link itemprop="mainEntityOfPage" href="https://penghongzhan.github.io/2019/10/16/【转载】Elasticsearch2-x-Filter执行流程及缓存原理/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="name" content="penghong.zhan">
@@ -599,7 +582,7 @@ Scylla是一款入门级的Apache Cassandra替代产品，可为您的应用提�
         
           <h1 class="post-title" itemprop="name headline">
                 
-                <a class="post-title-link" href="/2018/05/02/Flink的事件时间和watermarks（翻译Flink官方文档）/" itemprop="url">Flink的事件时间和watermarks（翻译Flink官方文档）</a></h1>
+                <a class="post-title-link" href="/2019/10/16/【转载】Elasticsearch2-x-Filter执行流程及缓存原理/" itemprop="url">【转载】Elasticsearch2.x Filter执行流程及缓存原理</a></h1>
         
 
         <div class="post-meta">
@@ -611,8 +594,8 @@ Scylla是一款入门级的Apache Cassandra替代产品，可为您的应用提�
               
                 <span class="post-meta-item-text">发表于</span>
               
-              <time title="创建于" itemprop="dateCreated datePublished" datetime="2018-05-02T22:14:29+08:00">
-                2018-05-02
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2019-10-16T20:32:45+08:00">
+                2019-10-16
               </time>
             
 
@@ -634,8 +617,8 @@ Scylla是一款入门级的Apache Cassandra替代产品，可为您的应用提�
               
               
                 <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/flink/" itemprop="url" rel="index">
-                    <span itemprop="name">flink</span>
+                  <a href="/categories/elasticsearch/" itemprop="url" rel="index">
+                    <span itemprop="name">elasticsearch</span>
                   </a>
                 </span>
 
@@ -674,18 +657,14 @@ Scylla是一款入门级的Apache Cassandra替代产品，可为您的应用提�
         
           
           
-翻译：Event Time
-
-Event Time / Processing Time / Ingestion Time（事件时间/处理时间/摄入时间）
-flink支持不同的时间概念：
-
-处理时间：当前机器处理该条事件的时间
-
-流处理程序使用该时间进行处理的时候，所有的操作（类似于时间窗口）都会使
+基本概念
+在讲述ES Filter的执行流程和缓存原理之前，有几个概念我们必须要清楚。
+Query and Filter context官网地址
+Query Context所谓查询上下文，是指包含一个或多个查询条件的逻辑组合，QueryContext里包含的的单个查询表示的含义是“文档和该查询条件
           ...
           <!--noindex-->
           <div class="post-button text-center">
-            <a class="btn" href="/2018/05/02/Flink的事件时间和watermarks（翻译Flink官方文档）/#more" rel="contents">
+            <a class="btn" href="/2019/10/16/【转载】Elasticsearch2-x-Filter执行流程及缓存原理/#more" rel="contents">
               阅读全文 &raquo;
             </a>
           </div>
@@ -736,7 +715,7 @@ flink支持不同的时间概念：
   
   
   <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="https://penghongzhan.github.io/2018/04/19/翻译：HBase-Architecture-Analysis-Part1-Logical-Architecture/">
+    <link itemprop="mainEntityOfPage" href="https://penghongzhan.github.io/2019/10/09/elasticsearch的查询与评分/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="name" content="penghong.zhan">
@@ -755,7 +734,7 @@ flink支持不同的时间概念：
         
           <h1 class="post-title" itemprop="name headline">
                 
-                <a class="post-title-link" href="/2018/04/19/翻译：HBase-Architecture-Analysis-Part1-Logical-Architecture/" itemprop="url">翻译：HBase-Architecture-Analysis-Part1-Logical-Architecture</a></h1>
+                <a class="post-title-link" href="/2019/10/09/elasticsearch的查询与评分/" itemprop="url">elasticsearch的查询与评分</a></h1>
         
 
         <div class="post-meta">
@@ -767,8 +746,8 @@ flink支持不同的时间概念：
               
                 <span class="post-meta-item-text">发表于</span>
               
-              <time title="创建于" itemprop="dateCreated datePublished" datetime="2018-04-19T22:34:06+08:00">
-                2018-04-19
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2019-10-09T20:11:53+08:00">
+                2019-10-09
               </time>
             
 
@@ -790,8 +769,8 @@ flink支持不同的时间概念：
               
               
                 <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/hbase/" itemprop="url" rel="index">
-                    <span itemprop="name">hbase</span>
+                  <a href="/categories/elasticsearch/" itemprop="url" rel="index">
+                    <span itemprop="name">elasticsearch</span>
                   </a>
                 </span>
 
@@ -829,15 +808,24 @@ flink支持不同的时间概念：
       
         
           
-          原文链接
+          关键词
+match
+term
+filter
+bool
+text
+keyword
 
-1. 总览
-Apache HBase是一个开源的面向列的数据库。它通常被描述为一个稀疏的，一致的，分布式的，多维排序的Map。 HBase模仿Google的“Bigtable：一种分布式结构化数据存储系统”，它可以容纳数十亿行，X百万列的超大型表格。
-HBase是一个no-SQL数据库，
+什么时候会进行评分
+分词字段&amp;match：会评分
+分词字段&amp;term：会评分
+分词字段&amp;filter&amp;term：不会评分
+分词字段&amp;filter&amp;match：不会评分
+不
           ...
           <!--noindex-->
           <div class="post-button text-center">
-            <a class="btn" href="/2018/04/19/翻译：HBase-Architecture-Analysis-Part1-Logical-Architecture/#more" rel="contents">
+            <a class="btn" href="/2019/10/09/elasticsearch的查询与评分/#more" rel="contents">
               阅读全文 &raquo;
             </a>
           </div>
@@ -888,7 +876,7 @@ HBase是一个no-SQL数据库，
   
   
   <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="https://penghongzhan.github.io/2018/04/13/Druid的segment/">
+    <link itemprop="mainEntityOfPage" href="https://penghongzhan.github.io/2019/09/15/ByteBuffer的理解/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="name" content="penghong.zhan">
@@ -907,7 +895,7 @@ HBase是一个no-SQL数据库，
         
           <h1 class="post-title" itemprop="name headline">
                 
-                <a class="post-title-link" href="/2018/04/13/Druid的segment/" itemprop="url">Druid的segment</a></h1>
+                <a class="post-title-link" href="/2019/09/15/ByteBuffer的理解/" itemprop="url">ByteBuffer的理解</a></h1>
         
 
         <div class="post-meta">
@@ -919,610 +907,8 @@ HBase是一个no-SQL数据库，
               
                 <span class="post-meta-item-text">发表于</span>
               
-              <time title="创建于" itemprop="dateCreated datePublished" datetime="2018-04-13T21:43:48+08:00">
-                2018-04-13
-              </time>
-            
-
-            
-
-            
-          </span>
-
-          
-            <span class="post-category">
-            
-              <span class="post-meta-divider">|</span>
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-folder-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">分类于</span>
-              
-              
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/druid/" itemprop="url" rel="index">
-                    <span itemprop="name">druid</span>
-                  </a>
-                </span>
-
-                
-                
-              
-            </span>
-          
-
-          
-            
-          
-
-          
-          
-
-          
-
-          
-
-          
-
-        </div>
-      </header>
-    
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-      
-
-      
-        
-          
-          一个datasource的每个维度（列）会单独创建索引——倒排索引，每个维度有自己独立的倒排索引；指标维度不需要创建倒排索引，只需要保存起来，由于不需要进行聚合，所以保存的时候可以进行压缩。在最终保存的时候，所有的维度和指标对应的数据会组织在一个segment中，segment是按照时间段进行创建的
-          ...
-          <!--noindex-->
-          <div class="post-button text-center">
-            <a class="btn" href="/2018/04/13/Druid的segment/#more" rel="contents">
-              阅读全文 &raquo;
-            </a>
-          </div>
-          <!--/noindex-->
-        
-      
-    </div>
-    
-    
-    
-
-    
-
-    
-
-    
-
-    <footer class="post-footer">
-      
-
-      
-
-      
-
-      
-      
-        <div class="post-eof"></div>
-      
-    </footer>
-  </div>
-  
-  
-  
-  </article>
-
-
-    
-      
-
-  
-
-  
-  
-  
-
-  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
-  
-  
-  
-  <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="https://penghongzhan.github.io/2018/04/13/Flink的checkpoint学习笔记/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="name" content="penghong.zhan">
-      <meta itemprop="description" content>
-      <meta itemprop="image" content="/images/我的头像.jpg">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="HongMo's Blog">
-    </span>
-
-    
-      <header class="post-header">
-
-        
-        
-          <h1 class="post-title" itemprop="name headline">
-                
-                <a class="post-title-link" href="/2018/04/13/Flink的checkpoint学习笔记/" itemprop="url">Flink的checkpoint学习笔记</a></h1>
-        
-
-        <div class="post-meta">
-          <span class="post-time">
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">发表于</span>
-              
-              <time title="创建于" itemprop="dateCreated datePublished" datetime="2018-04-13T13:33:26+08:00">
-                2018-04-13
-              </time>
-            
-
-            
-
-            
-          </span>
-
-          
-            <span class="post-category">
-            
-              <span class="post-meta-divider">|</span>
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-folder-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">分类于</span>
-              
-              
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/flink/" itemprop="url" rel="index">
-                    <span itemprop="name">flink</span>
-                  </a>
-                </span>
-
-                
-                
-              
-            </span>
-          
-
-          
-            
-          
-
-          
-          
-
-          
-
-          
-
-          
-
-        </div>
-      </header>
-    
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-      
-
-      
-        
-          
-          学习官方文档
-数据流中消费到barrier n（第n个快照对应的barrier）的时候，flink会做一次checkpoin，生成一个snapshot。当出现故障之后，集群进入恢复阶段，会从最近的snapshot恢复出最新的快照。从当前快照的执行进度继续执行。
-快照中需要记录消费的source的位置
-          ...
-          <!--noindex-->
-          <div class="post-button text-center">
-            <a class="btn" href="/2018/04/13/Flink的checkpoint学习笔记/#more" rel="contents">
-              阅读全文 &raquo;
-            </a>
-          </div>
-          <!--/noindex-->
-        
-      
-    </div>
-    
-    
-    
-
-    
-
-    
-
-    
-
-    <footer class="post-footer">
-      
-
-      
-
-      
-
-      
-      
-        <div class="post-eof"></div>
-      
-    </footer>
-  </div>
-  
-  
-  
-  </article>
-
-
-    
-      
-
-  
-
-  
-  
-  
-
-  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
-  
-  
-  
-  <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="https://penghongzhan.github.io/2018/04/13/hexo常用命令/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="name" content="penghong.zhan">
-      <meta itemprop="description" content>
-      <meta itemprop="image" content="/images/我的头像.jpg">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="HongMo's Blog">
-    </span>
-
-    
-      <header class="post-header">
-
-        
-        
-          <h1 class="post-title" itemprop="name headline">
-                
-                <a class="post-title-link" href="/2018/04/13/hexo常用命令/" itemprop="url">hexo常用命令</a></h1>
-        
-
-        <div class="post-meta">
-          <span class="post-time">
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">发表于</span>
-              
-              <time title="创建于" itemprop="dateCreated datePublished" datetime="2018-04-13T13:28:27+08:00">
-                2018-04-13
-              </time>
-            
-
-            
-
-            
-          </span>
-
-          
-            <span class="post-category">
-            
-              <span class="post-meta-divider">|</span>
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-folder-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">分类于</span>
-              
-              
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/Hexo/" itemprop="url" rel="index">
-                    <span itemprop="name">Hexo</span>
-                  </a>
-                </span>
-
-                
-                
-              
-            </span>
-          
-
-          
-            
-          
-
-          
-          
-
-          
-
-          
-
-          
-
-        </div>
-      </header>
-    
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-      
-
-      
-        
-          
-          
-创建新的文章：hexo new &quot;name&quot;
-发布文章：hexo clean &amp;&amp; hexo g &amp;&amp; hexo d
-
-
-          
-          <!--noindex-->
-          <div class="post-button text-center">
-            <a class="btn" href="/2018/04/13/hexo常用命令/#more" rel="contents">
-              阅读全文 &raquo;
-            </a>
-          </div>
-          <!--/noindex-->
-        
-      
-    </div>
-    
-    
-    
-
-    
-
-    
-
-    
-
-    <footer class="post-footer">
-      
-
-      
-
-      
-
-      
-      
-        <div class="post-eof"></div>
-      
-    </footer>
-  </div>
-  
-  
-  
-  </article>
-
-
-    
-      
-
-  
-
-  
-  
-  
-
-  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
-  
-  
-  
-  <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="https://penghongzhan.github.io/2018/03/22/Spring依赖注入的bean装载/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="name" content="penghong.zhan">
-      <meta itemprop="description" content>
-      <meta itemprop="image" content="/images/我的头像.jpg">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="HongMo's Blog">
-    </span>
-
-    
-      <header class="post-header">
-
-        
-        
-          <h1 class="post-title" itemprop="name headline">
-                
-                <a class="post-title-link" href="/2018/03/22/Spring依赖注入的bean装载/" itemprop="url">Spring依赖注入的bean装载</a></h1>
-        
-
-        <div class="post-meta">
-          <span class="post-time">
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">发表于</span>
-              
-              <time title="创建于" itemprop="dateCreated datePublished" datetime="2018-03-22T18:10:56+08:00">
-                2018-03-22
-              </time>
-            
-
-            
-
-            
-          </span>
-
-          
-            <span class="post-category">
-            
-              <span class="post-meta-divider">|</span>
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-folder-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">分类于</span>
-              
-              
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/spring/" itemprop="url" rel="index">
-                    <span itemprop="name">spring</span>
-                  </a>
-                </span>
-
-                
-                
-              
-            </span>
-          
-
-          
-            
-          
-
-          
-          
-
-          
-
-          
-
-          
-
-        </div>
-      </header>
-    
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-      
-
-      
-        
-          
-          
-关于父类
-通过spring装配的两个bean（A和B），都继承了一个父类，父类也是通过spring进行装配，spring容器初始化的时候，会装配这两个bean（A和B），这两个子类装配的时候，会分别初始化一次父类，也就是父类会初始化两次。再加上父类本身被装载，所以还有一次，总共三次。
-
-java类
-          ...
-          <!--noindex-->
-          <div class="post-button text-center">
-            <a class="btn" href="/2018/03/22/Spring依赖注入的bean装载/#more" rel="contents">
-              阅读全文 &raquo;
-            </a>
-          </div>
-          <!--/noindex-->
-        
-      
-    </div>
-    
-    
-    
-
-    
-
-    
-
-    
-
-    <footer class="post-footer">
-      
-
-      
-
-      
-
-      
-      
-        <div class="post-eof"></div>
-      
-    </footer>
-  </div>
-  
-  
-  
-  </article>
-
-
-    
-      
-
-  
-
-  
-  
-  
-
-  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
-  
-  
-  
-  <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="https://penghongzhan.github.io/2018/03/22/JIT基本原理/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="name" content="penghong.zhan">
-      <meta itemprop="description" content>
-      <meta itemprop="image" content="/images/我的头像.jpg">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="HongMo's Blog">
-    </span>
-
-    
-      <header class="post-header">
-
-        
-        
-          <h1 class="post-title" itemprop="name headline">
-                
-                <a class="post-title-link" href="/2018/03/22/JIT基本原理/" itemprop="url">JIT基本原理</a></h1>
-        
-
-        <div class="post-meta">
-          <span class="post-time">
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">发表于</span>
-              
-              <time title="创建于" itemprop="dateCreated datePublished" datetime="2018-03-22T15:22:03+08:00">
-                2018-03-22
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2019-09-15T16:33:56+08:00">
+                2019-09-15
               </time>
             
 
@@ -1584,12 +970,16 @@ java类
         
           
           
-JIT简介
-JVM自动监控这所有方法的执行，如果某个方法是热点方法，JVM就计划把该方法的字节码代码编译成本地机器代码，同时还会在后续的执行过程中进行可能的更深层次的优化，编译成机器代码的过程是在独立线程中执行的，不会影响程序的执行；除次以外，JVM还对热点方法和很小的方法内联到调用方的方法中，减
+ByteBuffer是nio包中的类
+
+实际上就是对字节数组的一个封装，提供了操作字节的api，方便的进行字节的读取，所以说是字节缓冲区。
+
+分配一块空间用于存放字节
+支持除了boolean之外的所有基本类型的存储，因为这些基本类型最终也是通过字节数组存储的，之所以不包含boolean，因为boo
           ...
           <!--noindex-->
           <div class="post-button text-center">
-            <a class="btn" href="/2018/03/22/JIT基本原理/#more" rel="contents">
+            <a class="btn" href="/2019/09/15/ByteBuffer的理解/#more" rel="contents">
               阅读全文 &raquo;
             </a>
           </div>
@@ -1640,7 +1030,7 @@ JVM自动监控这所有方法的执行，如果某个方法是热点方法，JV
   
   
   <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="https://penghongzhan.github.io/2018/03/22/zookeeper的数据与存储/">
+    <link itemprop="mainEntityOfPage" href="https://penghongzhan.github.io/2019/09/12/mysql预聚合结果查询与索引设计/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="name" content="penghong.zhan">
@@ -1659,7 +1049,7 @@ JVM自动监控这所有方法的执行，如果某个方法是热点方法，JV
         
           <h1 class="post-title" itemprop="name headline">
                 
-                <a class="post-title-link" href="/2018/03/22/zookeeper的数据与存储/" itemprop="url">zookeeper的数据与存储</a></h1>
+                <a class="post-title-link" href="/2019/09/12/mysql预聚合结果查询与索引设计/" itemprop="url">mysql预聚合结果查询与索引设计</a></h1>
         
 
         <div class="post-meta">
@@ -1671,8 +1061,8 @@ JVM自动监控这所有方法的执行，如果某个方法是热点方法，JV
               
                 <span class="post-meta-item-text">发表于</span>
               
-              <time title="创建于" itemprop="dateCreated datePublished" datetime="2018-03-22T14:32:47+08:00">
-                2018-03-22
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2019-09-12T21:29:19+08:00">
+                2019-09-12
               </time>
             
 
@@ -1694,8 +1084,8 @@ JVM自动监控这所有方法的执行，如果某个方法是热点方法，JV
               
               
                 <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/zookeeper/" itemprop="url" rel="index">
-                    <span itemprop="name">zookeeper</span>
+                  <a href="/categories/mysql/" itemprop="url" rel="index">
+                    <span itemprop="name">mysql</span>
                   </a>
                 </span>
 
@@ -1733,16 +1123,591 @@ JVM自动监控这所有方法的执行，如果某个方法是热点方法，JV
       
         
           
-          
-内存数据
-zookeeper的数据结构是一颗树，类似于linux的文件系统，但是更加简单轻量。zookeeper在内存中存储了整个树的内容，DataTree包括所有节点的路径、节点数据以及ACL信息等。
-DataTree底层是一个典型的ConcurrentHashMap：
-
-key: 节点路径（p
+          这里需要注意，mysql中存储的数据不光具有明细数据，还具有经过etl聚合完成之后的数据，也就是说查询某个维度的聚合结果的时候，不需要实时的group by，可以直接查询预聚合完成的结果。
+什么样的索引是最合适的
+因为维度很多，所以需要使用联合索引
+联合索引最需要关注的是索引的字段顺序
+如果是实时聚
           ...
           <!--noindex-->
           <div class="post-button text-center">
-            <a class="btn" href="/2018/03/22/zookeeper的数据与存储/#more" rel="contents">
+            <a class="btn" href="/2019/09/12/mysql预聚合结果查询与索引设计/#more" rel="contents">
+              阅读全文 &raquo;
+            </a>
+          </div>
+          <!--/noindex-->
+        
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+    
+      
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="https://penghongzhan.github.io/2019/09/12/spark-es-bitmap实现离线排重指标计算/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="penghong.zhan">
+      <meta itemprop="description" content>
+      <meta itemprop="image" content="/images/我的头像.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="HongMo's Blog">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+                
+                <a class="post-title-link" href="/2019/09/12/spark-es-bitmap实现离线排重指标计算/" itemprop="url">spark+es+bitmap实现离线排重指标计算</a></h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2019-09-12T13:49:32+08:00">
+                2019-09-12
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+          
+          
+          <!--noindex-->
+          <div class="post-button text-center">
+            <a class="btn" href="/2019/09/12/spark-es-bitmap实现离线排重指标计算/#more" rel="contents">
+              阅读全文 &raquo;
+            </a>
+          </div>
+          <!--/noindex-->
+        
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+    
+      
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="https://penghongzhan.github.io/2019/09/12/单例模式-懒加载模式的Double-Checked-Locking/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="penghong.zhan">
+      <meta itemprop="description" content>
+      <meta itemprop="image" content="/images/我的头像.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="HongMo's Blog">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+                
+                <a class="post-title-link" href="/2019/09/12/单例模式-懒加载模式的Double-Checked-Locking/" itemprop="url">单例模式-懒加载模式的Double-Checked Locking</a></h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2019-09-12T13:43:58+08:00">
+                2019-09-12
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category">
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/设计模式/" itemprop="url" rel="index">
+                    <span itemprop="name">设计模式</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+          最简单的懒加载12345678910// Single threaded versionclass Foo &#123;   private Helper helper = null;  public Helper getHelper() &#123;    if (helper == null) 
+          ...
+          <!--noindex-->
+          <div class="post-button text-center">
+            <a class="btn" href="/2019/09/12/单例模式-懒加载模式的Double-Checked-Locking/#more" rel="contents">
+              阅读全文 &raquo;
+            </a>
+          </div>
+          <!--/noindex-->
+        
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+    
+      
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="https://penghongzhan.github.io/2019/09/03/自定义分片分配/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="penghong.zhan">
+      <meta itemprop="description" content>
+      <meta itemprop="image" content="/images/我的头像.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="HongMo's Blog">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+                
+                <a class="post-title-link" href="/2019/09/03/自定义分片分配/" itemprop="url">自定义分片分配</a></h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2019-09-03T12:03:06+08:00">
+                2019-09-03
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category">
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/elasticsearch/" itemprop="url" rel="index">
+                    <span itemprop="name">elasticsearch</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+          场景一个集群中有多台机器，但是机器的配置不同，最好能够让配置好的机器上面的分片多一些，但是es自己的策略貌似不会考虑到机器的配置，配置高低的机器上分片的数量差不多
+自定义分片分配数量对于一个索引来说，配置高的机器上分片更多一些
+分配策略：排除低配节点ES提供了api，可以排除低配的节点，但是不能所有
+          ...
+          <!--noindex-->
+          <div class="post-button text-center">
+            <a class="btn" href="/2019/09/03/自定义分片分配/#more" rel="contents">
+              阅读全文 &raquo;
+            </a>
+          </div>
+          <!--/noindex-->
+        
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+    
+      
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="https://penghongzhan.github.io/2019/08/30/输入流与输出流/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="penghong.zhan">
+      <meta itemprop="description" content>
+      <meta itemprop="image" content="/images/我的头像.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="HongMo's Blog">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+                
+                <a class="post-title-link" href="/2019/08/30/输入流与输出流/" itemprop="url">输入流与输出流</a></h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2019-08-30T16:53:11+08:00">
+                2019-08-30
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category">
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/java/" itemprop="url" rel="index">
+                    <span itemprop="name">java</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+          java的io有一个比较不容易理解的就是流的方向问题，到底输入流和输出流是怎么个概念，这个入和出到底有什么不同？以最常见的文件流和不太常见的字节数组流为例进行解释
+文件输入输出流输入流
+将文件读入到内存（这个内存就是流）中，构造器以File作为参数，读取文件的时候就是读取这个文件
+
+1FileInp
+          ...
+          <!--noindex-->
+          <div class="post-button text-center">
+            <a class="btn" href="/2019/08/30/输入流与输出流/#more" rel="contents">
               阅读全文 &raquo;
             </a>
           </div>
@@ -1784,7 +1749,7 @@ key: 节点路径（p
 
   
   <nav class="pagination">
-    <a class="extend prev" rel="prev" href="/page/4/"><i class="fa fa-angle-left"></i></a><a class="page-number" href="/">1</a><span class="space">&hellip;</span><a class="page-number" href="/page/4/">4</a><span class="page-number current">5</span><a class="page-number" href="/page/6/">6</a><a class="extend next" rel="next" href="/page/6/"><i class="fa fa-angle-right"></i></a>
+    <a class="extend prev" rel="prev" href="/page/4/"><i class="fa fa-angle-left"></i></a><a class="page-number" href="/">1</a><span class="space">&hellip;</span><a class="page-number" href="/page/4/">4</a><span class="page-number current">5</span><a class="page-number" href="/page/6/">6</a><span class="space">&hellip;</span><a class="page-number" href="/page/8/">8</a><a class="extend next" rel="next" href="/page/6/"><i class="fa fa-angle-right"></i></a>
   </nav>
 
 
@@ -1832,7 +1797,7 @@ key: 节点路径（p
               
                 <a href="/archives/">
               
-                  <span class="site-state-item-count">58</span>
+                  <span class="site-state-item-count">79</span>
                   <span class="site-state-item-name">日志</span>
                 </a>
               </div>
@@ -1843,7 +1808,7 @@ key: 节点路径（p
               
               <div class="site-state-item site-state-categories">
                 <a href="/categories/index.html">
-                  <span class="site-state-item-count">22</span>
+                  <span class="site-state-item-count">34</span>
                   <span class="site-state-item-name">分类</span>
                 </a>
               </div>
@@ -1854,7 +1819,7 @@ key: 节点路径（p
               
               <div class="site-state-item site-state-tags">
                 <a href="/tags/index.html">
-                  <span class="site-state-item-count">117</span>
+                  <span class="site-state-item-count">150</span>
                   <span class="site-state-item-name">标签</span>
                 </a>
               </div>

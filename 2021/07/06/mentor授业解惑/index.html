@@ -1,0 +1,839 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next mist use-motion" lang="zh-Hans">
+<head><meta name="generator" content="Hexo 3.9.0">
+  <meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform">
+<meta http-equiv="Cache-Control" content="no-siteapp">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css">
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css">
+
+<link href="/css/main.css?v=5.1.4" rel="stylesheet" type="text/css">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=5.1.4">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=5.1.4" color="#222">
+
+
+
+
+
+  <meta name="keywords" content="数据平台,mentor,">
+
+
+
+
+
+
+
+
+
+
+<meta name="description" content="123452021H1小组述职记录1. 数据框架上了解，数据处理的流程2. 对数据交付有一个明确的标准，比如说准确性和及时性，衡量结果用数据说话3. 了解清楚需求的背景、目标、收益4. 说话太腼腆  设计原则单一职责原则并不单单指方法或者类的单一职责，对于微服务来讲，仍然是大的指导原则，每个服务的职责尽量单一 封装变化（开闭原则、高内聚）在不稳定组件上创建稳定的抽象接口，将可能的变化封装在接口之后">
+<meta name="keywords" content="数据平台,mentor">
+<meta property="og:type" content="article">
+<meta property="og:title" content="mentor授业解惑">
+<meta property="og:url" content="https://penghongzhan.github.io/2021/07/06/mentor授业解惑/index.html">
+<meta property="og:site_name" content="HongMo&#39;s Blog">
+<meta property="og:description" content="123452021H1小组述职记录1. 数据框架上了解，数据处理的流程2. 对数据交付有一个明确的标准，比如说准确性和及时性，衡量结果用数据说话3. 了解清楚需求的背景、目标、收益4. 说话太腼腆  设计原则单一职责原则并不单单指方法或者类的单一职责，对于微服务来讲，仍然是大的指导原则，每个服务的职责尽量单一 封装变化（开闭原则、高内聚）在不稳定组件上创建稳定的抽象接口，将可能的变化封装在接口之后">
+<meta property="og:locale" content="zh-Hans">
+<meta property="og:updated_time" content="2021-08-03T08:44:06.000Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="mentor授业解惑">
+<meta name="twitter:description" content="123452021H1小组述职记录1. 数据框架上了解，数据处理的流程2. 对数据交付有一个明确的标准，比如说准确性和及时性，衡量结果用数据说话3. 了解清楚需求的背景、目标、收益4. 说话太腼腆  设计原则单一职责原则并不单单指方法或者类的单一职责，对于微服务来讲，仍然是大的指导原则，每个服务的职责尽量单一 封装变化（开闭原则、高内聚）在不稳定组件上创建稳定的抽象接口，将可能的变化封装在接口之后">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Mist',
+    version: '5.1.4',
+    sidebar: {"position":"left","display":"post","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    duoshuo: {
+      userId: '0',
+      author: '博主'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="https://penghongzhan.github.io/2021/07/06/mentor授业解惑/">
+
+
+
+
+
+  <title>mentor授业解惑 | HongMo's Blog</title>
+  
+
+
+
+
+
+
+
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">HongMo's Blog</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle"></p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br>
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br>
+            
+            标签
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br>
+            
+            分类
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br>
+            
+            归档
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-about">
+          <a href="/about/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-user"></i> <br>
+            
+            关于
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="https://penghongzhan.github.io/2021/07/06/mentor授业解惑/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="penghong.zhan">
+      <meta itemprop="description" content>
+      <meta itemprop="image" content="/images/我的头像.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="HongMo's Blog">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">mentor授业解惑</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2021-07-06T16:57:33+08:00">
+                2021-07-06
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category">
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/mentor/" itemprop="url" rel="index">
+                    <span itemprop="name">mentor</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">2021H1小组述职记录</span><br><span class="line">1. 数据框架上了解，数据处理的流程</span><br><span class="line">2. 对数据交付有一个明确的标准，比如说准确性和及时性，衡量结果用数据说话</span><br><span class="line">3. 了解清楚需求的背景、目标、收益</span><br><span class="line">4. 说话太腼腆</span><br></pre></td></tr></table></figure>
+
+<h1 id="设计原则"><a href="#设计原则" class="headerlink" title="设计原则"></a>设计原则</h1><h2 id="单一职责原则"><a href="#单一职责原则" class="headerlink" title="单一职责原则"></a>单一职责原则</h2><p>并不单单指方法或者类的单一职责，对于微服务来讲，仍然是大的指导原则，每个服务的职责尽量单一</p>
+<h2 id="封装变化（开闭原则、高内聚）"><a href="#封装变化（开闭原则、高内聚）" class="headerlink" title="封装变化（开闭原则、高内聚）"></a>封装变化（开闭原则、高内聚）</h2><p>在不稳定组件上创建稳定的抽象接口，将可能的变化封装在接口之后，使得系统内部的不稳定或者变化不会对系统的其它部分产生不良影响</p>
+<h2 id="依赖倒置（低耦合）"><a href="#依赖倒置（低耦合）" class="headerlink" title="依赖倒置（低耦合）"></a>依赖倒置（低耦合）</h2><p>高层不直接依赖于底层的实现，需要依赖于接口</p>
+<h1 id="java基本功"><a href="#java基本功" class="headerlink" title="java基本功"></a>java基本功</h1><h2 id="分层思想"><a href="#分层思想" class="headerlink" title="分层思想"></a>分层思想</h2><p>文章：<a href="https://www.jianshu.com/p/cbc3846df8d5" target="_blank" rel="noopener">https://www.jianshu.com/p/cbc3846df8d5</a></p>
+<p>好处：专注、复用、扩展</p>
+<p>核心：接口定义，面向接口编程</p>
+<h3 id="service层"><a href="#service层" class="headerlink" title="service层"></a>service层</h3><p>业务逻辑，不同的需求千奇百怪；数据服务大多是查询维度的处理，比如说事业部表现、品类表现；针对不同的表现，需要处理的业务逻辑也是不同的。</p>
+<p>这一层一定不要耦合存储引擎的查询逻辑，比如说mapper直接用在这一层，es查询直接用在这一层，并且还进行了一些es api的Response的处理；只有pm需求迭代的时候，我才能动这一层的代码，我们自己的一些技术优化，禁止改动这一层的代码。</p>
+<p>这一层最常用的两种设计模式：策略模式、责任链模式。</p>
+<h3 id="manager层"><a href="#manager层" class="headerlink" title="manager层"></a>manager层</h3><p>通用业务处理层，屏蔽不同需求的千奇百怪，抽象出最通用的；</p>
+<ul>
+<li><p>对第三方平台封装的层，预处理返回结果及转化异常信息； </p>
+</li>
+<li><p>对 Service 层通用能力的下沉，如缓存方案、中间件通用处理； </p>
+</li>
+<li><p>与 DAO 层交互，对多个 DAO 的组合复用。 </p>
+</li>
+</ul>
+<p>尤其这一层需要特别注重接口的入参和输出的规范性，需要通用，输入和输出不能跟第三方的类耦合。</p>
+<h2 id="关键API"><a href="#关键API" class="headerlink" title="关键API"></a>关键API</h2><ul>
+<li>stream<ul>
+<li>flatmap</li>
+</ul>
+</li>
+<li>optional</li>
+</ul>
+<h2 id="抽象类、接口、继承、实现接口的应用场景总结"><a href="#抽象类、接口、继承、实现接口的应用场景总结" class="headerlink" title="抽象类、接口、继承、实现接口的应用场景总结"></a>抽象类、接口、继承、实现接口的应用场景总结</h2><p>什么时候用接口，什么时候用抽象类，什么情况是继承，什么情况是实现接口</p>
+<p>思考：如何在实际开发中抽象出通用的接口，而不是所有逻辑平铺在一个方法中</p>
+<ul>
+<li>每一层需要接收什么信息，提供什么能力</li>
+<li>每层内部需要执行什么样的流程，流程能否抽象成统一的接口</li>
+</ul>
+<h2 id="队列与线程池"><a href="#队列与线程池" class="headerlink" title="队列与线程池"></a>队列与线程池</h2><ul>
+<li>自己抽象一个接口，调用这个接口，每次能够获取一条消息</li>
+<li>自己抽象一个接口，调用这个接口，可以批量将消息写入某个存储</li>
+</ul>
+<p>实现这样一个写入功能，要求：数据写入能够支持并发和批量写入，并且并发度和批量大小可以通过参数调节</p>
+<p>自己起一个本地的小项目，类似我们的platform，使用springboot，要求项目能够启动运行</p>
+<h1 id="存储引擎"><a href="#存储引擎" class="headerlink" title="存储引擎"></a>存储引擎</h1><h2 id="列式存储与行式存储-olap-amp-oltp"><a href="#列式存储与行式存储-olap-amp-oltp" class="headerlink" title="列式存储与行式存储|olap&amp;oltp"></a>列式存储与行式存储|olap&amp;oltp</h2><h3 id="优缺点分析"><a href="#优缺点分析" class="headerlink" title="优缺点分析"></a>优缺点分析</h3><p>列存优点：</p>
+<ul>
+<li>单列数据保存在一起，不同列分开存储，导致存下同样一个表需要更多的Block文件，看起来是更复杂了，但是基于列和列分开存储，这种形式天生就适合分布式的存储，并能完全利用并发写入和并发读取的能力</li>
+<li>同一列存放在一起，数据类型相同，则更好的进行压缩</li>
+<li>同一列存放在一起，则排序更加方便，基于排序方便，where某一列会更加快</li>
+</ul>
+<p>行存优点：</p>
+<ul>
+<li>行式存储对于 OLTP(事务型) 场景是很自然的：大多数操作都以实体（entity）为单位，即大多为增删改查一整行记录，显然把一行数据存在物理上相邻的位置是个很好的选择。</li>
+<li>更容易实现事务性、一致性控制。</li>
+</ul>
+<p>总结：</p>
+<ul>
+<li>行： 一致性、事务更加容易实现</li>
+<li>列：吞吐量高、性能强，一致性、事务性较弱</li>
+</ul>
+<h2 id="从需求到表结构设计"><a href="#从需求到表结构设计" class="headerlink" title="从需求到表结构设计"></a>从需求到表结构设计</h2><p>需求来了，不是等数仓出表结构，我们才有表结构，而是我们先设计应用层的表结构，转而去向数仓提要求，要求他们的表是什么粒度的</p>
+<h3 id="两种数据模型"><a href="#两种数据模型" class="headerlink" title="两种数据模型"></a>两种数据模型</h3><ul>
+<li>聚合结果冗余模型（cube）</li>
+<li>细粒度聚合模型</li>
+</ul>
+<h1 id="分布式"><a href="#分布式" class="headerlink" title="分布式"></a>分布式</h1><p>es&amp;doris：hash、路由</p>
+<h2 id="doris"><a href="#doris" class="headerlink" title="doris"></a>doris</h2><ul>
+<li>数据模型：唯一、重复、聚合</li>
+<li>数据存储：列存</li>
+<li>数据索引：前缀索引，rollup</li>
+<li>高可用&amp;高性能：分区、分桶、cpu资源充分发挥</li>
+<li>重点数据结构：bitmap</li>
+</ul>
+<h1 id="olap"><a href="#olap" class="headerlink" title="olap"></a>olap</h1><h2 id="olap方面doris为什么比es强"><a href="#olap方面doris为什么比es强" class="headerlink" title="olap方面doris为什么比es强"></a>olap方面doris为什么比es强</h2><p>暂时先不考虑doris的rollup和聚合模型，假设只用doris的duplicate模型</p>
+<h1 id="工具-amp-规范"><a href="#工具-amp-规范" class="headerlink" title="工具&amp;规范"></a>工具&amp;规范</h1><p>通过idea进行commit和push，push之前打开代码对比，再过一遍自己的代码</p>
+<h1 id="数据治理"><a href="#数据治理" class="headerlink" title="数据治理"></a>数据治理</h1><p>为了能够全面的衡量数仓治理的效果，我们新建了数据衡量指标体系，总体分为五大类：质量类、成本类、安全、易用性和价值。在监控方式上分为日常监控和定期监控（周、月、季度监控），让我们知道整体数据治理是整体向好、平稳还是向坏的。</p>
+<p>总体来说，数据治理分为三个大阶段：被动治理、主动治理、自动治理。</p>
+<h2 id="维度和指标体系"><a href="#维度和指标体系" class="headerlink" title="维度和指标体系"></a>维度和指标体系</h2><p>维度建模</p>
+<ul>
+<li><p>指标表和维度表关联</p>
+</li>
+<li><p>星型模型和雪花模型</p>
+</li>
+</ul>
+<p>衍生指标</p>
+<ul>
+<li><p>通过已有指标，还能直接计算出新的指标，而不用数仓再加工一次</p>
+</li>
+<li><p>烟囱式开发问题</p>
+</li>
+</ul>
+<p>sql join比较多，可以通过DAG的形式进行逻辑优化</p>
+<h1 id="线上稳定性"><a href="#线上稳定性" class="headerlink" title="线上稳定性"></a>线上稳定性</h1><p>es一台机器fullgc导致集群不可用的解决思路，分析问题的本质：</p>
+<ul>
+<li>事前：规范、演练</li>
+<li>事中：告警、监控、降级、降噪追踪（日志）</li>
+<li>事后：复盘、大查询治理</li>
+</ul>
+<p>监控：事前预防，事中监控，事后追踪</p>
+<h1 id="架构图"><a href="#架构图" class="headerlink" title="架构图"></a>架构图</h1><p>C4架构</p>
+<h1 id="业务学习"><a href="#业务学习" class="headerlink" title="业务学习"></a>业务学习</h1><p>业务学习，报表对业务的价值，尤其pm的看板需求，了解其中业务背景</p>
+<ul>
+<li>需求上线之后，需要有方式监控需求的效果，访问人数、访问频次、下载量等</li>
+</ul>
+
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/数据平台/" rel="tag"># 数据平台</a>
+          
+            <a href="/tags/mentor/" rel="tag"># mentor</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2021/06/25/数据服务的缓存方案设计/" rel="next" title="数据服务的缓存方案设计">
+                <i class="fa fa-chevron-left"></i> 数据服务的缓存方案设计
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2021/07/08/自定义看板-实践经验/" rel="prev" title="自定义看板-实践经验">
+                自定义看板-实践经验 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+            
+              <img class="site-author-image" itemprop="image" src="/images/我的头像.jpg" alt="penghong.zhan">
+            
+              <p class="site-author-name" itemprop="name">penghong.zhan</p>
+              <p class="site-description motion-element" itemprop="description">一个热爱生活的程序猿</p>
+          </div>
+
+          <nav class="site-state motion-element">
+
+            
+              <div class="site-state-item site-state-posts">
+              
+                <a href="/archives/">
+              
+                  <span class="site-state-item-count">79</span>
+                  <span class="site-state-item-name">日志</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-categories">
+                <a href="/categories/index.html">
+                  <span class="site-state-item-count">34</span>
+                  <span class="site-state-item-name">分类</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-tags">
+                <a href="/tags/index.html">
+                  <span class="site-state-item-count">150</span>
+                  <span class="site-state-item-name">标签</span>
+                </a>
+              </div>
+            
+
+          </nav>
+
+          
+
+          
+
+          
+          
+
+          
+          
+
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#设计原则"><span class="nav-number">1.</span> <span class="nav-text">设计原则</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#单一职责原则"><span class="nav-number">1.1.</span> <span class="nav-text">单一职责原则</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#封装变化（开闭原则、高内聚）"><span class="nav-number">1.2.</span> <span class="nav-text">封装变化（开闭原则、高内聚）</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#依赖倒置（低耦合）"><span class="nav-number">1.3.</span> <span class="nav-text">依赖倒置（低耦合）</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#java基本功"><span class="nav-number">2.</span> <span class="nav-text">java基本功</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#分层思想"><span class="nav-number">2.1.</span> <span class="nav-text">分层思想</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#service层"><span class="nav-number">2.1.1.</span> <span class="nav-text">service层</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#manager层"><span class="nav-number">2.1.2.</span> <span class="nav-text">manager层</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#关键API"><span class="nav-number">2.2.</span> <span class="nav-text">关键API</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#抽象类、接口、继承、实现接口的应用场景总结"><span class="nav-number">2.3.</span> <span class="nav-text">抽象类、接口、继承、实现接口的应用场景总结</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#队列与线程池"><span class="nav-number">2.4.</span> <span class="nav-text">队列与线程池</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#存储引擎"><span class="nav-number">3.</span> <span class="nav-text">存储引擎</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#列式存储与行式存储-olap-amp-oltp"><span class="nav-number">3.1.</span> <span class="nav-text">列式存储与行式存储|olap&amp;oltp</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#优缺点分析"><span class="nav-number">3.1.1.</span> <span class="nav-text">优缺点分析</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#从需求到表结构设计"><span class="nav-number">3.2.</span> <span class="nav-text">从需求到表结构设计</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#两种数据模型"><span class="nav-number">3.2.1.</span> <span class="nav-text">两种数据模型</span></a></li></ol></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#分布式"><span class="nav-number">4.</span> <span class="nav-text">分布式</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#doris"><span class="nav-number">4.1.</span> <span class="nav-text">doris</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#olap"><span class="nav-number">5.</span> <span class="nav-text">olap</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#olap方面doris为什么比es强"><span class="nav-number">5.1.</span> <span class="nav-text">olap方面doris为什么比es强</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#工具-amp-规范"><span class="nav-number">6.</span> <span class="nav-text">工具&amp;规范</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#数据治理"><span class="nav-number">7.</span> <span class="nav-text">数据治理</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#维度和指标体系"><span class="nav-number">7.1.</span> <span class="nav-text">维度和指标体系</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#线上稳定性"><span class="nav-number">8.</span> <span class="nav-text">线上稳定性</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#架构图"><span class="nav-number">9.</span> <span class="nav-text">架构图</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#业务学习"><span class="nav-number">10.</span> <span class="nav-text">业务学习</span></a></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2021</span>
+  <span class="with-love">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">penghong.zhan</span>
+
+  
+</div>
+
+
+  <div class="powered-by">由 <a class="theme-link" target="_blank" href="https://hexo.io">Hexo</a> 强力驱动</div>
+
+
+
+  <span class="post-meta-divider">|</span>
+
+
+
+  <div class="theme-info">主题 &mdash; <a class="theme-link" target="_blank" href="https://github.com/iissnan/hexo-theme-next">NexT.Mist</a> v5.1.4</div>
+
+
+
+
+        
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.4"></script>
+
+
+
+  
+  
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.4"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>

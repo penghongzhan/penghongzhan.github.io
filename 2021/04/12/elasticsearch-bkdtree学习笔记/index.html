@@ -68,7 +68,7 @@
 
 
 
-  <meta name="keywords" content="elastic,elasticsearch,bkdtree,原理,">
+  <meta name="keywords" content="elastic,elasticsearch,原理,bkdtree,">
 
 
 
@@ -80,7 +80,7 @@
 
 
 <meta name="description" content="为什么需要bdk tree普通的字符串类型的term，倒排索引采用的数据结构是FST前缀索引和后缀词块，针对某个term的查询能够很快的定位到对应的文档列表；但是该数据结构不适合于数字类型的字段的range查询，早期的es对于这种查询，也是转化成范围内的所有term的查询，比如说range[1，50]，它实际上是转换成了bool中的or，就像（1 or 2 or 3 or 4 … or 50）。；">
-<meta name="keywords" content="elastic,elasticsearch,bkdtree,原理">
+<meta name="keywords" content="elastic,elasticsearch,原理,bkdtree">
 <meta property="og:type" content="article">
 <meta property="og:title" content="elasticsearch bkdtree学习笔记">
 <meta property="og:url" content="https://penghongzhan.github.io/2021/04/12/elasticsearch-bkdtree学习笔记/index.html">
@@ -397,9 +397,9 @@
           
             <a href="/tags/elasticsearch/" rel="tag"># elasticsearch</a>
           
-            <a href="/tags/bkdtree/" rel="tag"># bkdtree</a>
-          
             <a href="/tags/原理/" rel="tag"># 原理</a>
+          
+            <a href="/tags/bkdtree/" rel="tag"># bkdtree</a>
           
         </div>
       
@@ -421,6 +421,10 @@
           <span class="post-nav-divider"></span>
 
           <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2021/04/20/方法论之流程和架构/" rel="prev" title="方法论之流程和架构">
+                方法论之流程和架构 <i class="fa fa-chevron-right"></i>
+              </a>
             
           </div>
         </div>
@@ -499,7 +503,7 @@
               
                 <a href="/archives/">
               
-                  <span class="site-state-item-count">58</span>
+                  <span class="site-state-item-count">79</span>
                   <span class="site-state-item-name">日志</span>
                 </a>
               </div>
@@ -510,7 +514,7 @@
               
               <div class="site-state-item site-state-categories">
                 <a href="/categories/index.html">
-                  <span class="site-state-item-count">22</span>
+                  <span class="site-state-item-count">34</span>
                   <span class="site-state-item-name">分类</span>
                 </a>
               </div>
@@ -521,7 +525,7 @@
               
               <div class="site-state-item site-state-tags">
                 <a href="/tags/index.html">
-                  <span class="site-state-item-count">117</span>
+                  <span class="site-state-item-count">150</span>
                   <span class="site-state-item-name">标签</span>
                 </a>
               </div>
