@@ -72,7 +72,21 @@ public class NoClosureClass {
 }
 ````
 
+# double&float的精度丢失问题
 
+```java
+double yuan = 2.3;
+double fen = yuan * 100;
+// 结果为229
+System.out.println(Double.valueOf(fen).intValue());
+
+BigDecimal b01 = BigDecimal.valueOf(yuan);
+BigDecimal b02 = b01.multiply(BigDecimal.valueOf(100));
+// 结果为230
+System.out.println(b02.intValue());
+```
+
+double在进行计算（包括加减和乘除运算）的时候，会丢失精度，具体原因先不做太多展开，要想运算的时候不丢失精度，需要使用BigDecimal
 
 # 参考链接
 

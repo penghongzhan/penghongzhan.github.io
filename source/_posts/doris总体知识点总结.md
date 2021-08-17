@@ -48,3 +48,4 @@ tags:
 
 [doris存储文件和索引](http://doris.apache.org/master/zh-CN/internal/doris_storage_optimization.html#%E6%96%87%E4%BB%B6%E6%A0%BC%E5%BC%8F)
 
+![doris索引](doris索引.jpeg)
