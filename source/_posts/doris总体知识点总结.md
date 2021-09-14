@@ -49,3 +49,113 @@ tags:
 [doris存储文件和索引](http://doris.apache.org/master/zh-CN/internal/doris_storage_optimization.html#%E6%96%87%E4%BB%B6%E6%A0%BC%E5%BC%8F)
 
 ![doris索引](doris索引.jpeg)
+
+# bitmap全局字典
+
+- [Apache Doris 基于 Bitmap的精确去重和用户行为分析](https://blog.bcmeng.com/post/doris-bitmap.html)
+- [Doris 基于 Hive 表的全局字典设计与实现](https://xie.infoq.cn/article/308cf309bf3034727c6b1df06)
+
+| 客户id | skuid | 销售额   |
+| ------ | ----- | -------- |
+| 10001  | 123   | 10001123 |
+
+客户id和skuid的组合非常多，所以排序和生成顺序号的时候单个节点压力非常大。所以需要考虑，如果对这些结果进行拆分，然后放到不同的task中进行排序和顺序号的生成。
+
+两个维度的组合非常多，但是单个维度的值不多，所以可以先对单个维度（基于单个维度的维表）进行拆分，比如说都拆分成20份，这样组合之后是400份，可以放到400个task中执行。
+
+遍历数据表中的所有记录，按照上述拆分的400份，将组合拆分到不同的分组中，然后到不同的task中并发的进行排序和顺序编号的生成。最终再将各个task的结果进行合并，当然还需要给顺序号添加一个偏移量
+
+# 多表join时聚合多表的指标无法走rollup
+
+```sql
+# bitmap_union_count(t65418_0.customer_id)/bitmap_union_count(t1000001773_2.customer_id) `cust_cover_rate_930749`指标计算的时候，计算字段位于两张表中，导致两个表都不能走rollup
+explain 
+SELECT
+t1000001773_2.`mo_num` `dt`,
+bitmap_union_count(t65418_0.customer_id)/bitmap_union_count(t1000001773_2.customer_id) `cust_cover_rate_930749`
+FROM
+kldp_data_stat.app_invite_business_analysis_integrate_view_p1 t65418_0
+ left
+JOIN kldp_data_stat.app_invite_business_analysis_integrate_customer t1000001773_2 ON
+t65418_0.bu_id = t1000001773_2.bu_id
+and t65418_0.dt = t1000001773_2.dt
+and t65418_0.mo_num = t1000001773_2.mo_num
+and t65418_0.region_id = t1000001773_2.region_id
+and t65418_0.week_num_wt = t1000001773_2.week_num_wt
+where
+t65418_0.`region_id` in(22306,
+22307,
+22302,
+22303,
+22304)
+and t65418_0.`bu_id` in(11000019)
+and t65418_0.`dt` in(20210831,
+20210830,
+20210901,
+20210903,
+20210902,
+20210905,
+20210904,
+20210906)
+GROUP BY
+t1000001773_2.`mo_num`
+# 只计算了bitmap_union_count(t65418_0.customer_id) 这一个字段可以走rollup
+explain 
+SELECT
+t1000001773_2.`mo_num` `dt`,
+bitmap_union_count(t65418_0.customer_id) `cust_cover_rate_930749`
+FROM
+kldp_data_stat.app_invite_business_analysis_integrate_view_p1 t65418_0
+ left
+JOIN kldp_data_stat.app_invite_business_analysis_integrate_customer t1000001773_2 ON
+t65418_0.bu_id = t1000001773_2.bu_id
+and t65418_0.dt = t1000001773_2.dt
+and t65418_0.mo_num = t1000001773_2.mo_num
+and t65418_0.region_id = t1000001773_2.region_id
+and t65418_0.week_num_wt = t1000001773_2.week_num_wt
+where
+t65418_0.`region_id` in(22306,
+22307,
+22302,
+22303,
+22304)
+and t65418_0.`bu_id` in(11000019)
+and t65418_0.`dt` in(20210831,
+20210830,
+20210901,
+20210903,
+20210902,
+20210905,
+20210904,
+20210906)
+GROUP BY
+t1000001773_2.`mo_num`
+```
+
+在子查询中先group by，然后对结果在join，子查询是可以走rollup的
+
+```sql
+select
+  m94460_0.`dt`,
+  m94460_0.`cust_cnt_954218` / m94460_1.`cust_cnt_954218` `cust_cover_rate`
+from
+  (
+    SELECT
+      t65418_0.`dt` `dt`,
+      bitmap_union_count(t65418_0.customer_id) `cust_cnt_954218`
+    FROM
+      kldp_data_stat.app_invite_business_analysis_integrate_view_p1 t65418_0
+    GROUP BY
+      t65418_0.`dt`
+  ) m94460_0
+  left join (
+    SELECT
+      t65418_0.`dt` `dt`,
+      bitmap_union_count(t65418_0.customer_id) `cust_cnt_954218`
+    FROM
+      kldp_data_stat.app_invite_business_analysis_integrate_view_p1 t65418_0
+    GROUP BY
+      t65418_0.`dt`
+  ) m94460_1 on m94460_0.`dt` = m94460_1.`dt`
+```
+
