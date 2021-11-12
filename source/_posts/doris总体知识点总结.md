@@ -65,7 +65,14 @@ tags:
 
 遍历数据表中的所有记录，按照上述拆分的400份，将组合拆分到不同的分组中，然后到不同的task中并发的进行排序和顺序编号的生成。最终再将各个task的结果进行合并，当然还需要给顺序号添加一个偏移量
 
-# 多表join时聚合多表的指标无法走rollup
+# rollup
+
+## rollup与分区分桶
+
+rollup是基于doris的物理存储文件来构建的，不会跨物理存储文件来聚合数据生成rollup，所以rollup是到分区+分桶级别的。不单单多个分区之间不能聚合rollup，一个分区的多个分桶下也不能聚合rollup
+
+
+## 多表join时聚合多表的指标无法走rollup
 
 ```sql
 # bitmap_union_count(t65418_0.customer_id)/bitmap_union_count(t1000001773_2.customer_id) `cust_cover_rate_930749`指标计算的时候，计算字段位于两张表中，导致两个表都不能走rollup
@@ -159,3 +166,8 @@ from
   ) m94460_1 on m94460_0.`dt` = m94460_1.`dt`
 ```
 
+# cube与union all
+
+cube（包括：grouping set），在doris中查询性能非常差，不管是粗粒度的聚合还是细粒度聚合到粗粒度的聚合，性能都很差。
+
+实际查询中，需要将各种维度组合的sql生成好，然后再union all到一起进行查询，union all的时候注意多个sql最外层的查询字段的顺序的一致性。

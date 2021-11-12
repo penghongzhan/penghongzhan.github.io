@@ -88,6 +88,18 @@ System.out.println(b02.intValue());
 
 double在进行计算（包括加减和乘除运算）的时候，会丢失精度，具体原因先不做太多展开，要想运算的时候不丢失精度，需要使用BigDecimal
 
+# 领域实体
+
+分层领域模型规约：
+
+- DO（ Data Object）：与数据库表结构一一对应，通过DAO层向上传输数据源对象。
+- DTO（ Data Transfer Object）：数据传输对象，Service或Manager向外传输的对象。
+- BO（ Business Object）：业务对象。 由Service层输出的封装业务逻辑的对象。
+- AO（ Application Object）：应用对象。 在Web层与Service层之间抽象的复用对象模型，极为贴近展示层，复用度不高。
+- VO（ View Object）：显示层对象，通常是Web向模板渲染引擎层传输的对象。
+- POJO（ Plain Ordinary Java Object）：在本手册中， POJO专指只有setter/getter/toString的简单类，包括DO/DTO/BO/VO等。
+- Query：数据查询对象，各层接收上层的查询请求。 注意超过2个参数的查询封装，禁止使用Map类来传输。
+
 # 参考链接
 
 - [Java内部类之间的闭包和回调详解](https://www.jb51.net/article/92231.htm)
