@@ -166,6 +166,30 @@ from
   ) m94460_1 on m94460_0.`dt` = m94460_1.`dt`
 ```
 
+## 函数对rollup的影响
+
+聚合函数中增加if函数，会导致无法走rollup
+
+```sql
+explain SELECT 
+    t116147_0.`cat1_id` AS `cat1_id`,
+    sum(IF(t116147_0.`dt` = 20211101, t116147_0.`arranged_origin_amt`, NULL)) AS `arranged_origin_amt`
+FROM
+    kldp_data_stat.app_prod_sku_detail_data t116147_0
+GROUP BY t116147_0.`cat1_id`
+```
+
+聚合函数中增加case when函数，可以走rollup
+
+```sql
+explain SELECT 
+    t116147_0.`cat1_id` AS `cat1_id`,
+    sum(CASE WHEN t116147_0.`dt` = 20211101 THEN t116147_0.`arranged_origin_amt` END) AS `arranged_origin_amt`
+FROM
+    kldp_data_stat.app_prod_sku_detail_data t116147_0
+GROUP BY t116147_0.`cat1_id`
+```
+
 # cube与union all
 
 cube（包括：grouping set），在doris中查询性能非常差，不管是粗粒度的聚合还是细粒度聚合到粗粒度的聚合，性能都很差。

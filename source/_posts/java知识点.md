@@ -100,6 +100,13 @@ double在进行计算（包括加减和乘除运算）的时候，会丢失精�
 - POJO（ Plain Ordinary Java Object）：在本手册中， POJO专指只有setter/getter/toString的简单类，包括DO/DTO/BO/VO等。
 - Query：数据查询对象，各层接收上层的查询请求。 注意超过2个参数的查询封装，禁止使用Map类来传输。
 
+# 数据库的并发查询
+
+通过线程池对数据库的查询做并发控制
+
+- 每个数据源一个线程池
+- 一个请求中可能有很多个数据库查询，并发提交到统一的线程池中
+
 # 参考链接
 
 - [Java内部类之间的闭包和回调详解](https://www.jb51.net/article/92231.htm)
