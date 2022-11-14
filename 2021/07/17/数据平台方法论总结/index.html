@@ -1,0 +1,861 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next mist use-motion" lang="zh-Hans">
+<head><meta name="generator" content="Hexo 3.9.0">
+  <meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform">
+<meta http-equiv="Cache-Control" content="no-siteapp">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css">
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css">
+
+<link href="/css/main.css?v=5.1.4" rel="stylesheet" type="text/css">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=5.1.4">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=5.1.4" color="#222">
+
+
+
+
+
+  <meta name="keywords" content="数据平台,方法论,大数据,">
+
+
+
+
+
+
+
+
+
+
+<meta name="description" content="BI工具-取数分析 全链路监控平台-指标异常（销售额突然降低很多） 数据资产管理 画饼的能力，组内画饼也很重要，调用组员积极性 数据服务的工作，很多跟数仓的工作耦合在一起，尤其是一些自驱的项目，类似于自助取数工具，或者是一些全链路监控的质量保证系统，都是强耦合在数仓的，所以一些工作最好由数仓和服务组统一的老大来统筹安排  数据本身 数据内容 数据质量 数据展现形式  BI工具建设 自助取数工具">
+<meta name="keywords" content="数据平台,方法论,大数据">
+<meta property="og:type" content="article">
+<meta property="og:title" content="数据平台方法论总结">
+<meta property="og:url" content="https://penghongzhan.github.io/2021/07/17/数据平台方法论总结/index.html">
+<meta property="og:site_name" content="HongMo&#39;s Blog">
+<meta property="og:description" content="BI工具-取数分析 全链路监控平台-指标异常（销售额突然降低很多） 数据资产管理 画饼的能力，组内画饼也很重要，调用组员积极性 数据服务的工作，很多跟数仓的工作耦合在一起，尤其是一些自驱的项目，类似于自助取数工具，或者是一些全链路监控的质量保证系统，都是强耦合在数仓的，所以一些工作最好由数仓和服务组统一的老大来统筹安排  数据本身 数据内容 数据质量 数据展现形式  BI工具建设 自助取数工具">
+<meta property="og:locale" content="zh-Hans">
+<meta property="og:updated_time" content="2021-09-09T07:49:08.000Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="数据平台方法论总结">
+<meta name="twitter:description" content="BI工具-取数分析 全链路监控平台-指标异常（销售额突然降低很多） 数据资产管理 画饼的能力，组内画饼也很重要，调用组员积极性 数据服务的工作，很多跟数仓的工作耦合在一起，尤其是一些自驱的项目，类似于自助取数工具，或者是一些全链路监控的质量保证系统，都是强耦合在数仓的，所以一些工作最好由数仓和服务组统一的老大来统筹安排  数据本身 数据内容 数据质量 数据展现形式  BI工具建设 自助取数工具">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Mist',
+    version: '5.1.4',
+    sidebar: {"position":"left","display":"post","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    duoshuo: {
+      userId: '0',
+      author: '博主'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="https://penghongzhan.github.io/2021/07/17/数据平台方法论总结/">
+
+
+
+
+
+  <title>数据平台方法论总结 | HongMo's Blog</title>
+  
+
+
+
+
+
+
+
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">HongMo's Blog</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle"></p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br>
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br>
+            
+            标签
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br>
+            
+            分类
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br>
+            
+            归档
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-about">
+          <a href="/about/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-user"></i> <br>
+            
+            关于
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="https://penghongzhan.github.io/2021/07/17/数据平台方法论总结/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="penghong.zhan">
+      <meta itemprop="description" content>
+      <meta itemprop="image" content="/images/我的头像.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="HongMo's Blog">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">数据平台方法论总结</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2021-07-17T14:21:26+08:00">
+                2021-07-17
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category">
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/数据平台/" itemprop="url" rel="index">
+                    <span itemprop="name">数据平台</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <ul>
+<li>BI工具-取数分析</li>
+<li>全链路监控平台-指标异常（销售额突然降低很多）</li>
+<li>数据资产管理</li>
+<li>画饼的能力，组内画饼也很重要，调用组员积极性</li>
+<li>数据服务的工作，很多跟数仓的工作耦合在一起，尤其是一些自驱的项目，类似于自助取数工具，或者是一些全链路监控的质量保证系统，都是强耦合在数仓的，所以一些工作最好由数仓和服务组统一的老大来统筹安排</li>
+</ul>
+<h1 id="数据本身"><a href="#数据本身" class="headerlink" title="数据本身"></a>数据本身</h1><ul>
+<li>数据内容</li>
+<li>数据质量</li>
+<li>数据展现形式</li>
+</ul>
+<h1 id="BI工具建设"><a href="#BI工具建设" class="headerlink" title="BI工具建设"></a>BI工具建设</h1><ul>
+<li>自助取数工具</li>
+<li>自助分析工具</li>
+<li>能力开放、对外赋能</li>
+</ul>
+<p>需求定制开发 -》 自助取数工具 -》 自助分析工具 -》 其他组的配置化页面可以复用数据组的底层查询路由能力</p>
+<p>最好底层取数工具和上层报表展示层解耦，因为有的用户只需要取数，可能不需要配置多么好看的报表</p>
+<h2 id="行业标准"><a href="#行业标准" class="headerlink" title="行业标准"></a>行业标准</h2><p>有些东西不一定一定要根据业务需求来，一些业界成为标准的东西，可以先建设，然后推动业务同学去使用，比如说：</p>
+<ul>
+<li>数据分析的指标二次计算：我们现在支持同环比，是不是还有其他的二次计算功能？</li>
+<li>一些业界沉淀的展现形式：一些前端的UI也可以参考业界标准来实现，而不是一定要根据业务需求来做</li>
+</ul>
+<h2 id="规范和限制"><a href="#规范和限制" class="headerlink" title="规范和限制"></a>规范和限制</h2><ul>
+<li>服务端同学往往只注重代码层面的规范，做的也会相对比较好</li>
+<li>对与sql的限制不多，也没有明确的规范和最佳实践，sql写的太复杂，随着数据量增大，性能会有问题，库也受不了，例如品类分析、供应商看板等</li>
+<li>所以需要对sql有规范，其中一种方式就是统一的取数工具，取数不是自己写sql，而是通过取数工具统一进行获取</li>
+</ul>
+<h2 id="取数工具"><a href="#取数工具" class="headerlink" title="取数工具"></a>取数工具</h2><p>核心点：</p>
+<ul>
+<li>指标一致性</li>
+<li>指标和维度接入速度<ul>
+<li>支持自定义维度，例如某个维度的分段可以作为一个新的维度，比如说头部品类这种</li>
+</ul>
+</li>
+<li>一些衍生&amp;复合指标的快速生成，而不需要数仓二次加工</li>
+<li>指标的二次计算逻辑，应该沉淀在取数工具层面，而不是在报表封装组件中</li>
+<li>数据模型到数据产品的打通</li>
+<li>数据，元数据，基础服务，API</li>
+</ul>
+<p>技术点：</p>
+<ul>
+<li>查询接口入参和出参统一<ul>
+<li>出参分成数据部分和模板部分，而不是整体的结果跟展示形式耦合在一起</li>
+</ul>
+</li>
+</ul>
+<h2 id="分析工具"><a href="#分析工具" class="headerlink" title="分析工具"></a>分析工具</h2><p>分析工具跟取数工具的区别，取数工具帮助用户更快、更准、更好的获取想要的数据，数据拿到了用户可能根据当前阶段的工作进行一些分析，以数据反推业务，促进业务发展；分析数据其实是希望能将用户自己分析的这个过程线上化，线上化的好处主要有：</p>
+<ul>
+<li>提效，用户取数之后自己再分析，这个过程效率比较低</li>
+<li>沉淀，会用数、分析数据的用户只在少数，其他用户如何分析，通过将头部用户的分析思路进行线上化沉淀，能够将好的思路进行推广，帮助数据分析相对较差的用户更好的运用数据</li>
+</ul>
+<p>分析工具的主要形式有：</p>
+<ul>
+<li>对比分析<ul>
+<li>同环比、自定义同环比</li>
+<li>下钻对比</li>
+<li>同环比波动排序</li>
+</ul>
+</li>
+<li>占比分析<ul>
+<li>各个品类的销售额占比</li>
+</ul>
+</li>
+<li>自定义指标<ul>
+<li>分析需求往往需要自己定义一些指标，典型的是一些衍生指标、计算指标，通过添加限定词、四则运算产生的新指标</li>
+</ul>
+</li>
+<li>自定义分类<ul>
+<li>维度分组：定义城市分级分组，整体对比分区的情况</li>
+<li>指标分段：销售额TOP20的商品数量等</li>
+</ul>
+</li>
+<li>自定义时间的计算、环比、趋势<ul>
+<li>如果是最近7天，可以时间维表关联事实表，join的条件不是日期相等，而是日期有个7天的delta</li>
+<li>如果是自定义周等统计时间，需要通过时间维表来进行统计，事实表去关联时间维表</li>
+</ul>
+</li>
+<li>智能分析<ul>
+<li>除了展示数据，分析数据变化，还能帮助用户发现变化背后的原因</li>
+<li>波动贡献分析：维度拆解、指标拆解（指标公式拆解）</li>
+</ul>
+</li>
+</ul>
+<h2 id="多维分析产品"><a href="#多维分析产品" class="headerlink" title="多维分析产品"></a>多维分析产品</h2><ul>
+<li>还原数据事实</li>
+<li>定位异动问题</li>
+<li>分析问题原因</li>
+</ul>
+<p>交互形式：</p>
+<ul>
+<li>透视图：多维度组合下钻展示</li>
+</ul>
+<h1 id="数据资产管理"><a href="#数据资产管理" class="headerlink" title="数据资产管理"></a>数据资产管理</h1><p>数据相关的元数据管理：</p>
+<ul>
+<li>元数据应用层</li>
+<li>元数据存储层</li>
+<li>元数据采集层</li>
+<li>数据源</li>
+<li>元数据体检（什么东西都需要有监控，即使是监控也需要有监控）</li>
+</ul>
+<p>指标和维度：</p>
+<ul>
+<li>指标的目标是个指标，有一张事实表，第一列是维度，存储的是指标id，第二列是目标，存储的是目标值；因此需要一个维度叫『指标』，需要一个指标叫『目标』</li>
+</ul>
+<h1 id="底层查询引擎"><a href="#底层查询引擎" class="headerlink" title="底层查询引擎"></a>底层查询引擎</h1><ul>
+<li>执行计划解析：逻辑执行计划&amp;物理执行计划</li>
+</ul>
+<p>逻辑计划树虽然可以看到各个节点之间的关系，但是我们不知道如何去分布式执行。比如各个节点之间的数据传输需不需要进行 Shuffle，如果需要 Shuffle 是用 ROUND_ROBIN 还是 HASH 等分区策略？到目前为止，我们是完全不知道的。所以我们需要进一步处理这个执行计划树，使得它变成物理计划树。</p>
+<ul>
+<li>统一查询协议</li>
+<li>DataSet统一数据集抽象</li>
+<li>Operator统一算子管理</li>
+</ul>
+<h1 id="工具入参和响应的定义"><a href="#工具入参和响应的定义" class="headerlink" title="工具入参和响应的定义"></a>工具入参和响应的定义</h1><p>入参不要用一个固定字段，比如说bu_id来让前端传对应的值，这样只要前端加一个下拉框就需要我们修改代码。</p>
+<p>每个下拉框对应一个维度，每个维度对应一个稳定的id或者code，所以前端的多个下拉框对应的入参是这样的</p>
+<figure class="highlight json"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line">&#123;</span><br><span class="line">  <span class="attr">"condition"</span>: [</span><br><span class="line">    &#123;</span><br><span class="line">      <span class="attr">"dimId"</span>: <span class="number">100</span>,</span><br><span class="line">      <span class="attr">"dimCode"</span>: <span class="string">"bu_id"</span>,</span><br><span class="line">      <span class="attr">"dimValues"</span>: [<span class="number">1</span>,<span class="number">2</span>,<span class="number">3</span>]</span><br><span class="line">    &#125;,</span><br><span class="line">    &#123;</span><br><span class="line">      <span class="attr">"dimId"</span>: <span class="number">1001</span>,</span><br><span class="line">      <span class="attr">"dimCode"</span>: <span class="string">"cat1_id"</span>,</span><br><span class="line">      <span class="attr">"dimValues"</span>: [<span class="number">1</span>,<span class="number">2</span>,<span class="number">3</span>]    </span><br><span class="line">    &#125;</span><br><span class="line">  ]</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>不能说这种入参一定是最好的，但是对于数据平台的通用BI报表工具，这种应该是通用性最强的，我们后端也不需要做一堆转化，直接通过前端的入参的维度信息，映射到需要查询的起源的维度即可。</p>
+
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/数据平台/" rel="tag"># 数据平台</a>
+          
+            <a href="/tags/方法论/" rel="tag"># 方法论</a>
+          
+            <a href="/tags/大数据/" rel="tag"># 大数据</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2021/07/14/单元测试规范/" rel="next" title="单元测试规范">
+                <i class="fa fa-chevron-left"></i> 单元测试规范
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2021/07/26/doris-vs-es/" rel="prev" title="Doris VS Es之索引原理">
+                Doris VS Es之索引原理 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+            
+              <img class="site-author-image" itemprop="image" src="/images/我的头像.jpg" alt="penghong.zhan">
+            
+              <p class="site-author-name" itemprop="name">penghong.zhan</p>
+              <p class="site-description motion-element" itemprop="description">一个热爱生活的程序猿</p>
+          </div>
+
+          <nav class="site-state motion-element">
+
+            
+              <div class="site-state-item site-state-posts">
+              
+                <a href="/archives/">
+              
+                  <span class="site-state-item-count">84</span>
+                  <span class="site-state-item-name">日志</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-categories">
+                <a href="/categories/index.html">
+                  <span class="site-state-item-count">38</span>
+                  <span class="site-state-item-name">分类</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-tags">
+                <a href="/tags/index.html">
+                  <span class="site-state-item-count">157</span>
+                  <span class="site-state-item-name">标签</span>
+                </a>
+              </div>
+            
+
+          </nav>
+
+          
+
+          
+
+          
+          
+
+          
+          
+
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#数据本身"><span class="nav-number">1.</span> <span class="nav-text">数据本身</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#BI工具建设"><span class="nav-number">2.</span> <span class="nav-text">BI工具建设</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#行业标准"><span class="nav-number">2.1.</span> <span class="nav-text">行业标准</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#规范和限制"><span class="nav-number">2.2.</span> <span class="nav-text">规范和限制</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#取数工具"><span class="nav-number">2.3.</span> <span class="nav-text">取数工具</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#分析工具"><span class="nav-number">2.4.</span> <span class="nav-text">分析工具</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#多维分析产品"><span class="nav-number">2.5.</span> <span class="nav-text">多维分析产品</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#数据资产管理"><span class="nav-number">3.</span> <span class="nav-text">数据资产管理</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#底层查询引擎"><span class="nav-number">4.</span> <span class="nav-text">底层查询引擎</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#工具入参和响应的定义"><span class="nav-number">5.</span> <span class="nav-text">工具入参和响应的定义</span></a></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2022</span>
+  <span class="with-love">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">penghong.zhan</span>
+
+  
+</div>
+
+
+  <div class="powered-by">由 <a class="theme-link" target="_blank" href="https://hexo.io">Hexo</a> 强力驱动</div>
+
+
+
+  <span class="post-meta-divider">|</span>
+
+
+
+  <div class="theme-info">主题 &mdash; <a class="theme-link" target="_blank" href="https://github.com/iissnan/hexo-theme-next">NexT.Mist</a> v5.1.4</div>
+
+
+
+
+        
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.4"></script>
+
+
+
+  
+  
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.4"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>

@@ -1,0 +1,872 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next mist use-motion" lang="zh-Hans">
+<head><meta name="generator" content="Hexo 3.9.0">
+  <meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform">
+<meta http-equiv="Cache-Control" content="no-siteapp">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css">
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css">
+
+<link href="/css/main.css?v=5.1.4" rel="stylesheet" type="text/css">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=5.1.4">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=5.1.4" color="#222">
+
+
+
+
+
+  <meta name="keywords" content="druid,">
+
+
+
+
+
+
+
+
+
+
+<meta name="description" content="重要概念  dimension: 维度列 metrics: 指标列    集群角色 Historical历史节点，从deep storage中加载数据，并且创建索引 deep storage数据存储，例如HDFS broker接收client过来的查询请求，路由到Historical节点和Realtime节点，进行数据的查询。 Broker节点负责将查询路由到历史节点和实时节点，Broker节点">
+<meta name="keywords" content="druid">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Druid基础架构">
+<meta property="og:url" content="https://penghongzhan.github.io/2018/03/18/druid基础架构/index.html">
+<meta property="og:site_name" content="HongMo&#39;s Blog">
+<meta property="og:description" content="重要概念  dimension: 维度列 metrics: 指标列    集群角色 Historical历史节点，从deep storage中加载数据，并且创建索引 deep storage数据存储，例如HDFS broker接收client过来的查询请求，路由到Historical节点和Realtime节点，进行数据的查询。 Broker节点负责将查询路由到历史节点和实时节点，Broker节点">
+<meta property="og:locale" content="zh-Hans">
+<meta property="og:image" content="https://upload-images.jianshu.io/upload_images/3151600-031d423929ad737d.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240">
+<meta property="og:updated_time" content="2019-08-12T11:07:34.000Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Druid基础架构">
+<meta name="twitter:description" content="重要概念  dimension: 维度列 metrics: 指标列    集群角色 Historical历史节点，从deep storage中加载数据，并且创建索引 deep storage数据存储，例如HDFS broker接收client过来的查询请求，路由到Historical节点和Realtime节点，进行数据的查询。 Broker节点负责将查询路由到历史节点和实时节点，Broker节点">
+<meta name="twitter:image" content="https://upload-images.jianshu.io/upload_images/3151600-031d423929ad737d.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Mist',
+    version: '5.1.4',
+    sidebar: {"position":"left","display":"post","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    duoshuo: {
+      userId: '0',
+      author: '博主'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="https://penghongzhan.github.io/2018/03/18/druid基础架构/">
+
+
+
+
+
+  <title>Druid基础架构 | HongMo's Blog</title>
+  
+
+
+
+
+
+
+
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">HongMo's Blog</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle"></p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br>
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br>
+            
+            标签
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br>
+            
+            分类
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br>
+            
+            归档
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-about">
+          <a href="/about/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-user"></i> <br>
+            
+            关于
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="https://penghongzhan.github.io/2018/03/18/druid基础架构/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="penghong.zhan">
+      <meta itemprop="description" content>
+      <meta itemprop="image" content="/images/我的头像.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="HongMo's Blog">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">Druid基础架构</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2018-03-18T12:47:22+08:00">
+                2018-03-18
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category">
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/druid/" itemprop="url" rel="index">
+                    <span itemprop="name">druid</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <hr>
+<h1 id="重要概念"><a href="#重要概念" class="headerlink" title="重要概念"></a>重要概念</h1><hr>
+<ul>
+<li>dimension: 维度列</li>
+<li>metrics: 指标列</li>
+</ul>
+<p><img src="https://upload-images.jianshu.io/upload_images/3151600-031d423929ad737d.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240" alt="druid的维度和指标.png"></p>
+<hr>
+<h1 id="集群角色"><a href="#集群角色" class="headerlink" title="集群角色"></a>集群角色</h1><hr>
+<h2 id="Historical"><a href="#Historical" class="headerlink" title="Historical"></a>Historical</h2><p>历史节点，从deep storage中加载数据，并且创建索引</p>
+<h2 id="deep-storage"><a href="#deep-storage" class="headerlink" title="deep storage"></a>deep storage</h2><p>数据存储，例如HDFS</p>
+<h2 id="broker"><a href="#broker" class="headerlink" title="broker"></a>broker</h2><p>接收client过来的查询请求，路由到Historical节点和Realtime节点，进行数据的查询。</p>
+<p>Broker节点负责将查询路由到历史节点和实时节点，Broker节点通过zk来知道哪些Segment存在哪个节点上。Broker也会把查询的结果进行Merge。</p>
+<p>Broker节点会维护一个LRU缓存，缓存存着每个Segment的结果，缓存可以是一个本地的缓存或者多个节点共用的外部的缓存如 memcached。当Broker收到查询时候，它首先将查询映射成一堆Segment的查询，其中的一个子集的结果可能已经存在缓存中，他们可以直接从缓存中拉出来，那些没在缓存中的将被发送到相应节点。</p>
+<h2 id="Realtime"><a href="#Realtime" class="headerlink" title="Realtime"></a>Realtime</h2><p>接收些数据请求，实时获取数据并且创建索引</p>
+<h2 id="Coordinator"><a href="#Coordinator" class="headerlink" title="Coordinator"></a>Coordinator</h2><p>协调节点负责Segment的管理和分发，协调节点指挥历史节点来加载或者删除Segment，以及Segment的冗余和平衡Segment。协调节点会周期性的进行扫描，每次扫描会根据集群当前的状态来决定进一步的动作。</p>
+<p>例如，集群中某个history节点离线，那么Coordinator会默认该机器上的所有segments已经失效，会通知集群中其它的history节点去接在这些segments。实际运行中，Coordinator不会在发现history离线的时候，立即进行segment的重新加载，这样势必会集中整个集群的负担，因此，Coordinator会为集群内所有已丢弃的Segment保存一个生存时间(lifetime)，这个生存时间表示Coordinator Node在该Segment被标记为丢弃后，允许不被重新分配最长等待时间，如果该Historical Node在该时间内重新上线，则Segment会被重新置为有效，如果超过该时间则会按照加载规则重新分配到其他Historical Node上。 </p>
+<h2 id="Zookeeper"><a href="#Zookeeper" class="headerlink" title="Zookeeper"></a>Zookeeper</h2><p>每个历史节点维持一个和Zookeeper的长连接监测一组path来获取新的Segment信息。历史节点互相不进行通信，他们依靠zk来等待协调节点来协调，协调节点负责把新的Segment分发给历史节点.</p>
+<p>当历史节点发现一个新的entry出现在path中，它首先会检查本地文件缓存看有有没Segment信息，如果没有Segment信息，历史节点会从zk上下载新的Segment的元信息。Segment的元信息包括Segment存在Deep Storage的位置和如何解压和处理Segment。一旦一个历史节点完成对一个Segment的处理，这个历史节点会在zk上的一个路径声明对这个Segment提供查询服务，此刻这个Segment就可以查询了</p>
+<h2 id="mysql"><a href="#mysql" class="headerlink" title="mysql"></a>mysql</h2><p>集群的元数据存储</p>
+<hr>
+<h1 id="数据结构"><a href="#数据结构" class="headerlink" title="数据结构"></a>数据结构</h1><hr>
+<h2 id="segment"><a href="#segment" class="headerlink" title="segment"></a>segment</h2><p>Druid 把它的索引存储到一个Segment文件中，Segment文件是通过时间来分割的。</p>
+<p>segment中索引的采用的列式存储，假设发送给druid两条记录：</p>
+<table>
+<thead>
+<tr>
+<th>timestamp</th>
+<th>country</th>
+<th>city</th>
+<th>count</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>2018-03-15T01:00:00</td>
+<td>china</td>
+<td>shandong</td>
+<td>1</td>
+</tr>
+<tr>
+<td>2018-03-15T02:00:00</td>
+<td>america</td>
+<td>newyork</td>
+<td>2</td>
+</tr>
+<tr>
+<td>2018-03-15T02:00:00</td>
+<td>america</td>
+<td>Washington</td>
+<td>3</td>
+</tr>
+</tbody></table>
+<h2 id="列式存储与bitmap"><a href="#列式存储与bitmap" class="headerlink" title="列式存储与bitmap"></a>列式存储与bitmap</h2><p>现在行存储的结构是：3行2列</p>
+<p><strong>注意：这里的两列是指维度有两列，因为查询的时候是根据维度来进行聚合，所以转化成列式存储的时候只需要考虑维度列即可。</strong></p>
+<p>druid会将发送过来的一条条记录转化成列式的索引，对于country这一列来说，一共有2个值，记录总共有3行，转化成列存储之后，变成2行3列，这3列的列标为之前行存储的行号：</p>
+<table>
+<thead>
+<tr>
+<th>country</th>
+<th>1</th>
+<th>2</th>
+<th>3</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>china</td>
+<td>1</td>
+<td>0</td>
+<td>0</td>
+</tr>
+<tr>
+<td>america</td>
+<td>0</td>
+<td>1</td>
+<td>1</td>
+</tr>
+</tbody></table>
+<p>加上city维度之后形成的索引如下：</p>
+<table>
+<thead>
+<tr>
+<th>country</th>
+<th>1</th>
+<th>2</th>
+<th>3</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>china</td>
+<td>1</td>
+<td>0</td>
+<td>0</td>
+</tr>
+<tr>
+<td>america</td>
+<td>0</td>
+<td>1</td>
+<td>1</td>
+</tr>
+<tr>
+<td>shandong</td>
+<td>1</td>
+<td>0</td>
+<td>0</td>
+</tr>
+<tr>
+<td>newyork</td>
+<td>0</td>
+<td>1</td>
+<td>0</td>
+</tr>
+<tr>
+<td>Washington</td>
+<td>0</td>
+<td>0</td>
+<td>1</td>
+</tr>
+</tbody></table>
+<p>china出现在第一行，所以现在的第1列对应的值是1，2列和3列对应的值是0。</p>
+<p>实际上的是按照bitmap进行存储的：china -&gt; [1, 0, 0]; shandong -&gt; [1, 0, 0]</p>
+<p>查询的时候，例如我要进行这样的查询：select * from table where country = ‘china’ and city = ‘shandong’</p>
+<p>索引上进行的操作是：[1, 0, 0] &amp; [1, 0, 0] = [1, 0, 0]，所以从文件中将第一行都出来返回即可。</p>
+<p>再例如查询：select sum(count) from table where country = ‘china’ and city = ‘newyork’</p>
+<p>索引上进行的操作是：[1, 0, 0] &amp; [0, 1, 0] = [0, 0, 0]，所以返回结果为空</p>
+<hr>
+<h1 id="索引的创建"><a href="#索引的创建" class="headerlink" title="索引的创建"></a>索引的创建</h1><hr>
+<p>加载segment的过程实际上也就是在内存中创建索引的过程，索引创建的组建包括三个：Peon， Middle Manager ，Overlord。</p>
+<ul>
+<li>Peon。运行一个单独的任务。 </li>
+<li>Middle Manager。管理多个Peon。 </li>
+<li>Overlord。接收任务，协调任务分发，对任务创建锁，最后对请求者返回状态。</li>
+</ul>
+<p>在远程模式中，Overlord对于任务的调度是通过zookeeper进行的，会将任务信息注册到Zookeeper的/task目录下所有在线的Middle Manager对应的目录中，由Middle Manager去感知产生的新任务。产生新的任务实际上是创建Peon的过程，创建完Peon之后，Middle Manager又会将Peon信息同步到zookeeper中的/Status目录</p>
+
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/druid/" rel="tag"># druid</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2018/03/17/Hexo的使用技巧/" rel="next" title="Hexo的使用技巧">
+                <i class="fa fa-chevron-left"></i> Hexo的使用技巧
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2018/03/18/zookeeper的通信协调/" rel="prev" title="zookeeper的通信协调">
+                zookeeper的通信协调 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+            
+              <img class="site-author-image" itemprop="image" src="/images/我的头像.jpg" alt="penghong.zhan">
+            
+              <p class="site-author-name" itemprop="name">penghong.zhan</p>
+              <p class="site-description motion-element" itemprop="description">一个热爱生活的程序猿</p>
+          </div>
+
+          <nav class="site-state motion-element">
+
+            
+              <div class="site-state-item site-state-posts">
+              
+                <a href="/archives/">
+              
+                  <span class="site-state-item-count">84</span>
+                  <span class="site-state-item-name">日志</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-categories">
+                <a href="/categories/index.html">
+                  <span class="site-state-item-count">38</span>
+                  <span class="site-state-item-name">分类</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-tags">
+                <a href="/tags/index.html">
+                  <span class="site-state-item-count">157</span>
+                  <span class="site-state-item-name">标签</span>
+                </a>
+              </div>
+            
+
+          </nav>
+
+          
+
+          
+
+          
+          
+
+          
+          
+
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#重要概念"><span class="nav-number">1.</span> <span class="nav-text">重要概念</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#集群角色"><span class="nav-number">2.</span> <span class="nav-text">集群角色</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#Historical"><span class="nav-number">2.1.</span> <span class="nav-text">Historical</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#deep-storage"><span class="nav-number">2.2.</span> <span class="nav-text">deep storage</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#broker"><span class="nav-number">2.3.</span> <span class="nav-text">broker</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Realtime"><span class="nav-number">2.4.</span> <span class="nav-text">Realtime</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Coordinator"><span class="nav-number">2.5.</span> <span class="nav-text">Coordinator</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Zookeeper"><span class="nav-number">2.6.</span> <span class="nav-text">Zookeeper</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#mysql"><span class="nav-number">2.7.</span> <span class="nav-text">mysql</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#数据结构"><span class="nav-number">3.</span> <span class="nav-text">数据结构</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#segment"><span class="nav-number">3.1.</span> <span class="nav-text">segment</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#列式存储与bitmap"><span class="nav-number">3.2.</span> <span class="nav-text">列式存储与bitmap</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#索引的创建"><span class="nav-number">4.</span> <span class="nav-text">索引的创建</span></a></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2022</span>
+  <span class="with-love">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">penghong.zhan</span>
+
+  
+</div>
+
+
+  <div class="powered-by">由 <a class="theme-link" target="_blank" href="https://hexo.io">Hexo</a> 强力驱动</div>
+
+
+
+  <span class="post-meta-divider">|</span>
+
+
+
+  <div class="theme-info">主题 &mdash; <a class="theme-link" target="_blank" href="https://github.com/iissnan/hexo-theme-next">NexT.Mist</a> v5.1.4</div>
+
+
+
+
+        
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.4"></script>
+
+
+
+  
+  
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.4"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>

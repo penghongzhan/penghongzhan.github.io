@@ -1,0 +1,772 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next mist use-motion" lang="zh-Hans">
+<head><meta name="generator" content="Hexo 3.9.0">
+  <meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform">
+<meta http-equiv="Cache-Control" content="no-siteapp">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css">
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css">
+
+<link href="/css/main.css?v=5.1.4" rel="stylesheet" type="text/css">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=5.1.4">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=5.1.4" color="#222">
+
+
+
+
+
+  <meta name="keywords" content="elastic,elasticsearch,es,lucene,跳表,bitmap,倒排索引,文档列表,">
+
+
+
+
+
+
+
+
+
+
+<meta name="description" content="根本原因个人感觉，lucene的倒排索引的文档列表，之所以没有选择bitmap，并不是因为bitmap和跳表本身的性能差异，而是因为跳表除了能保存文档列表之外，还能保存其他信息，就比如说该term在文档中出现的次数 因为lucene是为全文检索而生的，全文检索非常关键的一点就是文档的相关度，其中非常重要的一点又是词项出现的频次，一个词项出现在三个文档中，第一个文档出现了3次，剩下两个文档中只出现了">
+<meta name="keywords" content="elastic,elasticsearch,es,lucene,跳表,bitmap,倒排索引,文档列表">
+<meta property="og:type" content="article">
+<meta property="og:title" content="为什么lucene的文档列表使用跳表而不是bitmap">
+<meta property="og:url" content="https://penghongzhan.github.io/2019/10/16/为什么lucene的文档列表使用跳表而不是bitmap/index.html">
+<meta property="og:site_name" content="HongMo&#39;s Blog">
+<meta property="og:description" content="根本原因个人感觉，lucene的倒排索引的文档列表，之所以没有选择bitmap，并不是因为bitmap和跳表本身的性能差异，而是因为跳表除了能保存文档列表之外，还能保存其他信息，就比如说该term在文档中出现的次数 因为lucene是为全文检索而生的，全文检索非常关键的一点就是文档的相关度，其中非常重要的一点又是词项出现的频次，一个词项出现在三个文档中，第一个文档出现了3次，剩下两个文档中只出现了">
+<meta property="og:locale" content="zh-Hans">
+<meta property="og:updated_time" content="2019-10-16T13:09:00.000Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="为什么lucene的文档列表使用跳表而不是bitmap">
+<meta name="twitter:description" content="根本原因个人感觉，lucene的倒排索引的文档列表，之所以没有选择bitmap，并不是因为bitmap和跳表本身的性能差异，而是因为跳表除了能保存文档列表之外，还能保存其他信息，就比如说该term在文档中出现的次数 因为lucene是为全文检索而生的，全文检索非常关键的一点就是文档的相关度，其中非常重要的一点又是词项出现的频次，一个词项出现在三个文档中，第一个文档出现了3次，剩下两个文档中只出现了">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Mist',
+    version: '5.1.4',
+    sidebar: {"position":"left","display":"post","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    duoshuo: {
+      userId: '0',
+      author: '博主'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="https://penghongzhan.github.io/2019/10/16/为什么lucene的文档列表使用跳表而不是bitmap/">
+
+
+
+
+
+  <title>为什么lucene的文档列表使用跳表而不是bitmap | HongMo's Blog</title>
+  
+
+
+
+
+
+
+
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">HongMo's Blog</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle"></p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br>
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br>
+            
+            标签
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br>
+            
+            分类
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br>
+            
+            归档
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-about">
+          <a href="/about/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-user"></i> <br>
+            
+            关于
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="https://penghongzhan.github.io/2019/10/16/为什么lucene的文档列表使用跳表而不是bitmap/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="penghong.zhan">
+      <meta itemprop="description" content>
+      <meta itemprop="image" content="/images/我的头像.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="HongMo's Blog">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">为什么lucene的文档列表使用跳表而不是bitmap</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2019-10-16T21:07:56+08:00">
+                2019-10-16
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category">
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/elasticsearch/" itemprop="url" rel="index">
+                    <span itemprop="name">elasticsearch</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h1 id="根本原因"><a href="#根本原因" class="headerlink" title="根本原因"></a>根本原因</h1><p>个人感觉，lucene的倒排索引的文档列表，之所以没有选择bitmap，并不是因为bitmap和跳表本身的性能差异，而是因为跳表除了能保存文档列表之外，还能保存其他信息，就比如说该term在文档中出现的次数</p>
+<p>因为lucene是为全文检索而生的，全文检索非常关键的一点就是文档的相关度，其中非常重要的一点又是词项出现的频次，一个词项出现在三个文档中，第一个文档出现了3次，剩下两个文档中只出现了1次，那么第一个文档的相关度更高。</p>
+<p>所以，如果查出term对应的文档列表之后，能顺便将该term在每个文档中出现的频次顺带拿到，那么后续评分将会非常方便。</p>
+<p>对于这点来说，跳表实现起来方便多了，跳表最底层的链表的元素可以携带任意格式的信息；但是bitmap只能保存文档id，如果想要找term出现的次数，还需要再去另一个地方去查询，显然没有那么方便。</p>
+<h1 id="倒排索引与评分"><a href="#倒排索引与评分" class="headerlink" title="倒排索引与评分"></a>倒排索引与评分</h1><h2 id="倒排索引文件"><a href="#倒排索引文件" class="headerlink" title="倒排索引文件"></a>倒排索引文件</h2><figure class="highlight css"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"> 12<span class="selector-tag">K</span> <span class="selector-tag">Oct</span> 10 17<span class="selector-pseudo">:25</span> _<span class="selector-tag">b_Lucene50_0</span><span class="selector-class">.tip</span></span><br><span class="line">2<span class="selector-class">.1M</span> <span class="selector-tag">Oct</span> 10 17<span class="selector-pseudo">:25</span> _<span class="selector-tag">b_Lucene50_0</span><span class="selector-class">.tim</span></span><br><span class="line">172<span class="selector-tag">K</span> <span class="selector-tag">Oct</span> 10 17<span class="selector-pseudo">:25</span> _<span class="selector-tag">b_Lucene50_0</span><span class="selector-class">.doc</span></span><br><span class="line">143<span class="selector-tag">K</span> <span class="selector-tag">Oct</span> 10 17<span class="selector-pseudo">:25</span> _<span class="selector-tag">b_Lucene50_0</span><span class="selector-class">.pos</span></span><br><span class="line">  78 <span class="selector-tag">Oct</span> 10 17<span class="selector-pseudo">:25</span> _<span class="selector-tag">b</span><span class="selector-class">.nvm</span></span><br><span class="line">  59 <span class="selector-tag">Oct</span> 10 17<span class="selector-pseudo">:25</span> _<span class="selector-tag">b</span><span class="selector-class">.nvd</span></span><br></pre></td></tr></table></figure>
+
+<p>其中doc保存的是文档列表以及term在每个文档中出现的频率</p>
+<p>可见文档列表文件中除了保存文档id之外，还需要保存term出现的次数。所以用bitmap来作为doc文件的数据结构是不合适的。</p>
+<h2 id="评分"><a href="#评分" class="headerlink" title="评分"></a>评分</h2><p>评分的时候需要用到上面存储的：</p>
+<ul>
+<li>doc中的频次</li>
+<li>nvm和nvd中的字段长度和提升因子</li>
+</ul>
+<h1 id="畅享"><a href="#畅享" class="headerlink" title="畅享"></a>畅享</h1><p>lucene基于全文检索的需求，文档列表采用了跳表而不是bitmap，但是如果es的使用场景是olap分析，不存在评分，只是过滤查询，那么是不是文档列表使用bitmap更合适，因为bitmap拥有天然的做合并的优势。</p>
+<blockquote>
+<p>druid是一个典型的olap分析引擎，他的维度列的倒排索引的使用的就是bitmap。</p>
+</blockquote>
+<p>上面提到对于keyword字段来说，是只保存docs的，也就是文档列表对应的链表中只有文档id信息，那么这个时候，是不是用bitmap来存储更合适呢？</p>
+<blockquote>
+<p>感觉应该是，因为es在lucene之上，对于filter类型的查询结果对应的文档列表是用bitmap缓存在内存中的，用于后续的多条件查询的时候进行合并，可见bitmap还是有优势的</p>
+</blockquote>
+
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/elastic/" rel="tag"># elastic</a>
+          
+            <a href="/tags/elasticsearch/" rel="tag"># elasticsearch</a>
+          
+            <a href="/tags/es/" rel="tag"># es</a>
+          
+            <a href="/tags/lucene/" rel="tag"># lucene</a>
+          
+            <a href="/tags/跳表/" rel="tag"># 跳表</a>
+          
+            <a href="/tags/bitmap/" rel="tag"># bitmap</a>
+          
+            <a href="/tags/倒排索引/" rel="tag"># 倒排索引</a>
+          
+            <a href="/tags/文档列表/" rel="tag"># 文档列表</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2019/10/16/倒排索引保存的信息/" rel="next" title="倒排索引保存的信息">
+                <i class="fa fa-chevron-left"></i> 倒排索引保存的信息
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2019/10/16/CompletableFuture核心思想/" rel="prev" title="CompletableFuture核心思想">
+                CompletableFuture核心思想 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+            
+              <img class="site-author-image" itemprop="image" src="/images/我的头像.jpg" alt="penghong.zhan">
+            
+              <p class="site-author-name" itemprop="name">penghong.zhan</p>
+              <p class="site-description motion-element" itemprop="description">一个热爱生活的程序猿</p>
+          </div>
+
+          <nav class="site-state motion-element">
+
+            
+              <div class="site-state-item site-state-posts">
+              
+                <a href="/archives/">
+              
+                  <span class="site-state-item-count">84</span>
+                  <span class="site-state-item-name">日志</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-categories">
+                <a href="/categories/index.html">
+                  <span class="site-state-item-count">38</span>
+                  <span class="site-state-item-name">分类</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-tags">
+                <a href="/tags/index.html">
+                  <span class="site-state-item-count">157</span>
+                  <span class="site-state-item-name">标签</span>
+                </a>
+              </div>
+            
+
+          </nav>
+
+          
+
+          
+
+          
+          
+
+          
+          
+
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#根本原因"><span class="nav-number">1.</span> <span class="nav-text">根本原因</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#倒排索引与评分"><span class="nav-number">2.</span> <span class="nav-text">倒排索引与评分</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#倒排索引文件"><span class="nav-number">2.1.</span> <span class="nav-text">倒排索引文件</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#评分"><span class="nav-number">2.2.</span> <span class="nav-text">评分</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#畅享"><span class="nav-number">3.</span> <span class="nav-text">畅享</span></a></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2022</span>
+  <span class="with-love">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">penghong.zhan</span>
+
+  
+</div>
+
+
+  <div class="powered-by">由 <a class="theme-link" target="_blank" href="https://hexo.io">Hexo</a> 强力驱动</div>
+
+
+
+  <span class="post-meta-divider">|</span>
+
+
+
+  <div class="theme-info">主题 &mdash; <a class="theme-link" target="_blank" href="https://github.com/iissnan/hexo-theme-next">NexT.Mist</a> v5.1.4</div>
+
+
+
+
+        
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.4"></script>
+
+
+
+  
+  
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.4"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>

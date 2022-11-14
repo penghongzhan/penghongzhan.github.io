@@ -1,0 +1,788 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next mist use-motion" lang="zh-Hans">
+<head><meta name="generator" content="Hexo 3.9.0">
+  <meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform">
+<meta http-equiv="Cache-Control" content="no-siteapp">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css">
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css">
+
+<link href="/css/main.css?v=5.1.4" rel="stylesheet" type="text/css">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=5.1.4">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=5.1.4" color="#222">
+
+
+
+
+
+  <meta name="keywords" content="doris,partition,bucket,">
+
+
+
+
+
+
+
+
+
+
+<meta name="description" content="doris分区partitionrange分区，根据时间范围进行分区，这种分区是物理隔离的，可以理解成单独的一张小表，删除、查询等操作非常快 bucket在Doris的存储引擎中，用户数据被水平划分为若干个数据分片（Tablet，也称作数据分桶）。每个Tablet包含若干数据行。各个Tablet之间的数据没有交集，并且在物理上是独立存储的。 多个Tablet在逻辑上归属于不同的分区（Partiti">
+<meta name="keywords" content="doris,partition,bucket">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Doris小知识点">
+<meta property="og:url" content="https://penghongzhan.github.io/2021/03/06/Doris小知识点/index.html">
+<meta property="og:site_name" content="HongMo&#39;s Blog">
+<meta property="og:description" content="doris分区partitionrange分区，根据时间范围进行分区，这种分区是物理隔离的，可以理解成单独的一张小表，删除、查询等操作非常快 bucket在Doris的存储引擎中，用户数据被水平划分为若干个数据分片（Tablet，也称作数据分桶）。每个Tablet包含若干数据行。各个Tablet之间的数据没有交集，并且在物理上是独立存储的。 多个Tablet在逻辑上归属于不同的分区（Partiti">
+<meta property="og:locale" content="zh-Hans">
+<meta property="og:updated_time" content="2021-04-22T07:50:18.000Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Doris小知识点">
+<meta name="twitter:description" content="doris分区partitionrange分区，根据时间范围进行分区，这种分区是物理隔离的，可以理解成单独的一张小表，删除、查询等操作非常快 bucket在Doris的存储引擎中，用户数据被水平划分为若干个数据分片（Tablet，也称作数据分桶）。每个Tablet包含若干数据行。各个Tablet之间的数据没有交集，并且在物理上是独立存储的。 多个Tablet在逻辑上归属于不同的分区（Partiti">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Mist',
+    version: '5.1.4',
+    sidebar: {"position":"left","display":"post","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    duoshuo: {
+      userId: '0',
+      author: '博主'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="https://penghongzhan.github.io/2021/03/06/Doris小知识点/">
+
+
+
+
+
+  <title>Doris小知识点 | HongMo's Blog</title>
+  
+
+
+
+
+
+
+
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">HongMo's Blog</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle"></p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br>
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br>
+            
+            标签
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br>
+            
+            分类
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br>
+            
+            归档
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-about">
+          <a href="/about/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-user"></i> <br>
+            
+            关于
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="https://penghongzhan.github.io/2021/03/06/Doris小知识点/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="penghong.zhan">
+      <meta itemprop="description" content>
+      <meta itemprop="image" content="/images/我的头像.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="HongMo's Blog">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">Doris小知识点</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2021-03-06T11:29:03+08:00">
+                2021-03-06
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category">
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/doris/" itemprop="url" rel="index">
+                    <span itemprop="name">doris</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h1 id="doris分区"><a href="#doris分区" class="headerlink" title="doris分区"></a>doris分区</h1><h2 id="partition"><a href="#partition" class="headerlink" title="partition"></a>partition</h2><p>range分区，根据时间范围进行分区，这种分区是物理隔离的，可以理解成单独的一张小表，删除、查询等操作非常快</p>
+<h2 id="bucket"><a href="#bucket" class="headerlink" title="bucket"></a>bucket</h2><p>在Doris的存储引擎中，用户数据被水平划分为若干个数据分片（Tablet，也称作数据分桶）。每个Tablet包含若干数据行。各个Tablet之间的数据没有交集，并且在物理上是独立存储的。</p>
+<p>多个Tablet在逻辑上归属于不同的分区（Partition）。一个Tablet只属于一个Partition。而一个Partition包含若干个Tablet。因为Tablet在物理上是独立存储的，所以可以视为Partition在物理上也是独立。Tablet是数据移动、复制等操作的最小物理存储单元。</p>
+<p>若干个Partition组成一个Table。Partition可以视为是逻辑上最小的管理单元。数据的导入与删除，都可以或仅能针对一个Partition进行。</p>
+<p>一个 Partition 的 Bucket 数量一旦指定，不可更改。所以在确定 Bucket 数量时，需要预先考虑集群扩容的情况。比如当前只有 3 台 host，每台 host 有 1 块盘。如果 Bucket 的数量只设置为 3 或更小，那么后期即使再增加机器，也不能提高并发度。</p>
+<h1 id="doris查询条件"><a href="#doris查询条件" class="headerlink" title="doris查询条件"></a>doris查询条件</h1><ul>
+<li>一个有所有三级类目权限的人，查询的时候，会添加三级类目in的查询条件，这是非常影响性能的，去掉这个条件之后，查询性能提升一倍；到底是in的影响，还是三级类目没在索引中的影响？</li>
+</ul>
+<h1 id="doris前缀索引"><a href="#doris前缀索引" class="headerlink" title="doris前缀索引"></a>doris前缀索引</h1><p>我们将一行数据的前 36 个字节 作为这行数据的前缀索引。当遇到 VARCHAR 类型时，前缀索引会直接截断</p>
+<ul>
+<li><a href="http://doris.apache.org/master/zh-CN/getting-started/data-model-rollup.html#rollup" target="_blank" rel="noopener">http://doris.apache.org/master/zh-CN/getting-started/data-model-rollup.html#rollup</a></li>
+<li><a href="https://km.sankuai.com/page/28276900" target="_blank" rel="noopener">https://km.sankuai.com/page/28276900</a></li>
+</ul>
+<h1 id="doris本地join"><a href="#doris本地join" class="headerlink" title="doris本地join"></a>doris本地join</h1><ul>
+<li>本地join的时候，两个表的查询都不能有group by</li>
+<li>如果是两个事实表，如果想使用本地join，那么最好两张表的维度是一致的，这种情况下，两个表可以直接join，不需要先group by之后再join；假设有一张表是到类目维度，另一张表到事业部维度，计算销售额占比等指标，类目表可以直接关联事业部表，因为本身的计算就是需要两张表的维度不一样</li>
+<li>如果是事实表和维表，例如一个事实表和时间维表，可以直接本地join</li>
+</ul>
+<h1 id="doris的分区查询"><a href="#doris的分区查询" class="headerlink" title="doris的分区查询"></a>doris的分区查询</h1><figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">select</span> dim.dt,</span><br><span class="line">       vendor_id,</span><br><span class="line">       bitmap_union_count(temp_bu_id) </span><br><span class="line"><span class="keyword">from</span> (<span class="keyword">select</span> * <span class="keyword">from</span> time_dim <span class="keyword">where</span> nature_mo = <span class="number">202103</span>) dim <span class="keyword">inner</span> <span class="keyword">join</span> app_vendor_board_basesku_day sku <span class="keyword">on</span> dim.dt = sku.dt</span><br><span class="line"><span class="keyword">group</span> <span class="keyword">by</span> vendor_id,</span><br><span class="line">    dim.dt;</span><br><span class="line"><span class="comment">#####</span></span><br><span class="line"><span class="keyword">select</span> dt,</span><br><span class="line">       vendor_id,</span><br><span class="line">       bitmap_union_count(temp_bu_id)</span><br><span class="line"><span class="keyword">from</span> app_vendor_board_basesku_day <span class="keyword">where</span> dt <span class="keyword">in</span> (<span class="keyword">select</span> dt <span class="keyword">from</span> time_dim <span class="keyword">where</span> nature_mo = <span class="number">202103</span>)</span><br><span class="line"><span class="keyword">group</span> <span class="keyword">by</span> vendor_id,</span><br><span class="line">    dt;</span><br><span class="line"><span class="comment">#####</span></span><br><span class="line"><span class="keyword">select</span> dim.dt,</span><br><span class="line">       tt1.vendor_id,</span><br><span class="line">       tt1.bitmap_union_count(temp_bu_id)</span><br><span class="line"><span class="keyword">from</span> app_vendor_board_basesku_day <span class="keyword">as</span> tt1 <span class="keyword">left</span> <span class="keyword">join</span> time_dim <span class="keyword">as</span> dim <span class="keyword">on</span> tt1.dt=time_dim.dt</span><br><span class="line"><span class="keyword">where</span> time_dim.nature_mo = <span class="number">202103</span></span><br><span class="line"><span class="keyword">group</span> <span class="keyword">by</span> vendor_id,</span><br><span class="line">    dt;</span><br></pre></td></tr></table></figure>
+
+<p>上面的这三种方式都无法走分区查询，最难理解的就是第二种，但是这个是doris的机制，如果想要走分区查询，那么需要查询两次：</p>
+<ul>
+<li>从维表中查询日期的list</li>
+<li>事实表的dt查询in这个list</li>
+</ul>
+<h1 id="doris前缀索引数序"><a href="#doris前缀索引数序" class="headerlink" title="doris前缀索引数序"></a>doris前缀索引数序</h1><p>一个unique模型的表，begin_date作为分区字段，date_scale是真正的时间维度的时间字段</p>
+<p><strong>第一种前缀索引的顺序：</strong></p>
+<ul>
+<li>因为date_scale是各种时间类型的时间值，必须是字符串类型，但是字符串类型的字段会截断前缀索引，后续的字段不会构建在前缀索引中了，所以想着把其他必查的字段放到前面</li>
+</ul>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">CREATE</span> <span class="keyword">TABLE</span> kldp_data_stat.app_management_dashboard_product_with3p_merge_test (</span><br><span class="line">  <span class="string">`business_type`</span> <span class="built_in">INT</span> <span class="literal">NULL</span> <span class="keyword">COMMENT</span> <span class="string">"业务类型 ：-1 全部 ， 1 KA ， 2 中小B"</span>,</span><br><span class="line">  <span class="string">`time_tag`</span> <span class="built_in">INT</span> <span class="literal">NULL</span> <span class="keyword">COMMENT</span> <span class="string">"时间标记，0:日1:自然周2:自然月3:周WTD4:月MTD 5:近7D 6:每天月MTD"</span>,</span><br><span class="line">  <span class="string">`cat1_id`</span> <span class="built_in">BIGINT</span> <span class="literal">NULL</span> <span class="keyword">COMMENT</span> <span class="string">"后台一级类目 -1 全部类目"</span>,</span><br><span class="line">  <span class="string">`cat2_id`</span> <span class="built_in">BIGINT</span> <span class="literal">NULL</span> <span class="keyword">COMMENT</span> <span class="string">"后台二级类目 -1 全部类目"</span>,</span><br><span class="line">  <span class="string">`cat3_id`</span> <span class="built_in">BIGINT</span> <span class="literal">NULL</span> <span class="keyword">COMMENT</span> <span class="string">"后台三级类目 -1 全部类目"</span>,</span><br><span class="line">  <span class="string">`cat4_id`</span> <span class="built_in">BIGINT</span> <span class="literal">NULL</span> <span class="keyword">COMMENT</span> <span class="string">"后台四级类目 -1 全部类目"</span>,</span><br><span class="line">  <span class="string">`bu_id`</span> <span class="built_in">BIGINT</span> <span class="literal">NULL</span> <span class="keyword">COMMENT</span> <span class="string">"买家事业部ID"</span>,</span><br><span class="line">  <span class="string">`org_tag`</span> <span class="built_in">INT</span> <span class="literal">NULL</span> <span class="keyword">COMMENT</span> <span class="string">"维度标记，0:全国1:管理城市"</span>,</span><br><span class="line">  <span class="string">`date_scale`</span> <span class="built_in">VARCHAR</span>(<span class="number">64</span>) <span class="literal">NULL</span> <span class="keyword">COMMENT</span> <span class="string">"日周月W-1W-2M-1M-2MTD-20191223"</span>,</span><br><span class="line">  <span class="string">`begin_date`</span> <span class="built_in">INT</span> <span class="literal">NULL</span> <span class="keyword">COMMENT</span> <span class="string">"时间周期的起始日期"</span>,</span><br><span class="line">  <span class="string">`bu_name`</span> <span class="built_in">VARCHAR</span>(<span class="number">255</span>) <span class="literal">NULL</span> <span class="keyword">COMMENT</span> <span class="string">"买家事业部名称"</span>,</span><br><span class="line">  <span class="string">`catering_arranged_amt`</span> <span class="built_in">DECIMAL</span>(<span class="number">27</span>,<span class="number">6</span>) <span class="literal">NULL</span> <span class="keyword">COMMENT</span> <span class="string">"餐饮销售额"</span></span><br><span class="line">) <span class="keyword">ENGINE</span> = OLAP</span><br><span class="line"><span class="keyword">UNIQUE</span> <span class="keyword">KEY</span>(<span class="string">`business_type`</span>, <span class="string">`time_tag`</span>, <span class="string">`cat1_id`</span>, <span class="string">`cat2_id`</span>, <span class="string">`cat3_id`</span>, <span class="string">`cat4_id`</span>, <span class="string">`bu_id`</span>, <span class="string">`org_tag`</span>, <span class="string">`date_scale`</span>, <span class="string">`begin_date`</span>)</span><br><span class="line"><span class="keyword">COMMENT</span> <span class="string">"测试表-勿用！！！"</span></span><br><span class="line"><span class="keyword">PARTITION</span> <span class="keyword">BY</span> <span class="keyword">RANGE</span>(<span class="string">`begin_date`</span>)</span><br><span class="line">(</span><br><span class="line">  <span class="keyword">PARTITION</span> p20210423 <span class="keyword">VALUES</span>  [(<span class="string">"20210422"</span>),(<span class="string">"20210423"</span>))</span><br><span class="line">)</span><br><span class="line"><span class="keyword">DISTRIBUTED</span> <span class="keyword">BY</span> <span class="keyword">HASH</span>(<span class="string">`date_scale`</span>) BUCKETS <span class="number">3</span></span><br><span class="line">PROPERTIES (</span><br><span class="line"><span class="string">"storage_format"</span> = <span class="string">"v2"</span>)</span><br></pre></td></tr></table></figure>
+
+<p><strong>第二种前缀索引顺序：</strong></p>
+<ul>
+<li>date_scale放在前面其实也有好处，因为我们的查询条件中并没有添加分区字段，在扫描所有分区的时候，不在因为date_scale在最前，所以没有匹配到的日期的分区可以很快过滤掉</li>
+<li>但是每个分区中都会有其他字段的各种信息，如果其他字段放在最前面，需要扫很多列才能扫到date_scale列，猜测这部分时间是比较长的</li>
+</ul>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">CREATE</span> <span class="keyword">TABLE</span> kldp_data_stat.app_management_dashboard_product_with3p_merge (</span><br><span class="line">  <span class="string">`date_scale`</span> <span class="built_in">VARCHAR</span>(<span class="number">64</span>) <span class="literal">NULL</span> <span class="keyword">COMMENT</span> <span class="string">"日周月W-1W-2M-1M-2MTD-20191223"</span>,</span><br><span class="line">  <span class="string">`cat1_id`</span> <span class="built_in">BIGINT</span> <span class="literal">NULL</span> <span class="keyword">COMMENT</span> <span class="string">"后台一级类目 -1 全部类目"</span>,</span><br><span class="line">  <span class="string">`cat2_id`</span> <span class="built_in">BIGINT</span> <span class="literal">NULL</span> <span class="keyword">COMMENT</span> <span class="string">"后台二级类目 -1 全部类目"</span>,</span><br><span class="line">  <span class="string">`cat3_id`</span> <span class="built_in">BIGINT</span> <span class="literal">NULL</span> <span class="keyword">COMMENT</span> <span class="string">"后台三级类目 -1 全部类目"</span>,</span><br><span class="line">  <span class="string">`bu_id`</span> <span class="built_in">BIGINT</span> <span class="literal">NULL</span> <span class="keyword">COMMENT</span> <span class="string">"事业部iD"</span>,</span><br><span class="line">  <span class="string">`time_tag`</span> <span class="built_in">INT</span> <span class="literal">NULL</span> <span class="keyword">COMMENT</span> <span class="string">"时间标记，0:日1:自然周2:自然月3:周WTD4:月MTD 5:近7D 6:每天月MTD"</span>,</span><br><span class="line">  <span class="string">`cat4_id`</span> <span class="built_in">BIGINT</span> <span class="literal">NULL</span> <span class="keyword">COMMENT</span> <span class="string">"后台四级类目 -1 全部类目"</span>,</span><br><span class="line">  <span class="string">`business_type`</span> <span class="built_in">INT</span> <span class="literal">NULL</span> <span class="keyword">COMMENT</span> <span class="string">"业务类型 ：-1 全部 ， 1 KA ， 2 中小B"</span>,</span><br><span class="line">  <span class="string">`org_tag`</span> <span class="built_in">INT</span> <span class="literal">NULL</span> <span class="keyword">COMMENT</span> <span class="string">"维度标记，0:全国1:管理城市"</span>,</span><br><span class="line">  <span class="string">`begin_date`</span> <span class="built_in">INT</span> <span class="literal">NULL</span> <span class="keyword">COMMENT</span> <span class="string">"时间周期的起始日期"</span>,</span><br><span class="line">  <span class="string">`bu_name`</span> <span class="built_in">VARCHAR</span>(<span class="number">255</span>) <span class="literal">NULL</span> <span class="keyword">COMMENT</span> <span class="string">"管理城市名称"</span>,</span><br><span class="line">  <span class="string">`catering_arranged_amt`</span> <span class="built_in">DECIMAL</span>(<span class="number">27</span>,<span class="number">6</span>) <span class="literal">NULL</span> <span class="keyword">COMMENT</span> <span class="string">"餐饮销售额"</span></span><br><span class="line">) <span class="keyword">ENGINE</span> = OLAP</span><br><span class="line"><span class="keyword">UNIQUE</span> <span class="keyword">KEY</span>(<span class="string">`date_scale`</span>, <span class="string">`cat1_id`</span>, <span class="string">`cat2_id`</span>, <span class="string">`cat3_id`</span>, <span class="string">`bu_id`</span>, <span class="string">`time_tag`</span>, <span class="string">`cat4_id`</span>, <span class="string">`business_type`</span>, <span class="string">`org_tag`</span>, <span class="string">`begin_date`</span>)</span><br><span class="line"><span class="keyword">COMMENT</span> <span class="string">"经营大盘-商品主题"</span></span><br><span class="line"><span class="keyword">PARTITION</span> <span class="keyword">BY</span> <span class="keyword">RANGE</span>(<span class="string">`begin_date`</span>)</span><br><span class="line">(</span><br><span class="line">  <span class="keyword">PARTITION</span> p20210423 <span class="keyword">VALUES</span>  [(<span class="string">"20210422"</span>),(<span class="string">"20210423"</span>))</span><br><span class="line">)</span><br><span class="line"><span class="keyword">DISTRIBUTED</span> <span class="keyword">BY</span> <span class="keyword">HASH</span>(<span class="string">`date_scale`</span>) BUCKETS <span class="number">3</span></span><br><span class="line">PROPERTIES (</span><br><span class="line"><span class="string">"storage_format"</span> = <span class="string">"v2"</span>)</span><br></pre></td></tr></table></figure>
+
+<p><strong>测试性能的sql：</strong></p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">select</span> *</span><br><span class="line">  <span class="keyword">from</span> app_management_dashboard_product_with3p_merge</span><br><span class="line"> <span class="keyword">where</span> <span class="number">1</span> = <span class="number">1</span></span><br><span class="line">   <span class="keyword">and</span> time_tag=<span class="number">0</span></span><br><span class="line">   <span class="keyword">and</span> cat1_id = <span class="number">-1</span></span><br><span class="line">   <span class="keyword">and</span> cat2_id = <span class="number">-1</span></span><br><span class="line">   <span class="keyword">and</span> cat3_id = <span class="number">-1</span></span><br><span class="line">   <span class="keyword">and</span> cat4_id = <span class="number">-1</span></span><br><span class="line">   <span class="keyword">and</span> date_scale <span class="keyword">in</span> (<span class="string">'20210421'</span>, <span class="string">'20210420'</span>, <span class="string">'20210419'</span>, <span class="string">'20210418'</span>, <span class="string">'20210417'</span>, <span class="string">'20210416'</span>, <span class="string">'20210415'</span>, <span class="string">'20210414'</span>, <span class="string">'20210414'</span>)</span><br><span class="line">   <span class="keyword">and</span> bu_id =<span class="number">-1</span></span><br><span class="line">   <span class="keyword">and</span> org_tag != <span class="number">2</span></span><br><span class="line">   <span class="keyword">and</span> business_type = <span class="number">-1</span></span><br><span class="line"> <span class="keyword">order</span> <span class="keyword">by</span> date_scale <span class="keyword">asc</span>;</span><br></pre></td></tr></table></figure>
+
+<p>发现两个表的查询时间基本一样，都是200ms左右，可能跟这个表结构比较简单有关系，如果数据量比较大，可能会有差异的比较明显，但是从这个表的测试看，两种情况基本相同</p>
+<p><strong>效果最明显的还是添加分区字段到查询条件中，表中的begin_date：</strong></p>
+<figure class="highlight lsl"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line">select *</span><br><span class="line">  from app_management_dashboard_product_with3p_merge</span><br><span class="line"> where <span class="number">1</span> = <span class="number">1</span></span><br><span class="line">   and time_tag=<span class="number">0</span></span><br><span class="line">   and cat1_id = <span class="number">-1</span></span><br><span class="line">   and cat2_id = <span class="number">-1</span></span><br><span class="line">   and cat3_id = <span class="number">-1</span></span><br><span class="line">   and cat4_id = <span class="number">-1</span></span><br><span class="line">   and date_scale in ('<span class="number">20210421</span>', '<span class="number">20210420</span>', '<span class="number">20210419</span>', '<span class="number">20210418</span>', '<span class="number">20210417</span>', '<span class="number">20210416</span>', '<span class="number">20210415</span>', '<span class="number">20210414</span>', '<span class="number">20210414</span>')</span><br><span class="line">   and begin_date in (<span class="number">20210421</span>, <span class="number">20210420</span>, <span class="number">20210419</span>, <span class="number">20210418</span>, <span class="number">20210417</span>, <span class="number">20210416</span>, <span class="number">20210415</span>, <span class="number">20210414</span>, <span class="number">20210414</span>)</span><br><span class="line">   and bu_id =<span class="number">-1</span></span><br><span class="line">   and org_tag != <span class="number">2</span></span><br><span class="line">   and business_type = <span class="number">-1</span></span><br><span class="line"> order by date_scale asc;</span><br></pre></td></tr></table></figure>
+
+<p>加上分区条件，查询时间到了几十ms，效果十分明显~</p>
+
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/doris/" rel="tag"># doris</a>
+          
+            <a href="/tags/partition/" rel="tag"># partition</a>
+          
+            <a href="/tags/bucket/" rel="tag"># bucket</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2021/03/02/从CMS垃圾回收器日志看ES集群稳定性/" rel="next" title="从CMS垃圾回收器日志看ES集群稳定性">
+                <i class="fa fa-chevron-left"></i> 从CMS垃圾回收器日志看ES集群稳定性
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2021/03/15/Elasticsearch小知识/" rel="prev" title="Elasticsearch小知识">
+                Elasticsearch小知识 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+            
+              <img class="site-author-image" itemprop="image" src="/images/我的头像.jpg" alt="penghong.zhan">
+            
+              <p class="site-author-name" itemprop="name">penghong.zhan</p>
+              <p class="site-description motion-element" itemprop="description">一个热爱生活的程序猿</p>
+          </div>
+
+          <nav class="site-state motion-element">
+
+            
+              <div class="site-state-item site-state-posts">
+              
+                <a href="/archives/">
+              
+                  <span class="site-state-item-count">84</span>
+                  <span class="site-state-item-name">日志</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-categories">
+                <a href="/categories/index.html">
+                  <span class="site-state-item-count">38</span>
+                  <span class="site-state-item-name">分类</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-tags">
+                <a href="/tags/index.html">
+                  <span class="site-state-item-count">157</span>
+                  <span class="site-state-item-name">标签</span>
+                </a>
+              </div>
+            
+
+          </nav>
+
+          
+
+          
+
+          
+          
+
+          
+          
+
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#doris分区"><span class="nav-number">1.</span> <span class="nav-text">doris分区</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#partition"><span class="nav-number">1.1.</span> <span class="nav-text">partition</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#bucket"><span class="nav-number">1.2.</span> <span class="nav-text">bucket</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#doris查询条件"><span class="nav-number">2.</span> <span class="nav-text">doris查询条件</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#doris前缀索引"><span class="nav-number">3.</span> <span class="nav-text">doris前缀索引</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#doris本地join"><span class="nav-number">4.</span> <span class="nav-text">doris本地join</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#doris的分区查询"><span class="nav-number">5.</span> <span class="nav-text">doris的分区查询</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#doris前缀索引数序"><span class="nav-number">6.</span> <span class="nav-text">doris前缀索引数序</span></a></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2022</span>
+  <span class="with-love">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">penghong.zhan</span>
+
+  
+</div>
+
+
+  <div class="powered-by">由 <a class="theme-link" target="_blank" href="https://hexo.io">Hexo</a> 强力驱动</div>
+
+
+
+  <span class="post-meta-divider">|</span>
+
+
+
+  <div class="theme-info">主题 &mdash; <a class="theme-link" target="_blank" href="https://github.com/iissnan/hexo-theme-next">NexT.Mist</a> v5.1.4</div>
+
+
+
+
+        
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.4"></script>
+
+
+
+  
+  
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.4"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>

@@ -1,0 +1,864 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next mist use-motion" lang="zh-Hans">
+<head><meta name="generator" content="Hexo 3.9.0">
+  <meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform">
+<meta http-equiv="Cache-Control" content="no-siteapp">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css">
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css">
+
+<link href="/css/main.css?v=5.1.4" rel="stylesheet" type="text/css">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=5.1.4">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=5.1.4" color="#222">
+
+
+
+
+
+  <meta name="keywords" content="数仓,建模,">
+
+
+
+
+
+
+
+
+
+
+<meta name="description" content="维度建模和范式建模Linux的创始人Torvalds有一段关于“什么才是优秀程序员”的话：“烂程序员关心的是代码，好程序员关心的是数据结构和它们之间的关系”，其阐述了数据模型的重要性。 参考文献：  数据仓库系列之维度建模 - 知乎专栏 大数据分析基础——维度模型  范式建模业务交易、服务于业务系统  范式：即关系模式。一张数据表的表结构，符合的设计标准的级别 目的在于降低数据的冗余性和保证数据的">
+<meta name="keywords" content="数仓,建模">
+<meta property="og:type" content="article">
+<meta property="og:title" content="数仓建模知识点">
+<meta property="og:url" content="https://penghongzhan.github.io/2021/08/04/数仓建模知识点/index.html">
+<meta property="og:site_name" content="HongMo&#39;s Blog">
+<meta property="og:description" content="维度建模和范式建模Linux的创始人Torvalds有一段关于“什么才是优秀程序员”的话：“烂程序员关心的是代码，好程序员关心的是数据结构和它们之间的关系”，其阐述了数据模型的重要性。 参考文献：  数据仓库系列之维度建模 - 知乎专栏 大数据分析基础——维度模型  范式建模业务交易、服务于业务系统  范式：即关系模式。一张数据表的表结构，符合的设计标准的级别 目的在于降低数据的冗余性和保证数据的">
+<meta property="og:locale" content="zh-Hans">
+<meta property="og:updated_time" content="2022-03-07T06:22:25.000Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="数仓建模知识点">
+<meta name="twitter:description" content="维度建模和范式建模Linux的创始人Torvalds有一段关于“什么才是优秀程序员”的话：“烂程序员关心的是代码，好程序员关心的是数据结构和它们之间的关系”，其阐述了数据模型的重要性。 参考文献：  数据仓库系列之维度建模 - 知乎专栏 大数据分析基础——维度模型  范式建模业务交易、服务于业务系统  范式：即关系模式。一张数据表的表结构，符合的设计标准的级别 目的在于降低数据的冗余性和保证数据的">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Mist',
+    version: '5.1.4',
+    sidebar: {"position":"left","display":"post","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    duoshuo: {
+      userId: '0',
+      author: '博主'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="https://penghongzhan.github.io/2021/08/04/数仓建模知识点/">
+
+
+
+
+
+  <title>数仓建模知识点 | HongMo's Blog</title>
+  
+
+
+
+
+
+
+
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">HongMo's Blog</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle"></p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br>
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br>
+            
+            标签
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br>
+            
+            分类
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br>
+            
+            归档
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-about">
+          <a href="/about/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-user"></i> <br>
+            
+            关于
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="https://penghongzhan.github.io/2021/08/04/数仓建模知识点/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="penghong.zhan">
+      <meta itemprop="description" content>
+      <meta itemprop="image" content="/images/我的头像.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="HongMo's Blog">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">数仓建模知识点</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2021-08-04T17:51:09+08:00">
+                2021-08-04
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category">
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/数仓建模/" itemprop="url" rel="index">
+                    <span itemprop="name">数仓建模</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h1 id="维度建模和范式建模"><a href="#维度建模和范式建模" class="headerlink" title="维度建模和范式建模"></a>维度建模和范式建模</h1><p>Linux的创始人Torvalds有一段关于“什么才是优秀程序员”的话：“烂程序员关心的是代码，好程序员关心的是数据结构和它们之间的关系”，其阐述了数据模型的重要性。</p>
+<p>参考文献：</p>
+<ul>
+<li><a href="https://zhuanlan.zhihu.com/p/101364418" target="_blank" rel="noopener">数据仓库系列之维度建模 - 知乎专栏</a></li>
+<li><a href="https://www.cnblogs.com/yuluoxingkong/p/10736996.html" target="_blank" rel="noopener">大数据分析基础——维度模型</a></li>
+</ul>
+<h2 id="范式建模"><a href="#范式建模" class="headerlink" title="范式建模"></a>范式建模</h2><p>业务交易、服务于业务系统</p>
+<ul>
+<li>范式：即关系模式。一张数据表的表结构，符合的设计标准的级别</li>
+<li>目的在于降低数据的冗余性和保证数据的一致性。缺点是获取数据时，需要通过Join拼接出最后的数据。</li>
+<li>范式建模将事物抽象为 实体（Entity）、属性、关系(Relationship)来表示数据关联和事物描述。</li>
+</ul>
+<p>优点：准3NF、节约存储、易扩展、结构清晰、前期投入大，但后期成本低<br>缺点：周期长，见效慢、构建繁琐、查询复杂、学习成本高、对业务理解和建模能力都要求很高</p>
+<p>需要梳理清楚企业各个业务系统的实体，实体间的关系，实体的属性，它的实施周期长，而互联网行业是不断探索，不断迭代的过程，当你还没有梳理清楚的时候，业务就已经发生了改变，甚至当你的数仓还没建好的时候，有可能这个企业已经黄了。所以就有了我接下来讲的维度建模。</p>
+<h3 id="三范式"><a href="#三范式" class="headerlink" title="三范式"></a>三范式</h3><ul>
+<li>第一范式：保证每列的原子性，比如说地址字段拆分成国家、城市等原子字段</li>
+<li>第二范式：保证一张表只描述一件事情</li>
+<li>第三范式：保证每列都和主键直接相关，表中的字段和主键直接对应不依靠其他中间字段，说白了就是，决定某字段值的必须是主键。</li>
+</ul>
+<h2 id="维度建模"><a href="#维度建模" class="headerlink" title="维度建模"></a>维度建模</h2><p>分析、决策、服务于分析系统</p>
+<p>维度建模是面向分析场景而生，针对分析场景构建数仓模型。它重点关注快速、灵活的解决分析需求，同时能够提供大规模数据的快速响应性能。不需要完整的梳理企业业务流程和数据，实施周期根据主题边界而定，容易快速实现，这也符合互联网行业的特点。</p>
+<p>优点：方便使用、适合进行OLAP操作、建模方法简单、迭代式建设见效快<br>缺点：反范式、浪费存储、不易扩展、维度补全会造成存储的浪费，维度变化对数据的更新量大、前期成本低，后期会逐渐升高</p>
+<h1 id="次周复购率指标如何抽象通用的查询逻辑"><a href="#次周复购率指标如何抽象通用的查询逻辑" class="headerlink" title="次周复购率指标如何抽象通用的查询逻辑"></a>次周复购率指标如何抽象通用的查询逻辑</h1><p>分子是当前周的：复购客户数</p>
+<p>分母是上周的：合作客户数</p>
+<table>
+<thead>
+<tr>
+<th>指标名</th>
+<th>数仓字段</th>
+<th>字段含义</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>次日复购率</td>
+<td>rebuy_dt</td>
+<td>当天客户跟昨天有交集的复购客户</td>
+</tr>
+<tr>
+<td>次周复购率</td>
+<td>rebuy_wk</td>
+<td>当天客户跟上周一周有交集的复购客户</td>
+</tr>
+<tr>
+<td>次月复购率</td>
+<td>rebuy_mo</td>
+<td>当天客户跟上月一月有交集的复购客户</td>
+</tr>
+</tbody></table>
+<p>分子和分母的维度实际上是一样的，但是分母的时间维度的值需要是上个周期的时间；通过sql查询两个时间周期然后join在一起，在最外层进行指标计算，完全可以解决这个指标的计算问题；但是如果通过起源进行指标的计算，如何描述这个指标的计算逻辑？</p>
+<h2 id="如何知道某个客户是次周复购的"><a href="#如何知道某个客户是次周复购的" class="headerlink" title="如何知道某个客户是次周复购的"></a>如何知道某个客户是次周复购的</h2><p>通过给客户打标的方式，这种方式不可行，原因：</p>
+<ul>
+<li>表中存储的数据粒度是到sku的，在sku粒度给客户复购打标签，sku粒度的复购通过这个标签计算是没问题的</li>
+<li>但是如果聚合到品类，通过sku的标签网上聚，复购数会减少很多，比如说看三级品类的复购，复购这个三级品类下的某个skuA肯定是复购，但是昨天买了这个三级品类下的skuB，今天买了这个三级品类下的skuA，仍然是这个三级品类的复购</li>
+<li>如果按照上面给sku粒度打复购的标签，会导致品类的复购数量减少很多</li>
+<li>正常应该先得到今天整个三级品类的购买客户id，再得到昨天整个三级品类的购买客户id，两个id求交集</li>
+</ul>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">SELECT</span>  bitmap_count(bitmap_and(bitmap_union(customer_cnt),bitmap_union(customer_cnt)))  <span class="keyword">from</span> app_bi_dashboard_cust_spu_sales_day_withpop  <span class="keyword">LIMIT</span> <span class="number">10</span></span><br></pre></td></tr></table></figure>
+
+<p>实现次周复购的思路：</p>
+<ol>
+<li>查询两次，因为分子和分母的时间维度不同，分子查询本周复购客户数，分母查询上周合作客户数；这种查询方案实现起来还好，但是起源不支持一个指标通过查询两次进行计算。</li>
+<li>冗余一列，叫上周同日合作客户id，因为数仓给的是天粒度的数据，所以每天的数据，在当天的合作客户id(customer_id)的基础上，冗余一列，上周同日的合作客户id(last_wk_customer_id)（如果当前的客户id在上周同日也出现过，那么这个字段就是这个客户id，如果没出现过，这个字段是空），这样计算周的复购的时候，只需要查询一次：<code>bitmap_count(bitmap_and(bitmap_union(customer_id),bitmap_union(last_wk_customer_id)))/bitmap_count(last_wk_customer_id) where wk=?</code></li>
+<li>将复购指标通过单独的表提供，单独的表提供起来，可以不通过增加列的方式提供，增加一个叫做复购类型的字段，来表示当前购买的客户是哪天的，不同时间周期的指标，公式可以是一个，只要添加不同的type值就行了：``bitmap_count(bitmap_and(bitmap_union(customer_id),bitmap_union(last_customer_id)))/bitmap_count(last_customer_id) where wk=? and type=’last_wk’ `</li>
+</ol>
+<h2 id="上述方案2计算次月复购的问题"><a href="#上述方案2计算次月复购的问题" class="headerlink" title="上述方案2计算次月复购的问题"></a>上述方案2计算次月复购的问题</h2><p>周每周都是7天，但是月并不是每月都是30天；例如9月份共30天，每天的客户id会跟8月对应的日期比较，记录复购客户id字段；但是8月份有31天，假设9.1有个客户id A，在8.1到8.30都没有购买过，这时候按照上述方案，不是复购的，但是8.31号有这个客户id A，应该算是复购。</p>
+<p>所以上述方案的本质问题是，会导致上个周期天数多的情况，复购率会变低。</p>
+<p>解决方案：</p>
+<ul>
+<li>last_mo_customer_id，这个字段，不是记录的上月同天是否复购，而是记录上月周期是否有复购</li>
+<li>这里需要注意，上月周期并不一定是完整周期，如果当前周期不是完整周期（例如9.1-9.15），那么计算上月复购客户id的时候，需要对比的是上月同期（8.1-8.15）的客户id，判断是否复购；当然这个需要数仓来进行判断。</li>
+</ul>
+<p>还存在的问题：</p>
+<p>开始以为新加的last_wk_customer_id是，当天跟上周同天的合作客户的交集，所以说增加一列之后，数据条数是没有变化的，last_wk_customer_id这列要么跟customer_id相同，要么为空。但是这种方式有问题，因为次周复购率的口径是：本周复购客户数，除以上周的合作客户数，但是last_wk_customer_id字段不是上周的全量合作客户数，所以分母不能是这个字段，就没法计算了。</p>
+<p>如果想要增加这个字段，last_wk_customer_id应该代表上周全量的客户id，但是这样的话，会导致数据量膨胀，所以不是个很好的方式。</p>
+<p>这个问题的解决方案：数仓将上周的数据都放到周一那天下面，月的放在1号下面，不用每天都放上周全量的客户，但是仍然基本上是数据double了。</p>
+<p>还有一种解决方式：</p>
+<ul>
+<li>新增的字段不是last_week，而是next_week，这样这个字段就可以跟下周一整周的数据做交集，有留存的就记录下来，保证这个字段的值要么是空，要么跟customer_id相同，计算的时候，用这个字段比上customer_id字段即可。</li>
+<li>但是需要注意的是，如果前端传的周是2675，那么我们实际查询的时候，需要传2674，或者让数仓给数据的时候，延迟一天</li>
+</ul>
+<h1 id="新增sku的不同周期的计算方式"><a href="#新增sku的不同周期的计算方式" class="headerlink" title="新增sku的不同周期的计算方式"></a>新增sku的不同周期的计算方式</h1><p>基于数仓提供的是dt粒度的数据的场景</p>
+<h1 id="维度不同的数据如何合并到一起"><a href="#维度不同的数据如何合并到一起" class="headerlink" title="维度不同的数据如何合并到一起"></a>维度不同的数据如何合并到一起</h1><p>比如说客户覆盖率这种指标，分子是当前所选类目的数据，分母是整个事业部的数据，分子和分母的维度是不同的。</p>
+<p>在进行表设计的时候，无法通过union all的方式进行数据提供，因为事业部的数据，对应的类目id是空，union all之后，数据中会多出类目id为空的记录，这个是有问题的。</p>
+<p>所以这种方式的查询，只能是通过sql进行join的查询，而不能通过提前进行数据生产的时候给出，比如说冗余一个全事业部客户数的字段，除非数据给的是聚合好的数据，只要是doris实时聚合的数据，就无法通过冗余字段的方式来提供。</p>
+<p>具体的查询形式如下：</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">select</span></span><br><span class="line">  m94460_0.<span class="string">`dt`</span>,</span><br><span class="line">  m94460_0.<span class="string">`cat1_id`</span>,</span><br><span class="line">  m94460_0.<span class="string">`cust_cnt_954218`</span> / m94460_1.<span class="string">`cust_cnt_954218`</span> <span class="string">`cust_cover_rate`</span></span><br><span class="line"><span class="keyword">from</span></span><br><span class="line">  (</span><br><span class="line">    <span class="keyword">SELECT</span></span><br><span class="line">      t65418_0.<span class="string">`dt`</span> <span class="string">`dt`</span>,</span><br><span class="line">      t65418_0.<span class="string">`cat1_id`</span> <span class="string">`cat1_id`</span>,</span><br><span class="line">      bitmap_union_count(t65418_0.customer_id) <span class="string">`cust_cnt_954218`</span></span><br><span class="line">    <span class="keyword">FROM</span></span><br><span class="line">      kldp_data_stat.app_invite_business_analysis_integrate_view_p1 t65418_0</span><br><span class="line">    <span class="keyword">GROUP</span> <span class="keyword">BY</span></span><br><span class="line">      t65418_0.<span class="string">`dt`</span>,</span><br><span class="line">      t65418_0.<span class="string">`cat1_id`</span></span><br><span class="line">  ) m94460_0</span><br><span class="line">  <span class="keyword">left</span> <span class="keyword">join</span> (</span><br><span class="line">    <span class="keyword">SELECT</span></span><br><span class="line">      t65418_0.<span class="string">`dt`</span> <span class="string">`dt`</span>,</span><br><span class="line">      bitmap_union_count(t65418_0.customer_id) <span class="string">`cust_cnt_954218`</span></span><br><span class="line">    <span class="keyword">FROM</span></span><br><span class="line">      kldp_data_stat.app_invite_business_analysis_integrate_view_p1 t65418_0</span><br><span class="line">    <span class="keyword">GROUP</span> <span class="keyword">BY</span></span><br><span class="line">      t65418_0.<span class="string">`dt`</span></span><br><span class="line">  ) m94460_1 <span class="keyword">on</span> m94460_0.<span class="string">`dt`</span> = m94460_1.<span class="string">`dt`</span></span><br></pre></td></tr></table></figure>
+
+<h1 id="率类指标的日均"><a href="#率类指标的日均" class="headerlink" title="率类指标的日均"></a>率类指标的日均</h1><p>为什么率类指标的日均要分子相加除以分母相加，不能多天的值直接相加再除以天数？</p>
+<p>例如销售额占比这个指标：</p>
+<table>
+<thead>
+<tr>
+<th>分子</th>
+<th>分母</th>
+<th>日均结果</th>
+<th>整个指标</th>
+<th>日均结果</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>1</td>
+<td>1</td>
+<td></td>
+<td>100%</td>
+<td></td>
+</tr>
+<tr>
+<td>10000</td>
+<td>500000</td>
+<td></td>
+<td>2%</td>
+<td></td>
+</tr>
+<tr>
+<td></td>
+<td></td>
+<td>(10000+1)/(500000+1)=2%</td>
+<td></td>
+<td>(1+0.02)/2=51%</td>
+</tr>
+</tbody></table>
+<p>明显是分子分母分别相加之后的结果更合理</p>
+<h1 id="参考链接"><a href="#参考链接" class="headerlink" title="参考链接"></a>参考链接</h1><ul>
+<li><a href="https://blog.csdn.net/hsl971105/article/details/108165215" target="_blank" rel="noopener">我对维度建模和范式建模的一点理解</a></li>
+</ul>
+
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/数仓/" rel="tag"># 数仓</a>
+          
+            <a href="/tags/建模/" rel="tag"># 建模</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2021/08/03/java知识点/" rel="next" title="java知识点">
+                <i class="fa fa-chevron-left"></i> java知识点
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2021/08/25/spark任务执行情况分析/" rel="prev" title="spark任务执行情况分析">
+                spark任务执行情况分析 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+            
+              <img class="site-author-image" itemprop="image" src="/images/我的头像.jpg" alt="penghong.zhan">
+            
+              <p class="site-author-name" itemprop="name">penghong.zhan</p>
+              <p class="site-description motion-element" itemprop="description">一个热爱生活的程序猿</p>
+          </div>
+
+          <nav class="site-state motion-element">
+
+            
+              <div class="site-state-item site-state-posts">
+              
+                <a href="/archives/">
+              
+                  <span class="site-state-item-count">84</span>
+                  <span class="site-state-item-name">日志</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-categories">
+                <a href="/categories/index.html">
+                  <span class="site-state-item-count">38</span>
+                  <span class="site-state-item-name">分类</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-tags">
+                <a href="/tags/index.html">
+                  <span class="site-state-item-count">157</span>
+                  <span class="site-state-item-name">标签</span>
+                </a>
+              </div>
+            
+
+          </nav>
+
+          
+
+          
+
+          
+          
+
+          
+          
+
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#维度建模和范式建模"><span class="nav-number">1.</span> <span class="nav-text">维度建模和范式建模</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#范式建模"><span class="nav-number">1.1.</span> <span class="nav-text">范式建模</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#三范式"><span class="nav-number">1.1.1.</span> <span class="nav-text">三范式</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#维度建模"><span class="nav-number">1.2.</span> <span class="nav-text">维度建模</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#次周复购率指标如何抽象通用的查询逻辑"><span class="nav-number">2.</span> <span class="nav-text">次周复购率指标如何抽象通用的查询逻辑</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#如何知道某个客户是次周复购的"><span class="nav-number">2.1.</span> <span class="nav-text">如何知道某个客户是次周复购的</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#上述方案2计算次月复购的问题"><span class="nav-number">2.2.</span> <span class="nav-text">上述方案2计算次月复购的问题</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#新增sku的不同周期的计算方式"><span class="nav-number">3.</span> <span class="nav-text">新增sku的不同周期的计算方式</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#维度不同的数据如何合并到一起"><span class="nav-number">4.</span> <span class="nav-text">维度不同的数据如何合并到一起</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#率类指标的日均"><span class="nav-number">5.</span> <span class="nav-text">率类指标的日均</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#参考链接"><span class="nav-number">6.</span> <span class="nav-text">参考链接</span></a></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2022</span>
+  <span class="with-love">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">penghong.zhan</span>
+
+  
+</div>
+
+
+  <div class="powered-by">由 <a class="theme-link" target="_blank" href="https://hexo.io">Hexo</a> 强力驱动</div>
+
+
+
+  <span class="post-meta-divider">|</span>
+
+
+
+  <div class="theme-info">主题 &mdash; <a class="theme-link" target="_blank" href="https://github.com/iissnan/hexo-theme-next">NexT.Mist</a> v5.1.4</div>
+
+
+
+
+        
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.4"></script>
+
+
+
+  
+  
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.4"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>

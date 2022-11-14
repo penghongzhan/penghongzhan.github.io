@@ -1,0 +1,783 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next mist use-motion" lang="zh-Hans">
+<head><meta name="generator" content="Hexo 3.9.0">
+  <meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform">
+<meta http-equiv="Cache-Control" content="no-siteapp">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css">
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css">
+
+<link href="/css/main.css?v=5.1.4" rel="stylesheet" type="text/css">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=5.1.4">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=5.1.4" color="#222">
+
+
+
+
+
+  <meta name="keywords" content="spring,springboot,aop,动态代理,CGLib,jdk,">
+
+
+
+
+
+
+
+
+
+
+<meta name="description" content="动态代理的方式springboot貌似2.0前后，采用的动态代理方案不太一样：  2.0之前：实现接口的类的代理采用jdk动态代理，没有实现接口的类采用CGLib动态代理 2.0以及以后：不管是否实现接口，都默认采用CGLib代理  ps：这个分界版本可能不太准，具体可以测试一下 jdk动态代理的小坑123456789101112131415@Component(&quot;abstractTaskImpl">
+<meta name="keywords" content="spring,springboot,aop,动态代理,CGLib,jdk">
+<meta property="og:type" content="article">
+<meta property="og:title" content="spring动态代理的小坑">
+<meta property="og:url" content="https://penghongzhan.github.io/2019/11/08/spring动态代理的小坑/index.html">
+<meta property="og:site_name" content="HongMo&#39;s Blog">
+<meta property="og:description" content="动态代理的方式springboot貌似2.0前后，采用的动态代理方案不太一样：  2.0之前：实现接口的类的代理采用jdk动态代理，没有实现接口的类采用CGLib动态代理 2.0以及以后：不管是否实现接口，都默认采用CGLib代理  ps：这个分界版本可能不太准，具体可以测试一下 jdk动态代理的小坑123456789101112131415@Component(&quot;abstractTaskImpl">
+<meta property="og:locale" content="zh-Hans">
+<meta property="og:updated_time" content="2019-11-08T10:57:03.000Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="spring动态代理的小坑">
+<meta name="twitter:description" content="动态代理的方式springboot貌似2.0前后，采用的动态代理方案不太一样：  2.0之前：实现接口的类的代理采用jdk动态代理，没有实现接口的类采用CGLib动态代理 2.0以及以后：不管是否实现接口，都默认采用CGLib代理  ps：这个分界版本可能不太准，具体可以测试一下 jdk动态代理的小坑123456789101112131415@Component(&quot;abstractTaskImpl">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Mist',
+    version: '5.1.4',
+    sidebar: {"position":"left","display":"post","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    duoshuo: {
+      userId: '0',
+      author: '博主'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="https://penghongzhan.github.io/2019/11/08/spring动态代理的小坑/">
+
+
+
+
+
+  <title>spring动态代理的小坑 | HongMo's Blog</title>
+  
+
+
+
+
+
+
+
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">HongMo's Blog</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle"></p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br>
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br>
+            
+            标签
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br>
+            
+            分类
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br>
+            
+            归档
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-about">
+          <a href="/about/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-user"></i> <br>
+            
+            关于
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="https://penghongzhan.github.io/2019/11/08/spring动态代理的小坑/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="penghong.zhan">
+      <meta itemprop="description" content>
+      <meta itemprop="image" content="/images/我的头像.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="HongMo's Blog">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">spring动态代理的小坑</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2019-11-08T18:55:55+08:00">
+                2019-11-08
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category">
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/spring/" itemprop="url" rel="index">
+                    <span itemprop="name">spring</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h1 id="动态代理的方式"><a href="#动态代理的方式" class="headerlink" title="动态代理的方式"></a>动态代理的方式</h1><p>springboot貌似2.0前后，采用的动态代理方案不太一样：</p>
+<ul>
+<li>2.0之前：实现接口的类的代理采用jdk动态代理，没有实现接口的类采用CGLib动态代理</li>
+<li>2.0以及以后：不管是否实现接口，都默认采用CGLib代理</li>
+</ul>
+<p>ps：这个分界版本可能不太准，具体可以测试一下</p>
+<h1 id="jdk动态代理的小坑"><a href="#jdk动态代理的小坑" class="headerlink" title="jdk动态代理的小坑"></a>jdk动态代理的小坑</h1><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Component</span>(<span class="string">"abstractTaskImpl"</span>)</span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">AbstractTaskImpl</span> <span class="keyword">implements</span> <span class="title">AbstractTaskInter</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">static</span> Random random = <span class="keyword">new</span> Random();</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="meta">@Async</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">doTaskOne</span><span class="params">()</span> <span class="keyword">throws</span> InterruptedException </span>&#123;</span><br><span class="line">        System.out.println(<span class="string">"开始做任务一"</span>);</span><br><span class="line">        <span class="keyword">long</span> start = currentTimeMillis();</span><br><span class="line">        sleep(random.nextInt(<span class="number">10000</span>));</span><br><span class="line">        <span class="keyword">long</span> end = currentTimeMillis();</span><br><span class="line">        System.out.println(<span class="string">"完成任务一，耗时："</span> + (end - start) + <span class="string">"毫秒"</span>);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>上面的类中，<code>doTaskOne</code>方法添加了<code>@Async</code>注解，所以实际运行过程中会被代理，保证<code>doTaskOne</code>方法会进行异步调用。</p>
+<p>实现了接口，使用的是jdk动态代理（测试版本：springboot-1.5.8），所以代理类是实现了<code>AbstractTaskInter</code>接口，注入的时候，通过接口的类型可以正常注入。</p>
+<figure class="highlight less"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="variable">@Autowired</span></span><br><span class="line"><span class="variable">@Qualifier</span>(<span class="string">"abstractTaskImpl"</span>)</span><br><span class="line">private AbstractTaskInter abstractTaskInter;</span><br></pre></td></tr></table></figure>
+
+<p>此时，我想给类添加一个非接口的异步调用方法，如下：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Component</span>(<span class="string">"abstractTaskImpl"</span>)</span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">AbstractTaskImpl</span> <span class="keyword">implements</span> <span class="title">AbstractTaskInter</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">static</span> Random random = <span class="keyword">new</span> Random();</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Async</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">other</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        System.out.println(<span class="string">"other async"</span>);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="meta">@Async</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">doTaskOne</span><span class="params">()</span> <span class="keyword">throws</span> InterruptedException </span>&#123;</span><br><span class="line">        System.out.println(<span class="string">"开始做任务一"</span>);</span><br><span class="line">        <span class="keyword">long</span> start = currentTimeMillis();</span><br><span class="line">        sleep(random.nextInt(<span class="number">10000</span>));</span><br><span class="line">        <span class="keyword">long</span> end = currentTimeMillis();</span><br><span class="line">        System.out.println(<span class="string">"完成任务一，耗时："</span> + (end - start) + <span class="string">"毫秒"</span>);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>因为<code>other</code>方法不是接口的方法，所以通过接口类型注入的时候，无法调用到该方法，所以需要通过实现类具体类型来注入：</p>
+<figure class="highlight less"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="variable">@Autowired</span></span><br><span class="line"><span class="variable">@Qualifier</span>(<span class="string">"abstractTaskImpl"</span>)</span><br><span class="line">private AbstractTaskImpl abstractTaskInter;</span><br></pre></td></tr></table></figure>
+
+<p>此时运行程序的时候，会出现异常，显示<code>abstractTaskImpl</code>这个bean的类型不是<code>AbstractTaskImpl</code>：</p>
+<figure class="highlight delphi"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">Error creating bean <span class="keyword">with</span> <span class="keyword">name</span> <span class="string">'hong.study.utils.springboot.async.AsyncTaskTest'</span>: Unsatisfied dependency expressed through field <span class="string">'abstractTaskInter'</span>; nested exception <span class="keyword">is</span> org.springframework.beans.factory.BeanNotOfRequiredTypeException: Bean named <span class="string">'abstractTaskImpl'</span> <span class="keyword">is</span> expected <span class="keyword">to</span> be <span class="keyword">of</span> <span class="keyword">type</span> <span class="string">'hong.study.utils.springboot.async.AbstractTaskImpl'</span> but was actually <span class="keyword">of</span> <span class="keyword">type</span> <span class="string">'com.sun.proxy.$Proxy79'</span></span><br></pre></td></tr></table></figure>
+
+<p>原因在于，生成的代理类是通过jdk动态代理生成的，他是实现了<code>AbstractTaskInter</code>接口的类，跟<code>AbstractTaskImpl</code>类是平等的两个实现类，所以会出现上面的bean类型错误</p>
+<h1 id="小坑的解决方案"><a href="#小坑的解决方案" class="headerlink" title="小坑的解决方案"></a>小坑的解决方案</h1><h2 id="实现另一个接口"><a href="#实现另一个接口" class="headerlink" title="实现另一个接口"></a>实现另一个接口</h2><p>上面的<code>AbstractTaskImpl</code>类去实现另一个接口<code>OtherInter</code>，该接口中有方法<code>other</code>：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Component</span>(<span class="string">"abstractTaskImpl"</span>)</span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">AbstractTaskImpl</span> <span class="keyword">implements</span> <span class="title">AbstractTaskInter</span>, <span class="title">OtherInter</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">static</span> Random random = <span class="keyword">new</span> Random();</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="meta">@Async</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">other</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        System.out.println(<span class="string">"other async"</span>);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="meta">@Async</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">doTaskOne</span><span class="params">()</span> <span class="keyword">throws</span> InterruptedException </span>&#123;</span><br><span class="line">        System.out.println(<span class="string">"开始做任务一"</span>);</span><br><span class="line">        <span class="keyword">long</span> start = currentTimeMillis();</span><br><span class="line">        sleep(random.nextInt(<span class="number">10000</span>));</span><br><span class="line">        <span class="keyword">long</span> end = currentTimeMillis();</span><br><span class="line">        System.out.println(<span class="string">"完成任务一，耗时："</span> + (end - start) + <span class="string">"毫秒"</span>);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>注入的时候，通过这个新的接口类型进行注入，这样可以成功。</p>
+<figure class="highlight less"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="variable">@Autowired</span></span><br><span class="line"><span class="variable">@Qualifier</span>(<span class="string">"abstractTaskImpl"</span>)</span><br><span class="line">private OtherInter abstractTaskInter;</span><br></pre></td></tr></table></figure>
+
+<h2 id="将动态代理的方式改为CGLib"><a href="#将动态代理的方式改为CGLib" class="headerlink" title="将动态代理的方式改为CGLib"></a>将动态代理的方式改为CGLib</h2><p>CGLib的动态代理是通过生成被代理类的子类来实现的，代理类的类型就是被代理类，所以注入的时候通过<code>AbstractTaskImpl</code>进行注入是可以的，不会出现上面的代理类和注入的类型不一致的情况。</p>
+<figure class="highlight less"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="variable">@Autowired</span></span><br><span class="line"><span class="variable">@Qualifier</span>(<span class="string">"abstractTaskImpl"</span>)</span><br><span class="line">private AbstractTaskImpl abstractTaskInter;</span><br></pre></td></tr></table></figure>
+
+<h3 id="开启CGLib"><a href="#开启CGLib" class="headerlink" title="开启CGLib"></a>开启CGLib</h3><p>springboot2.0之后，默认都是CGLib的方式了，但是对于上面提到的<code>springboot-1.5.8</code>版本，需要进行一些手动设置：</p>
+<ul>
+<li>添加全局配置：<code>spring.aop.proxy-target-class=true</code>，但是这个经过测试不太好使，而且即使生效了也是全局修改，可能会影响到其他的类的动态代理的生成</li>
+<li>给bean添加单独配置：类上添加<mark><code>@Scope(proxyMode = ScopedProxyMode.TARGET_CLASS)</code></mark>，只会对当前类生效，测试有效，也不会影响到其他类，推荐这个方式</li>
+</ul>
+
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/spring/" rel="tag"># spring</a>
+          
+            <a href="/tags/springboot/" rel="tag"># springboot</a>
+          
+            <a href="/tags/aop/" rel="tag"># aop</a>
+          
+            <a href="/tags/动态代理/" rel="tag"># 动态代理</a>
+          
+            <a href="/tags/CGLib/" rel="tag"># CGLib</a>
+          
+            <a href="/tags/jdk/" rel="tag"># jdk</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2019/11/06/Linux的零拷贝技术/" rel="next" title="Linux的零拷贝技术">
+                <i class="fa fa-chevron-left"></i> Linux的零拷贝技术
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2019/11/19/JVM与Linux的swap/" rel="prev" title="JVM与Linux的swap">
+                JVM与Linux的swap <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+            
+              <img class="site-author-image" itemprop="image" src="/images/我的头像.jpg" alt="penghong.zhan">
+            
+              <p class="site-author-name" itemprop="name">penghong.zhan</p>
+              <p class="site-description motion-element" itemprop="description">一个热爱生活的程序猿</p>
+          </div>
+
+          <nav class="site-state motion-element">
+
+            
+              <div class="site-state-item site-state-posts">
+              
+                <a href="/archives/">
+              
+                  <span class="site-state-item-count">84</span>
+                  <span class="site-state-item-name">日志</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-categories">
+                <a href="/categories/index.html">
+                  <span class="site-state-item-count">38</span>
+                  <span class="site-state-item-name">分类</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-tags">
+                <a href="/tags/index.html">
+                  <span class="site-state-item-count">157</span>
+                  <span class="site-state-item-name">标签</span>
+                </a>
+              </div>
+            
+
+          </nav>
+
+          
+
+          
+
+          
+          
+
+          
+          
+
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#动态代理的方式"><span class="nav-number">1.</span> <span class="nav-text">动态代理的方式</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#jdk动态代理的小坑"><span class="nav-number">2.</span> <span class="nav-text">jdk动态代理的小坑</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#小坑的解决方案"><span class="nav-number">3.</span> <span class="nav-text">小坑的解决方案</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#实现另一个接口"><span class="nav-number">3.1.</span> <span class="nav-text">实现另一个接口</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#将动态代理的方式改为CGLib"><span class="nav-number">3.2.</span> <span class="nav-text">将动态代理的方式改为CGLib</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#开启CGLib"><span class="nav-number">3.2.1.</span> <span class="nav-text">开启CGLib</span></a></li></ol></li></ol></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2022</span>
+  <span class="with-love">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">penghong.zhan</span>
+
+  
+</div>
+
+
+  <div class="powered-by">由 <a class="theme-link" target="_blank" href="https://hexo.io">Hexo</a> 强力驱动</div>
+
+
+
+  <span class="post-meta-divider">|</span>
+
+
+
+  <div class="theme-info">主题 &mdash; <a class="theme-link" target="_blank" href="https://github.com/iissnan/hexo-theme-next">NexT.Mist</a> v5.1.4</div>
+
+
+
+
+        
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.4"></script>
+
+
+
+  
+  
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.4"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>

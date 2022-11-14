@@ -1,0 +1,817 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next mist use-motion" lang="zh-Hans">
+<head><meta name="generator" content="Hexo 3.9.0">
+  <meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform">
+<meta http-equiv="Cache-Control" content="no-siteapp">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css">
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css">
+
+<link href="/css/main.css?v=5.1.4" rel="stylesheet" type="text/css">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=5.1.4">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=5.1.4" color="#222">
+
+
+
+
+
+  <meta name="keywords" content="elastic,elasticsearch,jvm,es,gc,cms,线上稳定性,">
+
+
+
+
+
+
+
+
+
+
+<meta name="description" content="es堆内存配置 -Xms30g -Xmx30g -XX:CMSInitiatingOccupancyFraction=75 查看具体的堆内存的分配大小 /usr/local/java8/bin/jstat -gccapacity 17394  1000 survivor: 629120.0，629M eden: 5033216.0, 5G old: 25165824.0, 25G    cms正常">
+<meta name="keywords" content="elastic,elasticsearch,jvm,es,gc,cms,线上稳定性">
+<meta property="og:type" content="article">
+<meta property="og:title" content="从CMS垃圾回收器日志看ES集群稳定性">
+<meta property="og:url" content="https://penghongzhan.github.io/2021/03/02/从CMS垃圾回收器日志看ES集群稳定性/index.html">
+<meta property="og:site_name" content="HongMo&#39;s Blog">
+<meta property="og:description" content="es堆内存配置 -Xms30g -Xmx30g -XX:CMSInitiatingOccupancyFraction=75 查看具体的堆内存的分配大小 /usr/local/java8/bin/jstat -gccapacity 17394  1000 survivor: 629120.0，629M eden: 5033216.0, 5G old: 25165824.0, 25G    cms正常">
+<meta property="og:locale" content="zh-Hans">
+<meta property="og:updated_time" content="2021-03-02T15:41:32.000Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="从CMS垃圾回收器日志看ES集群稳定性">
+<meta name="twitter:description" content="es堆内存配置 -Xms30g -Xmx30g -XX:CMSInitiatingOccupancyFraction=75 查看具体的堆内存的分配大小 /usr/local/java8/bin/jstat -gccapacity 17394  1000 survivor: 629120.0，629M eden: 5033216.0, 5G old: 25165824.0, 25G    cms正常">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Mist',
+    version: '5.1.4',
+    sidebar: {"position":"left","display":"post","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    duoshuo: {
+      userId: '0',
+      author: '博主'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="https://penghongzhan.github.io/2021/03/02/从CMS垃圾回收器日志看ES集群稳定性/">
+
+
+
+
+
+  <title>从CMS垃圾回收器日志看ES集群稳定性 | HongMo's Blog</title>
+  
+
+
+
+
+
+
+
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">HongMo's Blog</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle"></p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br>
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br>
+            
+            标签
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br>
+            
+            分类
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br>
+            
+            归档
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-about">
+          <a href="/about/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-user"></i> <br>
+            
+            关于
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="https://penghongzhan.github.io/2021/03/02/从CMS垃圾回收器日志看ES集群稳定性/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="penghong.zhan">
+      <meta itemprop="description" content>
+      <meta itemprop="image" content="/images/我的头像.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="HongMo's Blog">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">从CMS垃圾回收器日志看ES集群稳定性</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2021-03-02T23:00:17+08:00">
+                2021-03-02
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category">
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/elasticsearch/" itemprop="url" rel="index">
+                    <span itemprop="name">elasticsearch</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h1 id="es堆内存配置"><a href="#es堆内存配置" class="headerlink" title="es堆内存配置"></a>es堆内存配置</h1><ul>
+<li>-Xms30g -Xmx30g</li>
+<li>-XX:CMSInitiatingOccupancyFraction=75</li>
+<li>查看具体的堆内存的分配大小<ul>
+<li><code>/usr/local/java8/bin/jstat -gccapacity 17394  1000</code></li>
+<li>survivor: 629120.0，629M</li>
+<li>eden: 5033216.0, 5G</li>
+<li>old: 25165824.0, 25G</li>
+</ul>
+</li>
+</ul>
+<h1 id="cms正常的并发gc"><a href="#cms正常的并发gc" class="headerlink" title="cms正常的并发gc"></a>cms正常的并发gc</h1><p>CMS通过将大量工作分散到并发处理阶段来在减少STW时间，在这块做得非常优秀。</p>
+<p>几个关键的时间日志：</p>
+<ul>
+<li>0.138/0.138 secs：这个阶段的持续时间与时钟时间；</li>
+<li>user：GC线程在垃圾收集期间所使用的CPU总时间；</li>
+<li>sys：系统调用或者等待系统事件花费的时间；</li>
+<li>real：应用被暂停的时钟时间，由于GC线程是多线程的，导致了real小于(user+real)，如果是gc线程是单线程的话，real是接近于(user+real)时间。</li>
+</ul>
+<p>下面个是一段ParNew和CMS结合的垃圾回收日志：</p>
+<figure class="highlight markdown"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br></pre></td><td class="code"><pre><span class="line"><span class="section"># 年轻代gc之后，对象分配失败</span></span><br><span class="line">2021-03-02T07:44:58.434+0800: 807042.036: [GC (Allocation Failure) 807042.036: [ParNew</span><br><span class="line"><span class="section"># survivor期望放下的对象大小是322M 按照上面es堆内存的配置，survivor的大小应该是600M+，这里为什么能发下的大小只有一般，Desired survivor size是Survivor区大小的50%(TargetSurvivorRatio的默认值)。</span></span><br><span class="line">Desired survivor size 322109440 bytes, new threshold 1 (max 6)</span><br><span class="line"><span class="section"># 年龄是1的对象的占用空间大小640M，可以发现，年龄为1的对象大小已经超过了survivor空间的大小，所以需要将对象升级到老年代</span></span><br><span class="line"><span class="bullet">- </span>age   1:  640934736 bytes,  640934736 total</span><br><span class="line"><span class="section"># 年轻代：回收前-&gt;回收后(年轻代总的空间) 回收时间；整个堆：回收前-&gt;回收后(总空间) 回收时间 </span></span><br><span class="line">: 5662336K-&gt;629120K(5662336K), 0.1170999 secs] 23497082K-&gt;19192581K(30828160K), 0.1175795 secs] [Times: user=2.19 sys=0.03, real=0.12 secs]</span><br><span class="line"><span class="section"># 经过上面的parnew回收之后，年轻代共5G空间，占用629M，老年代共25G空间，占用20G，到达了cms的回收阈值75%</span></span><br><span class="line"><span class="section"># stw 初始标记阶段</span></span><br><span class="line">2021-03-02T07:45:02.448+0800: 807046.051: [GC (CMS Initial Mark) [1 CMS-initial-mark: 19230527K(25165824K)] 19860050K(30828160K), 0.0077555 secs] [Times: user=0.08 sys=0.01, real=0.01 secs]</span><br><span class="line"><span class="section"># no stw 并发标记阶段</span></span><br><span class="line">2021-03-02T07:45:02.457+0800: 807046.059: [CMS-concurrent-mark-start]</span><br><span class="line">2021-03-02T07:45:04.725+0800: 807048.327: [CMS-concurrent-mark: 2.269/2.269 secs] [Times: user=25.46 sys=0.81, real=2.27 secs]</span><br><span class="line"><span class="section"># no stw 并发preclean阶段</span></span><br><span class="line">2021-03-02T07:45:04.725+0800: 807048.328: [CMS-concurrent-preclean-start]</span><br><span class="line">2021-03-02T07:45:04.896+0800: 807048.498: [CMS-concurrent-preclean: 0.162/0.170 secs] [Times: user=0.44 sys=0.02, real=0.17 secs]</span><br><span class="line"><span class="section"># no stw 并发的abortable preclean阶段</span></span><br><span class="line">2021-03-02T07:45:04.896+0800: 807048.498: [CMS-concurrent-abortable-preclean-start]</span><br><span class="line"> CMS: abort preclean due to time 2021-03-02T07:45:10.286+0800: 807053.888: [CMS-concurrent-abortable-preclean: 5.196/5.390 secs] [Times: user=23.80 sys=0.94, real=5.39 secs]</span><br><span class="line"><span class="section"># stw 最终标记阶段</span></span><br><span class="line">2021-03-02T07:45:50.010+0800: 807093.612: [<span class="string">GC (CMS Final Remark) [YG occupancy: 2388409 K (5662336 K)</span>]807093.612: [<span class="string">Rescan (parallel) , 0.0570763 secs</span>]807093.669: [<span class="string">weak refs processing, 0.0002759 secs</span>]807093.669: [<span class="string">class unloading, 0.0418367 secs</span>]807093.711: [<span class="string">scrub symbol table, 0.0110873 secs</span>]807093.722: [<span class="string">scrub string table, 0.0018460 secs</span>][<span class="symbol">1 CMS-remark: 19475169K(25165824K)</span>] 21863578K(30828160K), 0.1166112 secs] [Times: user=1.35 sys=0.00, real=0.11 secs]</span><br><span class="line"><span class="section"># no stw 并发清除阶段</span></span><br><span class="line">2021-03-02T07:45:50.127+0800: 807093.729: [CMS-concurrent-sweep-start]</span><br><span class="line">2021-03-02T07:45:53.535+0800: 807097.137: [CMS-concurrent-sweep: 3.270/3.408 secs] [Times: user=35.67 sys=1.43, real=3.41 secs]</span><br><span class="line"><span class="section"># no stw 并发reset阶段</span></span><br><span class="line">2021-03-02T07:45:53.535+0800: 807097.137: [CMS-concurrent-reset-start]</span><br><span class="line">2021-03-02T07:45:53.601+0800: 807097.204: [CMS-concurrent-reset: 0.066/0.066 secs] [Times: user=0.35 sys=0.03, real=0.07 secs]</span><br></pre></td></tr></table></figure>
+
+<p>上面的垃圾回收日志是正常的一个回收过程，年轻代放不下之后，会将对象升级到老年代，老年代到达cms设置的阈值之后，会触发老年代的回收，上述回收过程正是cms的优势所在，一次gc过程，大部分时间是跟应用线程并发执行，对应用线程的影响比较小，对于一般的应用基本上也是感知不到的。</p>
+<p>但是有一种情况下的gc会对应用造成很大的影响，cms本身有一个比较大的缺陷在于，无法处理浮动垃圾，单纯的标记清除算法，随着垃圾回收的进行，老年代的碎片也会越来越多，一次old gc的时候，如果新一波的young gc之后升级到老年代的对象，在目前老年代中仍然放不下，会产生concurrent mode failure，此时会造成单线程的fullgc，应用线程会被暂停，如果堆内存比较大，就像我们的es机器，堆内存30G，一次fullgc需要花费20多秒的时间，对线上的应用的影响会非常大。</p>
+<h1 id="concurrent-mode-failure"><a href="#concurrent-mode-failure" class="headerlink" title="concurrent mode failure"></a>concurrent mode failure</h1><p>CMS 收集器无法处理浮动垃圾（Floating Garbage），可能出现 “Concurrnet Mode Failure” 失败而导致另一次Full GC的产生，可能引发串行Full GC；下面是一段产生该异常的gc日志，gc造成es正常的线程停顿了26s的时间：</p>
+<figure class="highlight dns"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br></pre></td><td class="code"><pre><span class="line"><span class="number">2021</span>-<span class="number">02-23T07:01</span>:<span class="number">47</span>.<span class="number">432+0800</span>: <span class="number">199651.034</span>: [GC (CMS Initial Mark) [<span class="number">1</span> CMS-initial-mark: <span class="number">19184059</span>K(<span class="number">25165824</span>K)] <span class="number">19829584</span>K(<span class="number">30828160</span>K), <span class="number">0.0135926</span> secs] [Times: user=<span class="number">0</span>.<span class="number">10</span> sys=<span class="number">0</span>.<span class="number">00</span>, real=<span class="number">0</span>.<span class="number">01</span> secs]</span><br><span class="line"><span class="number">2021</span>-<span class="number">02-23T07:01</span>:<span class="number">47</span>.<span class="number">446+0800</span>: <span class="number">199651.048</span>: Total time for which application threads were stopped: <span class="number">0.0187626</span> seconds, Stopping threads took: <span class="number">0.0026169</span> seconds</span><br><span class="line"><span class="number">2021</span>-<span class="number">02-23T07:01</span>:<span class="number">47</span>.<span class="number">446+0800</span>: <span class="number">199651.048</span>: [CMS-concurrent-mark-start]</span><br><span class="line"><span class="number">2021</span>-<span class="number">02-23T07:01</span>:<span class="number">49</span>.<span class="number">548+0800</span>: <span class="number">199653.151</span>: [CMS-concurrent-mark: <span class="number">2.102/2.102</span> secs] [Times: user=<span class="number">24</span>.<span class="number">28</span> sys=<span class="number">0</span>.<span class="number">90</span>, real=<span class="number">2</span>.<span class="number">11</span> secs]</span><br><span class="line"><span class="number">2021</span>-<span class="number">02-23T07:01</span>:<span class="number">49</span>.<span class="number">548+0800</span>: <span class="number">199653.151</span>: [CMS-concurrent-preclean-start]</span><br><span class="line"><span class="number">2021</span>-<span class="number">02-23T07:01</span>:<span class="number">49</span>.<span class="number">728+0800</span>: <span class="number">199653.330</span>: [CMS-concurrent-preclean: <span class="number">0.169/0.179</span> secs] [Times: user=<span class="number">0</span>.<span class="number">35</span> sys=<span class="number">0</span>.<span class="number">02</span>, real=<span class="number">0</span>.<span class="number">17</span> secs]</span><br><span class="line"><span class="number">2021</span>-<span class="number">02-23T07:01</span>:<span class="number">49</span>.<span class="number">728+0800</span>: <span class="number">199653.330</span>: [CMS-concurrent-abortable-preclean-start]</span><br><span class="line"><span class="number">2021</span>-<span class="number">02-23T07:01</span>:<span class="number">51.246+0800</span>: <span class="number">199654.848</span>: Total time for which application threads were stopped: <span class="number">0.0029138</span> seconds, Stopping threads took: <span class="number">0.0004014</span> seconds</span><br><span class="line"><span class="number">2021</span>-<span class="number">02-23T07:01</span>:<span class="number">51.247+0800</span>: <span class="number">199654.849</span>: Total time for which application threads were stopped: <span class="number">0.0012148</span> seconds, Stopping threads took: <span class="number">0.0000792</span> seconds</span><br><span class="line"><span class="number">2021</span>-<span class="number">02-23T07:01</span>:<span class="number">52</span>.<span class="number">643+0800</span>: <span class="number">199656.245</span>: Total time for which application threads were stopped: <span class="number">0.0033441</span> seconds, Stopping threads took: <span class="number">0.0003442</span> seconds</span><br><span class="line"><span class="number">2021</span>-<span class="number">02-23T07:01</span>:<span class="number">52</span>.<span class="number">645+0800</span>: <span class="number">199656.247</span>: Total time for which application threads were stopped: <span class="number">0.0019024</span> seconds, Stopping threads took: <span class="number">0.0002444</span> seconds</span><br><span class="line"><span class="number">2021</span>-<span class="number">02-23T07:01</span>:<span class="number">54</span>.<span class="number">746+0800</span>: <span class="number">199658.348</span>: [GC (Allocation Failure) <span class="number">199658.348</span>: [ParNew</span><br><span class="line">Desired survivor size <span class="number">322109440</span> bytes, new threshold <span class="number">1</span> (max <span class="number">6</span>)</span><br><span class="line">- age   <span class="number">1</span>:  <span class="number">476010080</span> bytes,  <span class="number">476010080</span> total</span><br><span class="line">: <span class="number">5650054</span>K-&gt;<span class="number">558251</span>K(<span class="number">5662336</span>K), <span class="number">0.1145601</span> secs] <span class="number">24834113</span>K-&gt;<span class="number">20039782</span>K(<span class="number">30828160</span>K), <span class="number">0.1148260</span> secs] [Times: user=<span class="number">1</span>.<span class="number">48</span> sys=<span class="number">0</span>.<span class="number">03</span>, real=<span class="number">0</span>.<span class="number">12</span> secs]</span><br><span class="line"><span class="number">2021</span>-<span class="number">02-23T07:01</span>:<span class="number">54</span>.<span class="number">861+0800</span>: <span class="number">199658.463</span>: Total time for which application threads were stopped: <span class="number">0.1188860</span> seconds, Stopping threads took: <span class="number">0.0014423</span> seconds</span><br><span class="line"><span class="number">2021</span>-<span class="number">02-23T07:01</span>:<span class="number">55.211+0800</span>: <span class="number">199658.813</span>: Total time for which application threads were stopped: <span class="number">0.0041470</span> seconds, Stopping threads took: <span class="number">0.0018983</span> seconds</span><br><span class="line"> CMS: abort preclean due to time <span class="number">2021</span>-<span class="number">02-23T07:01</span>:<span class="number">55</span>.<span class="number">372+0800</span>: <span class="number">199658.974</span>: [CMS-concurrent-abortable-preclean: <span class="number">5.430/5</span>.<span class="number">644</span> secs] [Times: user=<span class="number">36</span>.<span class="number">94</span> sys=<span class="number">2</span>.<span class="number">87</span>, real=<span class="number">5</span>.<span class="number">65</span> secs]</span><br><span class="line"><span class="number">2021</span>-<span class="number">02-23T07:01</span>:<span class="number">55</span>.<span class="number">375+0800</span>: <span class="number">199658.977</span>: [GC (CMS Final Remark) [YG occupancy: <span class="number">1938421</span> K (<span class="number">5662336</span> K)]<span class="number">199658.977</span>: [Rescan (parallel) , <span class="number">0.0611395</span> secs]<span class="number">199659.038</span>: [weak refs processing, <span class="number">0.0003288</span> secs]<span class="number">199659.039</span>: [class unloading, <span class="number">0.0382319</span> secs]<span class="number">199659.077</span>: [scrub symbol t</span><br><span class="line">able, <span class="number">0.0107094</span> secs]<span class="number">199659.088</span>: [scrub string table, <span class="number">0.0015974</span> secs][<span class="number">1</span> CMS-remark: <span class="number">19481531</span>K(<span class="number">25165824</span>K)] <span class="number">21419952</span>K(<span class="number">30828160</span>K), <span class="number">0.1160335</span> secs] [Times: user=<span class="number">1</span>.<span class="number">42</span> sys=<span class="number">0</span>.<span class="number">12</span>, real=<span class="number">0</span>.<span class="number">12</span> secs]</span><br><span class="line"><span class="number">2021</span>-<span class="number">02-23T07:01</span>:<span class="number">55</span>.<span class="number">491+0800</span>: <span class="number">199659.093</span>: Total time for which application threads were stopped: <span class="number">0.1192748</span> seconds, Stopping threads took: <span class="number">0.0005368</span> seconds</span><br><span class="line"><span class="number">2021</span>-<span class="number">02-23T07:01</span>:<span class="number">55</span>.<span class="number">491+0800</span>: <span class="number">199659.094</span>: [CMS-concurrent-sweep-start]</span><br><span class="line"><span class="number">2021</span>-<span class="number">02-23T07:01</span>:<span class="number">55</span>.<span class="number">640+0800</span>: <span class="number">199659.242</span>: Total time for which application threads were stopped: <span class="number">0.0029760</span> seconds, Stopping threads took: <span class="number">0.0005614</span> seconds</span><br><span class="line"><span class="number">2021</span>-<span class="number">02-23T07:01</span>:<span class="number">55</span>.<span class="number">642+0800</span>: <span class="number">199659.244</span>: Total time for which application threads were stopped: <span class="number">0.0015641</span> seconds, Stopping threads took: <span class="number">0.0002054</span> seconds</span><br><span class="line"><span class="number">2021</span>-<span class="number">02-23T07:01</span>:<span class="number">56</span>.<span class="number">638+0800</span>: <span class="number">199660.241</span>: Total time for which application threads were stopped: <span class="number">0.0036077</span> seconds, Stopping threads took: <span class="number">0.0012128</span> seconds</span><br><span class="line"><span class="number">2021</span>-<span class="number">02-23T07:01</span>:<span class="number">56</span>.<span class="number">675+0800</span>: <span class="number">199660.278</span>: [GC (Allocation Failure) <span class="number">199660.278</span>: [ParNew (promotion failed): <span class="number">5590537</span>K-&gt;<span class="number">5661406</span>K(<span class="number">5662336</span>K), <span class="number">1.3361918</span> secs] <span class="number">24852053</span>K-&gt;<span class="number">25503147</span>K(<span class="number">30828160</span>K), <span class="number">1.3365327</span> secs] [Times: user=<span class="number">3</span>.<span class="number">56</span> sys=<span class="number">0</span>.<span class="number">02</span>, real=<span class="number">1</span>.<span class="number">34</span> secs]</span><br><span class="line"><span class="number">2021</span>-<span class="number">02-23T07:01</span>:<span class="number">58</span>.<span class="number">012+0800</span>: <span class="number">199661.614</span>: [Full GC (Allocation Failure) <span class="number">199661.614</span>: [CMS20<span class="number">21-02-23T07</span>:<span class="number">02:01.539</span>+<span class="number">0800</span>: <span class="number">199665.142</span>: [CMS-concurrent-sweep: <span class="number">4.686/6</span>.<span class="number">048</span> secs] [Times: user=<span class="number">27</span>.<span class="number">51</span> sys=<span class="number">2</span>.<span class="number">27</span>, real=<span class="number">6</span>.<span class="number">04</span> secs]</span><br><span class="line"> (concurrent mode failure): <span class="number">19841741</span>K-&gt;<span class="number">12822928</span>K(<span class="number">25165824</span>K), <span class="number">26.3160634</span> secs] <span class="number">25503147</span>K-&gt;<span class="number">12822928</span>K(<span class="number">30828160</span>K), [Metaspace: <span class="number">85227</span>K-&gt;<span class="number">85227</span>K(<span class="number">1130496</span>K)], <span class="number">26.3188523</span> secs] [Times: user=<span class="number">26</span>.<span class="number">33</span> sys=<span class="number">0</span>.<span class="number">00</span>, real=<span class="number">26</span>.<span class="number">31</span> secs]</span><br><span class="line"><span class="number">2021</span>-<span class="number">02-23T07:02</span>:<span class="number">24</span>.<span class="number">331+0800</span>: <span class="number">199687.934</span>: Total time for which application threads were stopped: <span class="number">27.6682172</span> seconds, Stopping threads took: <span class="number">0.0098307</span> seconds</span><br></pre></td></tr></table></figure>
+
+<h1 id="gc日志的设置"><a href="#gc日志的设置" class="headerlink" title="gc日志的设置"></a>gc日志的设置</h1><p>这个gc日志不是es特有的设置，而是jvm本身的设置</p>
+<figure class="highlight groovy"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">-<span class="string">Xloggc:</span><span class="regexp">/opt/</span>meituan<span class="regexp">/es_logs/</span>elasticsearch.gc.log</span><br><span class="line">-<span class="string">XX:</span>+UseGCLogFileRotation</span><br><span class="line">-<span class="string">XX:</span>NumberOfGCLogFiles=<span class="number">15</span></span><br><span class="line">-<span class="string">XX:</span>GCLogFileSize=<span class="number">20</span>M</span><br></pre></td></tr></table></figure>
+
+<p>之前遇到fullgc的问题，为了避免对线上应用的影响，第一时间重启了es进程，由于es进程配置的gc日志只保存在一个文件中，重启之后日志被重写，我们无法去分析当时的一个gc日志情况；这里开启了日志滚动的开关，生成的日志的形式如下：</p>
+<figure class="highlight css"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="selector-tag">elasticsearch</span><span class="selector-class">.gc</span><span class="selector-class">.log</span></span><br><span class="line"><span class="selector-tag">elasticsearch</span><span class="selector-class">.gc</span><span class="selector-class">.log</span><span class="selector-class">.0</span></span><br><span class="line"><span class="selector-tag">elasticsearch</span><span class="selector-class">.gc</span><span class="selector-class">.log</span><span class="selector-class">.1</span></span><br><span class="line"><span class="selector-tag">elasticsearch</span><span class="selector-class">.gc</span><span class="selector-class">.log</span><span class="selector-class">.2</span><span class="selector-class">.current</span></span><br></pre></td></tr></table></figure>
+
+<ul>
+<li>上面表示，当前正在写的文件的编号是2，假如文件的个数是3个，那么编号2的写完了之后，会继续写后缀为0的文件，就是这种滚动写日志文件的形式；</li>
+<li>每次程序启动的时候，都会从编号0开始，重新创建后缀0的文件<ul>
+<li>假设目前程序生成了文件0、1、2，重启之后，会重新写文件0，因此文件2中的内容还保存，也就是重启之前的gc的内容还可以去查看，分析重启之前的gc现场</li>
+<li>存在一个问题，假设日志文件比较少，日志还没有滚动，只有文件0，这时候，重启了程序，文件0会重新创建，这时候之前的日志内容就没了</li>
+</ul>
+</li>
+</ul>
+<h1 id="es线上稳定性的思考"><a href="#es线上稳定性的思考" class="headerlink" title="es线上稳定性的思考"></a>es线上稳定性的思考</h1><p>事前、事中、事后</p>
+<ul>
+<li>事前：监控、慢查询梳理</li>
+<li>事中：踢除有问题节点，保证线上查询正常；重启节点，需要注意的是保存好事故现场<ul>
+<li>直接杀掉有问题的节点，缺点无法保留问题现场</li>
+</ul>
+</li>
+<li>事后：分析问题出现的原因，解决问题<ul>
+<li>优化索引结构，优化慢查询</li>
+<li>开发小工具，保证问题出现的时候，线上服务影响程度最小化</li>
+</ul>
+</li>
+</ul>
+<p>当然这不是一个一次性的工作，需要针对问题不断去优化事前、事中、事后的处理逻辑</p>
+<ul>
+<li>比如说：监控是依赖es node api的，node api需要获取每个节点的状态，当一个节点full gc之后，整个api不返回结果了，监控无效了<ul>
+<li>通过线程池api，提前发现问题</li>
+</ul>
+</li>
+<li>获取节点的工具化页面，在full gc之后也无法获取到，通过cellar缓存解决</li>
+<li>gc log有问题，只保存在一个文件中，每次重启文件被重写，无法分析当时问题现场的gc日志</li>
+</ul>
+<h3 id="参考文章"><a href="#参考文章" class="headerlink" title="参考文章"></a>参考文章</h3><ul>
+<li><a href="https://neway6655.github.io/java,%20gc%20tuning/2016/09/24/gc-tuning.html" target="_blank" rel="noopener">一次GC Tuning小记</a></li>
+<li><a href="https://matt33.com/2018/07/28/jvm-cms/" target="_blank" rel="noopener">JVM 之 ParNew 和 CMS 日志分析</a></li>
+<li><a href="https://lihuimintu.github.io/2019/02/19/gcLog/" target="_blank" rel="noopener">JVM 配置GC日志</a></li>
+</ul>
+
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/elastic/" rel="tag"># elastic</a>
+          
+            <a href="/tags/elasticsearch/" rel="tag"># elasticsearch</a>
+          
+            <a href="/tags/jvm/" rel="tag"># jvm</a>
+          
+            <a href="/tags/es/" rel="tag"># es</a>
+          
+            <a href="/tags/gc/" rel="tag"># gc</a>
+          
+            <a href="/tags/cms/" rel="tag"># cms</a>
+          
+            <a href="/tags/线上稳定性/" rel="tag"># 线上稳定性</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2019/12/02/elasticsearch之按照维度聚合-按照维度排序/" rel="next" title="elasticsearch之按照维度聚合&按照维度排序">
+                <i class="fa fa-chevron-left"></i> elasticsearch之按照维度聚合&按照维度排序
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2021/03/06/Doris小知识点/" rel="prev" title="Doris小知识点">
+                Doris小知识点 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+            
+              <img class="site-author-image" itemprop="image" src="/images/我的头像.jpg" alt="penghong.zhan">
+            
+              <p class="site-author-name" itemprop="name">penghong.zhan</p>
+              <p class="site-description motion-element" itemprop="description">一个热爱生活的程序猿</p>
+          </div>
+
+          <nav class="site-state motion-element">
+
+            
+              <div class="site-state-item site-state-posts">
+              
+                <a href="/archives/">
+              
+                  <span class="site-state-item-count">84</span>
+                  <span class="site-state-item-name">日志</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-categories">
+                <a href="/categories/index.html">
+                  <span class="site-state-item-count">38</span>
+                  <span class="site-state-item-name">分类</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-tags">
+                <a href="/tags/index.html">
+                  <span class="site-state-item-count">157</span>
+                  <span class="site-state-item-name">标签</span>
+                </a>
+              </div>
+            
+
+          </nav>
+
+          
+
+          
+
+          
+          
+
+          
+          
+
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#es堆内存配置"><span class="nav-number">1.</span> <span class="nav-text">es堆内存配置</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#cms正常的并发gc"><span class="nav-number">2.</span> <span class="nav-text">cms正常的并发gc</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#concurrent-mode-failure"><span class="nav-number">3.</span> <span class="nav-text">concurrent mode failure</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#gc日志的设置"><span class="nav-number">4.</span> <span class="nav-text">gc日志的设置</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#es线上稳定性的思考"><span class="nav-number">5.</span> <span class="nav-text">es线上稳定性的思考</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#参考文章"><span class="nav-number">5.0.1.</span> <span class="nav-text">参考文章</span></a></li></ol></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2022</span>
+  <span class="with-love">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">penghong.zhan</span>
+
+  
+</div>
+
+
+  <div class="powered-by">由 <a class="theme-link" target="_blank" href="https://hexo.io">Hexo</a> 强力驱动</div>
+
+
+
+  <span class="post-meta-divider">|</span>
+
+
+
+  <div class="theme-info">主题 &mdash; <a class="theme-link" target="_blank" href="https://github.com/iissnan/hexo-theme-next">NexT.Mist</a> v5.1.4</div>
+
+
+
+
+        
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.4"></script>
+
+
+
+  
+  
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.4"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>

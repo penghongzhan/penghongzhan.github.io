@@ -1,0 +1,816 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next mist use-motion" lang="zh-Hans">
+<head><meta name="generator" content="Hexo 3.9.0">
+  <meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform">
+<meta http-equiv="Cache-Control" content="no-siteapp">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css">
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css">
+
+<link href="/css/main.css?v=5.1.4" rel="stylesheet" type="text/css">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=5.1.4">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=5.1.4" color="#222">
+
+
+
+
+
+  <meta name="keywords" content="doris,模型,维度,">
+
+
+
+
+
+
+
+
+
+
+<meta name="description" content="日、周、月维度是拆分成单独的表存储还是一张表存储  根儿上是一个写入和查询的权衡问题（存储压力其实可以忽略，因为周月维度数据量不大）：  多张表：写入压力大、查询压力小； 一张表：写入压力小、查询压力大。  只能通过具体的案例来得到一个经验值：  数据量超过多大之后，适合用一张表，此时压力主要在写入上 查询性能要求多少，适合多张表，此时压力主要在查询上  案例分析： 卖家多维分析多张表查询性能对">
+<meta name="keywords" content="doris,模型,维度">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Doris日周月维度表的创建">
+<meta property="og:url" content="https://penghongzhan.github.io/2021/05/17/Doris日周月维度表的创建/index.html">
+<meta property="og:site_name" content="HongMo&#39;s Blog">
+<meta property="og:description" content="日、周、月维度是拆分成单独的表存储还是一张表存储  根儿上是一个写入和查询的权衡问题（存储压力其实可以忽略，因为周月维度数据量不大）：  多张表：写入压力大、查询压力小； 一张表：写入压力小、查询压力大。  只能通过具体的案例来得到一个经验值：  数据量超过多大之后，适合用一张表，此时压力主要在写入上 查询性能要求多少，适合多张表，此时压力主要在查询上  案例分析： 卖家多维分析多张表查询性能对">
+<meta property="og:locale" content="zh-Hans">
+<meta property="og:updated_time" content="2021-05-29T03:45:22.000Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Doris日周月维度表的创建">
+<meta name="twitter:description" content="日、周、月维度是拆分成单独的表存储还是一张表存储  根儿上是一个写入和查询的权衡问题（存储压力其实可以忽略，因为周月维度数据量不大）：  多张表：写入压力大、查询压力小； 一张表：写入压力小、查询压力大。  只能通过具体的案例来得到一个经验值：  数据量超过多大之后，适合用一张表，此时压力主要在写入上 查询性能要求多少，适合多张表，此时压力主要在查询上  案例分析： 卖家多维分析多张表查询性能对">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Mist',
+    version: '5.1.4',
+    sidebar: {"position":"left","display":"post","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    duoshuo: {
+      userId: '0',
+      author: '博主'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="https://penghongzhan.github.io/2021/05/17/Doris日周月维度表的创建/">
+
+
+
+
+
+  <title>Doris日周月维度表的创建 | HongMo's Blog</title>
+  
+
+
+
+
+
+
+
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">HongMo's Blog</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle"></p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br>
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br>
+            
+            标签
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br>
+            
+            分类
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br>
+            
+            归档
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-about">
+          <a href="/about/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-user"></i> <br>
+            
+            关于
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="https://penghongzhan.github.io/2021/05/17/Doris日周月维度表的创建/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="penghong.zhan">
+      <meta itemprop="description" content>
+      <meta itemprop="image" content="/images/我的头像.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="HongMo's Blog">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">Doris日周月维度表的创建</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2021-05-17T15:11:29+08:00">
+                2021-05-17
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category">
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/doris/" itemprop="url" rel="index">
+                    <span itemprop="name">doris</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <blockquote>
+<p>日、周、月维度是拆分成单独的表存储还是一张表存储</p>
+</blockquote>
+<p>根儿上是一个写入和查询的权衡问题（存储压力其实可以忽略，因为周月维度数据量不大）：</p>
+<ul>
+<li>多张表：写入压力大、查询压力小；</li>
+<li>一张表：写入压力小、查询压力大。</li>
+</ul>
+<p>只能通过具体的案例来得到一个经验值：</p>
+<ul>
+<li>数据量超过多大之后，适合用一张表，此时压力主要在写入上</li>
+<li>查询性能要求多少，适合多张表，此时压力主要在查询上</li>
+</ul>
+<p>案例分析：</p>
+<h1 id="卖家多维分析多张表"><a href="#卖家多维分析多张表" class="headerlink" title="卖家多维分析多张表"></a>卖家多维分析多张表</h1><h2 id="查询性能对比"><a href="#查询性能对比" class="headerlink" title="查询性能对比"></a>查询性能对比</h2><ol>
+<li>通过单独的月表查询月维度</li>
+</ol>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 消耗时间0.9s</span></span><br><span class="line"><span class="keyword">SELECT</span> t44926_0.<span class="string">`mo_num`</span> <span class="string">`mo_num`</span>,</span><br><span class="line">       t44926_0.<span class="string">`bu_name`</span> <span class="string">`buname`</span>,</span><br><span class="line">       t44926_0.<span class="string">`seller_id`</span> <span class="string">`seller_id`</span>,</span><br><span class="line">       t44926_0.<span class="string">`seller_name`</span> <span class="string">`seller_name`</span>,</span><br><span class="line">       <span class="keyword">sum</span>(t44926_0.arranged_weight) <span class="string">`arranged_weight_3p`</span>,</span><br><span class="line">       <span class="keyword">sum</span>(t44926_0.arranged_cnt) <span class="string">`arranged_cnt_3p`</span>,</span><br><span class="line">       <span class="keyword">sum</span>(t44926_0.billing_amt)/(<span class="keyword">sum</span>(t44926_0.arranged_amt)+<span class="keyword">sum</span>(t44926_0.coupon_amt)) <span class="string">`billing_rate_3p`</span>,</span><br><span class="line">       bitmap_union_count(t44926_0.quality_case_customer_str)/bitmap_union_count(t44926_0.ord_customer_str) <span class="string">`quality_case_cust_rate_3p`</span>,</span><br><span class="line">       <span class="keyword">sum</span>(t44926_0.arranged_amt) <span class="string">`arranged_amt_3p`</span>,</span><br><span class="line">       bitmap_union_count(t44926_0.order_code) <span class="string">`order_cnt_3p`</span>,</span><br><span class="line">       <span class="keyword">sum</span>(t44926_0.arranged_amt)/bitmap_union_count(t44926_0.dt_customer_id) <span class="string">`day_cust_order_amt_3p`</span></span><br><span class="line">  <span class="keyword">FROM</span> kldp_data_stat.app_invite_business_analysis_view_mo t44926_0</span><br><span class="line"> <span class="keyword">where</span> t44926_0.<span class="string">`mo_num`</span> = <span class="number">24257</span></span><br><span class="line">   <span class="keyword">and</span> t44926_0.<span class="string">`bu_id`</span> <span class="keyword">in</span>(<span class="number">11002915</span>,<span class="number">11000217</span>,<span class="number">11000215</span>,<span class="number">11000216</span>,<span class="number">11000213</span>,<span class="number">11000214</span>,<span class="number">11000178</span>,<span class="number">11000211</span>,<span class="number">11000179</span>,<span class="number">11000212</span>,<span class="number">11000176</span>,<span class="number">11000177</span>,<span class="number">11000210</span>,<span class="number">11000185</span>,<span class="number">11000186</span>,<span class="number">11000183</span>,<span class="number">11000184</span>,<span class="number">11000181</span>,<span class="number">11000182</span>,<span class="number">120100</span>,<span class="number">11000180</span>,<span class="number">11000189</span>,<span class="number">11000187</span>,<span class="number">11000188</span>,<span class="number">11000075</span>,<span class="number">11000196</span>,<span class="number">11000197</span>,<span class="number">11000073</span>,<span class="number">11000194</span>,<span class="number">11000195</span>,<span class="number">11000192</span>,<span class="number">11000193</span>,<span class="number">11000190</span>,<span class="number">11000191</span>,<span class="number">11000039</span>,<span class="number">11000037</span>,<span class="number">11000158</span>,<span class="number">11000159</span>,<span class="number">11000156</span>,<span class="number">11000157</span>,<span class="number">11000033</span>,<span class="number">11000154</span>,<span class="number">11000155</span>,<span class="number">11000042</span>,<span class="number">11000163</span>,<span class="number">11000043</span>,<span class="number">11000164</span>,<span class="number">11000040</span>,<span class="number">11000161</span>,<span class="number">11000041</span>,<span class="number">11000162</span>,<span class="number">11000160</span>,<span class="number">340100</span>,<span class="number">11000208</span>,<span class="number">11000209</span>,<span class="number">11000206</span>,<span class="number">11000207</span>,<span class="number">11000204</span>,<span class="number">11000205</span>,<span class="number">11000169</span>,<span class="number">11000202</span>,<span class="number">11000203</span>,<span class="number">11000046</span>,<span class="number">11000167</span>,<span class="number">11000200</span>,<span class="number">11000047</span>,<span class="number">11000168</span>,<span class="number">11000201</span>,<span class="number">11000044</span>,<span class="number">11000165</span>,<span class="number">11000045</span>,<span class="number">11000166</span>,<span class="number">11000174</span>,<span class="number">11000175</span>,<span class="number">11000172</span>,<span class="number">11000173</span>,<span class="number">11000170</span>,<span class="number">11000171</span>,<span class="number">710400</span>,<span class="number">11000019</span>,<span class="number">110100</span>,<span class="number">11000017</span>,<span class="number">11000138</span>,<span class="number">11000018</span>,<span class="number">11000139</span>,<span class="number">11002954</span>,<span class="number">11000136</span>,<span class="number">11000016</span>,<span class="number">11000137</span>,<span class="number">11000134</span>,<span class="number">11000135</span>,<span class="number">11000011</span>,<span class="number">11000132</span>,<span class="number">11000012</span>,<span class="number">11000133</span>,<span class="number">11000020</span>,<span class="number">11000141</span>,<span class="number">11000021</span>,<span class="number">11000142</span>,<span class="number">11000140</span>,<span class="number">11000028</span>,<span class="number">11000149</span>,<span class="number">11000147</span>,<span class="number">11000027</span>,<span class="number">11000148</span>,<span class="number">11000024</span>,<span class="number">11000145</span>,<span class="number">11000146</span>,<span class="number">11002961</span>,<span class="number">11000143</span>,<span class="number">11000144</span>,<span class="number">11000031</span>,<span class="number">11000152</span>,<span class="number">11000032</span>,<span class="number">11000153</span>,<span class="number">11000150</span>,<span class="number">11000151</span>,<span class="number">11000116</span>,<span class="number">11000198</span>,<span class="number">310100</span>,<span class="number">11000111</span>,<span class="number">11000199</span>,<span class="number">11000008</span>,<span class="number">11000129</span>,<span class="number">11000009</span>,<span class="number">11000006</span>,<span class="number">11000125</span>,<span class="number">11000126</span>,<span class="number">11000003</span>,<span class="number">11000088</span>,<span class="number">11000010</span>)</span><br><span class="line"> <span class="keyword">GROUP</span> <span class="keyword">BY</span></span><br><span class="line">  mo_num,bu_name,seller_id,seller_name</span><br><span class="line"> <span class="keyword">order</span> <span class="keyword">by</span> <span class="string">`arranged_amt_3p`</span> <span class="keyword">DESC</span> <span class="keyword">nulls</span> <span class="keyword">last</span></span><br><span class="line"> <span class="keyword">limit</span> <span class="number">20</span>;</span><br></pre></td></tr></table></figure>
+
+<ol start="2">
+<li>通过日表出月维度的数据</li>
+</ol>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 消耗时间1.8s</span></span><br><span class="line"><span class="keyword">SELECT</span> </span><br><span class="line">       t44926_0.<span class="string">`bu_name`</span> <span class="string">`buname`</span>,</span><br><span class="line">       t44926_0.<span class="string">`seller_id`</span> <span class="string">`seller_id`</span>,</span><br><span class="line">       t44926_0.<span class="string">`seller_name`</span> <span class="string">`seller_name`</span>,</span><br><span class="line">       <span class="keyword">sum</span>(t44926_0.arranged_weight) <span class="string">`arranged_weight_3p`</span>,</span><br><span class="line">       <span class="keyword">sum</span>(t44926_0.arranged_cnt) <span class="string">`arranged_cnt_3p`</span>,</span><br><span class="line">       <span class="keyword">sum</span>(t44926_0.billing_amt)/(<span class="keyword">sum</span>(t44926_0.arranged_amt)+<span class="keyword">sum</span>(t44926_0.coupon_amt)) <span class="string">`billing_rate_3p`</span>,</span><br><span class="line">       bitmap_union_count(t44926_0.quality_case_customer_str)/bitmap_union_count(t44926_0.ord_customer_str) <span class="string">`quality_case_cust_rate_3p`</span>,</span><br><span class="line">       <span class="keyword">sum</span>(t44926_0.arranged_amt) <span class="string">`arranged_amt_3p`</span>,</span><br><span class="line">       bitmap_union_count(t44926_0.order_code) <span class="string">`order_cnt_3p`</span>,</span><br><span class="line">       <span class="keyword">sum</span>(t44926_0.arranged_amt)/bitmap_union_count(t44926_0.dt_customer_id) <span class="string">`day_cust_order_amt_3p`</span></span><br><span class="line">  <span class="keyword">FROM</span> kldp_data_stat.app_invite_business_analysis_view_dt t44926_0</span><br><span class="line"> <span class="keyword">where</span> t44926_0.<span class="string">`dt`</span> &gt;= <span class="number">20210501</span> <span class="keyword">and</span> <span class="string">`dt`</span>&lt;=<span class="number">20210531</span></span><br><span class="line">   <span class="keyword">and</span> t44926_0.<span class="string">`bu_id`</span> <span class="keyword">in</span>(<span class="number">11002915</span>,<span class="number">11000217</span>,<span class="number">11000215</span>,<span class="number">11000216</span>,<span class="number">11000213</span>,<span class="number">11000214</span>,<span class="number">11000178</span>,<span class="number">11000211</span>,<span class="number">11000179</span>,<span class="number">11000212</span>,<span class="number">11000176</span>,<span class="number">11000177</span>,<span class="number">11000210</span>,<span class="number">11000185</span>,<span class="number">11000186</span>,<span class="number">11000183</span>,<span class="number">11000184</span>,<span class="number">11000181</span>,<span class="number">11000182</span>,<span class="number">120100</span>,<span class="number">11000180</span>,<span class="number">11000189</span>,<span class="number">11000187</span>,<span class="number">11000188</span>,<span class="number">11000075</span>,<span class="number">11000196</span>,<span class="number">11000197</span>,<span class="number">11000073</span>,<span class="number">11000194</span>,<span class="number">11000195</span>,<span class="number">11000192</span>,<span class="number">11000193</span>,<span class="number">11000190</span>,<span class="number">11000191</span>,<span class="number">11000039</span>,<span class="number">11000037</span>,<span class="number">11000158</span>,<span class="number">11000159</span>,<span class="number">11000156</span>,<span class="number">11000157</span>,<span class="number">11000033</span>,<span class="number">11000154</span>,<span class="number">11000155</span>,<span class="number">11000042</span>,<span class="number">11000163</span>,<span class="number">11000043</span>,<span class="number">11000164</span>,<span class="number">11000040</span>,<span class="number">11000161</span>,<span class="number">11000041</span>,<span class="number">11000162</span>,<span class="number">11000160</span>,<span class="number">340100</span>,<span class="number">11000208</span>,<span class="number">11000209</span>,<span class="number">11000206</span>,<span class="number">11000207</span>,<span class="number">11000204</span>,<span class="number">11000205</span>,<span class="number">11000169</span>,<span class="number">11000202</span>,<span class="number">11000203</span>,<span class="number">11000046</span>,<span class="number">11000167</span>,<span class="number">11000200</span>,<span class="number">11000047</span>,<span class="number">11000168</span>,<span class="number">11000201</span>,<span class="number">11000044</span>,<span class="number">11000165</span>,<span class="number">11000045</span>,<span class="number">11000166</span>,<span class="number">11000174</span>,<span class="number">11000175</span>,<span class="number">11000172</span>,<span class="number">11000173</span>,<span class="number">11000170</span>,<span class="number">11000171</span>,<span class="number">710400</span>,<span class="number">11000019</span>,<span class="number">110100</span>,<span class="number">11000017</span>,<span class="number">11000138</span>,<span class="number">11000018</span>,<span class="number">11000139</span>,<span class="number">11002954</span>,<span class="number">11000136</span>,<span class="number">11000016</span>,<span class="number">11000137</span>,<span class="number">11000134</span>,<span class="number">11000135</span>,<span class="number">11000011</span>,<span class="number">11000132</span>,<span class="number">11000012</span>,<span class="number">11000133</span>,<span class="number">11000020</span>,<span class="number">11000141</span>,<span class="number">11000021</span>,<span class="number">11000142</span>,<span class="number">11000140</span>,<span class="number">11000028</span>,<span class="number">11000149</span>,<span class="number">11000147</span>,<span class="number">11000027</span>,<span class="number">11000148</span>,<span class="number">11000024</span>,<span class="number">11000145</span>,<span class="number">11000146</span>,<span class="number">11002961</span>,<span class="number">11000143</span>,<span class="number">11000144</span>,<span class="number">11000031</span>,<span class="number">11000152</span>,<span class="number">11000032</span>,<span class="number">11000153</span>,<span class="number">11000150</span>,<span class="number">11000151</span>,<span class="number">11000116</span>,<span class="number">11000198</span>,<span class="number">310100</span>,<span class="number">11000111</span>,<span class="number">11000199</span>,<span class="number">11000008</span>,<span class="number">11000129</span>,<span class="number">11000009</span>,<span class="number">11000006</span>,<span class="number">11000125</span>,<span class="number">11000126</span>,<span class="number">11000003</span>,<span class="number">11000088</span>,<span class="number">11000010</span>)</span><br><span class="line"> <span class="keyword">GROUP</span> <span class="keyword">BY</span></span><br><span class="line">  bu_name,seller_id,seller_name</span><br><span class="line"> <span class="keyword">order</span> <span class="keyword">by</span> <span class="string">`arranged_amt_3p`</span> <span class="keyword">DESC</span> <span class="keyword">nulls</span> <span class="keyword">last</span></span><br><span class="line"> <span class="keyword">limit</span> <span class="number">20</span>;</span><br></pre></td></tr></table></figure>
+
+<h2 id="写入时间对比"><a href="#写入时间对比" class="headerlink" title="写入时间对比"></a>写入时间对比</h2><ol>
+<li>单独的月表的导入任务的时间消耗</li>
+</ol>
+<blockquote>
+<p>日表导入需要时间为：2.7小时，月表的导入时间：2.9小时，月表的导入时间是更长的</p>
+</blockquote>
+<p>月表的导入数据量会更大一些，天表导入只需要60天，但是月表需要严格的2个月，配置的delta为60，但是真正对应的月份大多是3个月的情况。</p>
+<ol start="2">
+<li>单独的月表的存储空间的占用</li>
+</ol>
+<blockquote>
+<p>天表占用空间：23G，月表占用空间4.1G，额外空间的占用确实可以忽略，因为即使是一张表，也需要创建rollup也需要消耗空间</p>
+</blockquote>
+<h1 id="卖家多维分析单张表"><a href="#卖家多维分析单张表" class="headerlink" title="卖家多维分析单张表"></a>卖家多维分析单张表</h1><p>创建月分区表，dt维度通过创建rollup的方式来</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">CREATE</span> <span class="keyword">TABLE</span> <span class="string">`app_invite_business_analysis_view_all`</span> (</span><br><span class="line">  <span class="string">`mo_num`</span> <span class="built_in">int</span>(<span class="number">11</span>) <span class="literal">NULL</span> <span class="keyword">COMMENT</span> <span class="string">"月份"</span>,</span><br><span class="line">  <span class="string">`mtd_tag`</span> <span class="built_in">int</span>(<span class="number">11</span>) <span class="literal">NULL</span> <span class="keyword">COMMENT</span> <span class="string">"mtd:0否、1是"</span>,</span><br><span class="line">  <span class="string">`bu_id`</span> <span class="built_in">bigint</span>(<span class="number">20</span>) <span class="literal">NULL</span> <span class="keyword">COMMENT</span> <span class="string">"事业部"</span>,</span><br><span class="line">  <span class="string">`cat1_id`</span> <span class="built_in">bigint</span>(<span class="number">20</span>) <span class="literal">NULL</span> <span class="keyword">COMMENT</span> <span class="string">"一级类目ID"</span>,</span><br><span class="line">  <span class="string">`cat2_id`</span> <span class="built_in">bigint</span>(<span class="number">20</span>) <span class="literal">NULL</span> <span class="keyword">COMMENT</span> <span class="string">"二级类目ID"</span>,</span><br><span class="line">  <span class="string">`cat3_id`</span> <span class="built_in">bigint</span>(<span class="number">20</span>) <span class="literal">NULL</span> <span class="keyword">COMMENT</span> <span class="string">"三级类目ID"</span>,</span><br><span class="line">  <span class="string">`cat4_id`</span> <span class="built_in">bigint</span>(<span class="number">20</span>) <span class="literal">NULL</span> <span class="keyword">COMMENT</span> <span class="string">"四级类目ID"</span>,</span><br><span class="line">  <span class="string">`seller_id`</span> <span class="built_in">bigint</span>(<span class="number">20</span>) <span class="literal">NULL</span> <span class="keyword">COMMENT</span> <span class="string">"卖家ID"</span>,</span><br><span class="line">  <span class="string">`sku_id`</span> <span class="built_in">bigint</span>(<span class="number">20</span>) <span class="literal">NULL</span> <span class="keyword">COMMENT</span> <span class="string">"商品ID"</span>,</span><br><span class="line">  <span class="string">`bu_name`</span> <span class="built_in">varchar</span>(<span class="number">256</span>) <span class="literal">NULL</span> <span class="keyword">COMMENT</span> <span class="string">"事业部名称"</span>,</span><br><span class="line">  <span class="string">`cat1_name`</span> <span class="built_in">varchar</span>(<span class="number">256</span>) <span class="literal">NULL</span> <span class="keyword">COMMENT</span> <span class="string">"一级类目名称"</span>,</span><br><span class="line">  <span class="string">`cat2_name`</span> <span class="built_in">varchar</span>(<span class="number">256</span>) <span class="literal">NULL</span> <span class="keyword">COMMENT</span> <span class="string">"二级类目名称"</span>,</span><br><span class="line">  <span class="string">`cat3_name`</span> <span class="built_in">varchar</span>(<span class="number">256</span>) <span class="literal">NULL</span> <span class="keyword">COMMENT</span> <span class="string">"三级类目名称"</span>,</span><br><span class="line">  <span class="string">`cat4_name`</span> <span class="built_in">varchar</span>(<span class="number">256</span>) <span class="literal">NULL</span> <span class="keyword">COMMENT</span> <span class="string">"四级类目名称"</span>,</span><br><span class="line">  <span class="string">`seller_name`</span> <span class="built_in">varchar</span>(<span class="number">256</span>) <span class="literal">NULL</span> <span class="keyword">COMMENT</span> <span class="string">"卖家名称"</span>,</span><br><span class="line">  <span class="string">`sku_name`</span> <span class="built_in">varchar</span>(<span class="number">256</span>) <span class="literal">NULL</span> <span class="keyword">COMMENT</span> <span class="string">"商品名称"</span>,</span><br><span class="line">  <span class="string">`brand_name`</span> <span class="built_in">varchar</span>(<span class="number">256</span>) <span class="literal">NULL</span> <span class="keyword">COMMENT</span> <span class="string">"品牌名称"</span>,</span><br><span class="line">  <span class="string">`sku_unit_desc`</span> <span class="built_in">varchar</span>(<span class="number">256</span>) <span class="literal">NULL</span> <span class="keyword">COMMENT</span> <span class="string">"规格描述"</span>,</span><br><span class="line">  <span class="string">`dt`</span> <span class="built_in">int</span>(<span class="number">11</span>) <span class="literal">NULL</span> <span class="keyword">COMMENT</span> <span class="string">"日期类型:自然日"</span>,</span><br><span class="line">  <span class="string">`customer_id`</span> <span class="keyword">bitmap</span> BITMAP_UNION <span class="literal">NULL</span> <span class="keyword">COMMENT</span> <span class="string">"成交客户ID"</span>,</span><br><span class="line">  <span class="string">`dt_customer_id`</span> <span class="keyword">bitmap</span> BITMAP_UNION <span class="literal">NULL</span> <span class="keyword">COMMENT</span> <span class="string">"日期&amp;成交客户ID"</span>,</span><br><span class="line">  <span class="string">`order_code`</span> <span class="keyword">bitmap</span> BITMAP_UNION <span class="literal">NULL</span> <span class="keyword">COMMENT</span> <span class="string">"订单号"</span>,</span><br><span class="line">  <span class="string">`arranged_amt`</span> <span class="built_in">decimal</span>(<span class="number">27</span>, <span class="number">6</span>) <span class="keyword">SUM</span> <span class="literal">NULL</span> <span class="keyword">COMMENT</span> <span class="string">"销售金额"</span>,</span><br><span class="line">  <span class="string">`coupon_amt`</span> <span class="built_in">decimal</span>(<span class="number">27</span>, <span class="number">6</span>) <span class="keyword">SUM</span> <span class="literal">NULL</span> <span class="keyword">COMMENT</span> <span class="string">"优惠金额"</span>,</span><br><span class="line">  <span class="string">`arranged_cnt`</span> <span class="built_in">decimal</span>(<span class="number">27</span>, <span class="number">6</span>) <span class="keyword">SUM</span> <span class="literal">NULL</span> <span class="keyword">COMMENT</span> <span class="string">"销量"</span>,</span><br><span class="line">  <span class="string">`arranged_weight`</span> <span class="built_in">decimal</span>(<span class="number">27</span>, <span class="number">6</span>) <span class="keyword">SUM</span> <span class="literal">NULL</span> <span class="keyword">COMMENT</span> <span class="string">"销售重量：单位斤"</span>,</span><br><span class="line">  <span class="string">`billing_amt`</span> <span class="built_in">decimal</span>(<span class="number">27</span>, <span class="number">6</span>) <span class="keyword">SUM</span> <span class="literal">NULL</span> <span class="keyword">COMMENT</span> <span class="string">"佣金金额"</span>,</span><br><span class="line">  <span class="string">`bu_onshelf_sku_id`</span> <span class="keyword">bitmap</span> BITMAP_UNION <span class="literal">NULL</span> <span class="keyword">COMMENT</span> <span class="string">"事业部&amp;在售商品ID"</span>,</span><br><span class="line">  <span class="string">`bu_arranged_sku_id`</span> <span class="keyword">bitmap</span> BITMAP_UNION <span class="literal">NULL</span> <span class="keyword">COMMENT</span> <span class="string">"事业部&amp;动销商品ID"</span>,</span><br><span class="line">  <span class="string">`dt_bu_onshelf_sku_id`</span> <span class="keyword">bitmap</span> BITMAP_UNION <span class="literal">NULL</span> <span class="keyword">COMMENT</span> <span class="string">"日期&amp;事业部&amp;在售商品ID"</span>,</span><br><span class="line">  <span class="string">`dt_bu_arranged_sku_id`</span> <span class="keyword">bitmap</span> BITMAP_UNION <span class="literal">NULL</span> <span class="keyword">COMMENT</span> <span class="string">"日期&amp;事业部&amp;动销商品ID"</span>,</span><br><span class="line">  <span class="string">`ord_customer_str`</span> <span class="keyword">bitmap</span> BITMAP_UNION <span class="literal">NULL</span> <span class="keyword">COMMENT</span> <span class="string">"3p履约客户id"</span>,</span><br><span class="line">  <span class="string">`quality_case_customer_str`</span> <span class="keyword">bitmap</span> BITMAP_UNION <span class="literal">NULL</span> <span class="keyword">COMMENT</span> <span class="string">"3p商品质量客诉客户id"</span>,</span><br><span class="line">  <span class="string">`sku_bu_id`</span> <span class="keyword">bitmap</span> BITMAP_UNION <span class="literal">NULL</span> <span class="keyword">COMMENT</span> <span class="string">"商品指标bu_id"</span></span><br><span class="line">) <span class="keyword">ENGINE</span> = OLAP <span class="keyword">AGGREGATE</span> <span class="keyword">KEY</span>(<span class="string">`mo_num`</span>,<span class="string">`mtd_tag`</span>,<span class="string">`bu_id`</span>,<span class="string">`cat1_id`</span>,<span class="string">`cat2_id`</span>,<span class="string">`cat3_id`</span>,<span class="string">`cat4_id`</span>,<span class="string">`seller_id`</span>,<span class="string">`sku_id`</span>,<span class="string">`bu_name`</span>,<span class="string">`cat1_name`</span>,<span class="string">`cat2_name`</span>,<span class="string">`cat3_name`</span>,<span class="string">`cat4_name`</span>,<span class="string">`seller_name`</span>,<span class="string">`sku_name`</span>,<span class="string">`brand_name`</span>,<span class="string">`sku_unit_desc`</span>,<span class="string">`dt`</span></span><br><span class="line">) <span class="keyword">COMMENT</span> <span class="string">"卖家多维分析数据表-包括所有时间维度"</span> <span class="keyword">PARTITION</span> <span class="keyword">BY</span> <span class="keyword">RANGE</span>(<span class="string">`mo_num`</span>) (</span><br><span class="line">  <span class="keyword">PARTITION</span> p202012 <span class="keyword">VALUES</span> [(<span class="string">"24252"</span>), (<span class="string">"24253"</span>)), </span><br><span class="line">  <span class="keyword">PARTITION</span> p202101 <span class="keyword">VALUES</span> [(<span class="string">"24253"</span>), (<span class="string">"24254"</span>)), </span><br><span class="line">  <span class="keyword">PARTITION</span> p202102 <span class="keyword">VALUES</span> [(<span class="string">"24254"</span>), (<span class="string">"24255"</span>)), </span><br><span class="line">  <span class="keyword">PARTITION</span> p202103 <span class="keyword">VALUES</span> [(<span class="string">"24255"</span>), (<span class="string">"24256"</span>)), </span><br><span class="line">  <span class="keyword">PARTITION</span> p202104 <span class="keyword">VALUES</span> [(<span class="string">"24256"</span>), (<span class="string">"24257"</span>)), </span><br><span class="line">  <span class="keyword">PARTITION</span> p202105 <span class="keyword">VALUES</span> [(<span class="string">"24257"</span>), (<span class="string">"24258"</span>)), </span><br><span class="line">  <span class="keyword">PARTITION</span> p202106 <span class="keyword">VALUES</span> [(<span class="string">"24258"</span>), (<span class="string">"24259"</span>))</span><br><span class="line">) <span class="keyword">DISTRIBUTED</span> <span class="keyword">BY</span> <span class="keyword">HASH</span>(<span class="string">`bu_id`</span>) BUCKETS <span class="number">5</span> </span><br><span class="line">PROPERTIES ( <span class="string">"replication_num"</span> = <span class="string">"3"</span>, <span class="string">"in_memory"</span> = <span class="string">"false"</span>, <span class="string">"storage_format"</span> = <span class="string">"V2"</span> );</span><br></pre></td></tr></table></figure>
+
+<p>创建rollup</p>
+<ul>
+<li>rollup_cat3_dt( dt,bu_id,cat1_id,cat2_id,cat3_id,seller_id,bu_name,cat1_name,cat2_name,cat3_name,seller_name,customer_id,dt_customer_id,order_code,arranged_amt,coupon_amt,arranged_cnt,arranged_weight,billing_amt,bu_onshelf_sku_id,bu_arranged_sku_id,dt_bu_onshelf_sku_id,dt_bu_arranged_sku_id,ord_customer_str,quality_case_customer_str,sku_bu_id),</li>
+<li>rollup_sku_dt( dt,bu_id,cat1_id,cat2_id,cat3_id,cat4_id,seller_id,sku_id,bu_name,cat1_name,cat2_name,cat3_name,cat4_name,seller_name,sku_name,brand_name,sku_unit_desc,customer_id,dt_customer_id,order_code,arranged_amt,coupon_amt,arranged_cnt,arranged_weight,billing_amt,bu_onshelf_sku_id,bu_arranged_sku_id,dt_bu_onshelf_sku_id,dt_bu_arranged_sku_id,ord_customer_str,quality_case_customer_str,sku_bu_id),</li>
+<li>rollup_mo( mo_num,mtd_tag,dt,customer_id,dt_customer_id,order_code,arranged_amt,coupon_amt,arranged_cnt,arranged_weight,billing_amt,bu_onshelf_sku_id,bu_arranged_sku_id,dt_bu_onshelf_sku_id,dt_bu_arranged_sku_id,ord_customer_str,quality_case_customer_str,sku_bu_id),</li>
+<li>rollup_cat3_mo( mo_num,mtd_tag,bu_id,cat1_id,cat2_id,cat3_id,seller_id,bu_name,cat1_name,cat2_name,cat3_name,seller_name,dt,customer_id,dt_customer_id,order_code,arranged_amt,coupon_amt,arranged_cnt,arranged_weight,billing_amt,bu_onshelf_sku_id,bu_arranged_sku_id,dt_bu_onshelf_sku_id,dt_bu_arranged_sku_id,ord_customer_str,quality_case_customer_str,sku_bu_id),</li>
+<li>rollup_dt( dt,customer_id,dt_customer_id,order_code,arranged_amt,coupon_amt,arranged_cnt,arranged_weight,billing_amt,bu_onshelf_sku_id,bu_arranged_sku_id,dt_bu_onshelf_sku_id,dt_bu_arranged_sku_id,ord_customer_str,quality_case_customer_str,sku_bu_id)</li>
+</ul>
+<h2 id="数据导入"><a href="#数据导入" class="headerlink" title="数据导入"></a>数据导入</h2><ol>
+<li>导入任务执行时间：2.6小时，但是导入的时间是下午，不是凌晨执行的，可能有偏差，但是感觉应该导入时间不是瓶颈</li>
+<li>最终表的数据量：43G，数据范围为20210301到当天，天表和月表的数据范围为20210220到当天，天月表的总的数据量为28G；可以看出一张表的情况下（月分区，创建多个rollup的方式），数据量更大</li>
+</ol>
+<h2 id="数据查询"><a href="#数据查询" class="headerlink" title="数据查询"></a>数据查询</h2><h3 id="月维度查询对比"><a href="#月维度查询对比" class="headerlink" title="月维度查询对比"></a>月维度查询对比</h3><p>月维度的查询时间上没有差别，因为新表的分桶更合理，所以新表更快些</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">SELECT</span> t44926_0.<span class="string">`mo_num`</span> <span class="string">`mo_num`</span>,</span><br><span class="line">       t44926_0.<span class="string">`bu_name`</span> <span class="string">`buname`</span>,</span><br><span class="line">       t44926_0.<span class="string">`seller_id`</span> <span class="string">`seller_id`</span>,</span><br><span class="line">       t44926_0.<span class="string">`seller_name`</span> <span class="string">`seller_name`</span>,</span><br><span class="line">       <span class="keyword">sum</span>(t44926_0.arranged_weight) <span class="string">`arranged_weight_3p`</span>,</span><br><span class="line">       <span class="keyword">sum</span>(t44926_0.arranged_cnt) <span class="string">`arranged_cnt_3p`</span>,</span><br><span class="line">       <span class="keyword">sum</span>(t44926_0.billing_amt)/(<span class="keyword">sum</span>(t44926_0.arranged_amt)+<span class="keyword">sum</span>(t44926_0.coupon_amt)) <span class="string">`billing_rate_3p`</span>,</span><br><span class="line">       bitmap_union_count(t44926_0.quality_case_customer_str)/bitmap_union_count(t44926_0.ord_customer_str) <span class="string">`quality_case_cust_rate_3p`</span>,</span><br><span class="line">       <span class="keyword">sum</span>(t44926_0.arranged_amt) <span class="string">`arranged_amt_3p`</span>,</span><br><span class="line">       bitmap_union_count(t44926_0.order_code) <span class="string">`order_cnt_3p`</span>,</span><br><span class="line">       <span class="keyword">sum</span>(t44926_0.arranged_amt)/bitmap_union_count(t44926_0.dt_customer_id) <span class="string">`day_cust_order_amt_3p`</span></span><br><span class="line">  <span class="keyword">FROM</span> kldp_data_stat.app_invite_business_analysis_view_mo t44926_0</span><br><span class="line"> <span class="keyword">where</span> t44926_0.<span class="string">`mo_num`</span> = <span class="number">24256</span></span><br><span class="line">   <span class="keyword">and</span> t44926_0.<span class="string">`bu_id`</span> <span class="keyword">in</span>(<span class="number">11002915</span>,<span class="number">11000217</span>,<span class="number">11000215</span>,<span class="number">11000216</span>,<span class="number">11000213</span>,<span class="number">11000214</span>,<span class="number">11000178</span>,<span class="number">11000211</span>,<span class="number">11000179</span>,<span class="number">11000212</span>,<span class="number">11000176</span>,<span class="number">11000177</span>,<span class="number">11000210</span>,<span class="number">11000185</span>,<span class="number">11000186</span>,<span class="number">11000183</span>,<span class="number">11000184</span>,<span class="number">11000181</span>,<span class="number">11000182</span>,<span class="number">120100</span>,<span class="number">11000180</span>,<span class="number">11000189</span>,<span class="number">11000187</span>,<span class="number">11000188</span>,<span class="number">11000075</span>,<span class="number">11000196</span>,<span class="number">11000197</span>,<span class="number">11000073</span>,<span class="number">11000194</span>,<span class="number">11000195</span>,<span class="number">11000192</span>,<span class="number">11000193</span>,<span class="number">11000190</span>,<span class="number">11000191</span>,<span class="number">11000039</span>,<span class="number">11000037</span>,<span class="number">11000158</span>,<span class="number">11000159</span>,<span class="number">11000156</span>,<span class="number">11000157</span>,<span class="number">11000033</span>,<span class="number">11000154</span>,<span class="number">11000155</span>,<span class="number">11000042</span>,<span class="number">11000163</span>,<span class="number">11000043</span>,<span class="number">11000164</span>,<span class="number">11000040</span>,<span class="number">11000161</span>,<span class="number">11000041</span>,<span class="number">11000162</span>,<span class="number">11000160</span>,<span class="number">340100</span>,<span class="number">11000208</span>,<span class="number">11000209</span>,<span class="number">11000206</span>,<span class="number">11000207</span>,<span class="number">11000204</span>,<span class="number">11000205</span>,<span class="number">11000169</span>,<span class="number">11000202</span>,<span class="number">11000203</span>,<span class="number">11000046</span>,<span class="number">11000167</span>,<span class="number">11000200</span>,<span class="number">11000047</span>,<span class="number">11000168</span>,<span class="number">11000201</span>,<span class="number">11000044</span>,<span class="number">11000165</span>,<span class="number">11000045</span>,<span class="number">11000166</span>,<span class="number">11000174</span>,<span class="number">11000175</span>,<span class="number">11000172</span>,<span class="number">11000173</span>,<span class="number">11000170</span>,<span class="number">11000171</span>,<span class="number">710400</span>,<span class="number">11000019</span>,<span class="number">110100</span>,<span class="number">11000017</span>,<span class="number">11000138</span>,<span class="number">11000018</span>,<span class="number">11000139</span>,<span class="number">11002954</span>,<span class="number">11000136</span>,<span class="number">11000016</span>,<span class="number">11000137</span>,<span class="number">11000134</span>,<span class="number">11000135</span>,<span class="number">11000011</span>,<span class="number">11000132</span>,<span class="number">11000012</span>,<span class="number">11000133</span>,<span class="number">11000020</span>,<span class="number">11000141</span>,<span class="number">11000021</span>,<span class="number">11000142</span>,<span class="number">11000140</span>,<span class="number">11000028</span>,<span class="number">11000149</span>,<span class="number">11000147</span>,<span class="number">11000027</span>,<span class="number">11000148</span>,<span class="number">11000024</span>,<span class="number">11000145</span>,<span class="number">11000146</span>,<span class="number">11002961</span>,<span class="number">11000143</span>,<span class="number">11000144</span>,<span class="number">11000031</span>,<span class="number">11000152</span>,<span class="number">11000032</span>,<span class="number">11000153</span>,<span class="number">11000150</span>,<span class="number">11000151</span>,<span class="number">11000116</span>,<span class="number">11000198</span>,<span class="number">310100</span>,<span class="number">11000111</span>,<span class="number">11000199</span>,<span class="number">11000008</span>,<span class="number">11000129</span>,<span class="number">11000009</span>,<span class="number">11000006</span>,<span class="number">11000125</span>,<span class="number">11000126</span>,<span class="number">11000003</span>,<span class="number">11000088</span>,<span class="number">11000010</span>)</span><br><span class="line"> <span class="keyword">GROUP</span> <span class="keyword">BY</span></span><br><span class="line">  mo_num,bu_name,seller_id,seller_name</span><br><span class="line"> <span class="keyword">order</span> <span class="keyword">by</span> <span class="string">`arranged_amt_3p`</span> <span class="keyword">DESC</span> <span class="keyword">nulls</span> <span class="keyword">last</span></span><br><span class="line"> <span class="keyword">limit</span> <span class="number">20</span>;</span><br></pre></td></tr></table></figure>
+
+<h3 id="日维度查询对比"><a href="#日维度查询对比" class="headerlink" title="日维度查询对比"></a>日维度查询对比</h3><p>卖家表现查询：</p>
+<ul>
+<li>天分区的表查询时间：0.5s（多次查询基本稳定这个时间）</li>
+<li>月分区的一张表查询时间：0.9s、0.5s、0.6s、0.7s、0.5s，平均在0.7s左右</li>
+</ul>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">SELECT</span> t44926_0.<span class="string">`dt`</span> <span class="string">`dt`</span>,</span><br><span class="line">       t44926_0.<span class="string">`bu_name`</span> <span class="string">`buname`</span>,</span><br><span class="line">       t44926_0.<span class="string">`seller_id`</span> <span class="string">`seller_id`</span>,</span><br><span class="line">       t44926_0.<span class="string">`seller_name`</span> <span class="string">`seller_name`</span>,</span><br><span class="line">       <span class="keyword">sum</span>(t44926_0.arranged_weight) <span class="string">`arranged_weight_3p`</span>,</span><br><span class="line">       <span class="keyword">sum</span>(t44926_0.arranged_cnt) <span class="string">`arranged_cnt_3p`</span>,</span><br><span class="line">       <span class="keyword">sum</span>(t44926_0.billing_amt)/(<span class="keyword">sum</span>(t44926_0.arranged_amt)+<span class="keyword">sum</span>(t44926_0.coupon_amt)) <span class="string">`billing_rate_3p`</span>,</span><br><span class="line">       bitmap_union_count(t44926_0.quality_case_customer_str)/bitmap_union_count(t44926_0.ord_customer_str) <span class="string">`quality_case_cust_rate_3p`</span>,</span><br><span class="line">       <span class="keyword">sum</span>(t44926_0.arranged_amt) <span class="string">`arranged_amt_3p`</span>,</span><br><span class="line">       bitmap_union_count(t44926_0.order_code) <span class="string">`order_cnt_3p`</span>,</span><br><span class="line">       <span class="keyword">sum</span>(t44926_0.arranged_amt)/bitmap_union_count(t44926_0.dt_customer_id) <span class="string">`day_cust_order_amt_3p`</span></span><br><span class="line">  <span class="keyword">FROM</span> kldp_data_stat.app_invite_business_analysis_view_dt t44926_0</span><br><span class="line"> <span class="keyword">where</span> t44926_0.<span class="string">`dt`</span> <span class="keyword">between</span> <span class="number">20210501</span> <span class="keyword">and</span> <span class="number">20210507</span></span><br><span class="line">   <span class="keyword">and</span> t44926_0.<span class="string">`bu_id`</span> <span class="keyword">in</span>(<span class="number">11002915</span>,<span class="number">11000217</span>,<span class="number">11000215</span>,<span class="number">11000216</span>,<span class="number">11000213</span>,<span class="number">11000214</span>,<span class="number">11000178</span>,<span class="number">11000211</span>,<span class="number">11000179</span>,<span class="number">11000212</span>,<span class="number">11000176</span>,<span class="number">11000177</span>,<span class="number">11000210</span>,<span class="number">11000185</span>,<span class="number">11000186</span>,<span class="number">11000183</span>,<span class="number">11000184</span>,<span class="number">11000181</span>,<span class="number">11000182</span>,<span class="number">120100</span>,<span class="number">11000180</span>,<span class="number">11000189</span>,<span class="number">11000187</span>,<span class="number">11000188</span>,<span class="number">11000075</span>,<span class="number">11000196</span>,<span class="number">11000197</span>,<span class="number">11000073</span>,<span class="number">11000194</span>,<span class="number">11000195</span>,<span class="number">11000192</span>,<span class="number">11000193</span>,<span class="number">11000190</span>,<span class="number">11000191</span>,<span class="number">11000039</span>,<span class="number">11000037</span>,<span class="number">11000158</span>,<span class="number">11000159</span>,<span class="number">11000156</span>,<span class="number">11000157</span>,<span class="number">11000033</span>,<span class="number">11000154</span>,<span class="number">11000155</span>,<span class="number">11000042</span>,<span class="number">11000163</span>,<span class="number">11000043</span>,<span class="number">11000164</span>,<span class="number">11000040</span>,<span class="number">11000161</span>,<span class="number">11000041</span>,<span class="number">11000162</span>,<span class="number">11000160</span>,<span class="number">340100</span>,<span class="number">11000208</span>,<span class="number">11000209</span>,<span class="number">11000206</span>,<span class="number">11000207</span>,<span class="number">11000204</span>,<span class="number">11000205</span>,<span class="number">11000169</span>,<span class="number">11000202</span>,<span class="number">11000203</span>,<span class="number">11000046</span>,<span class="number">11000167</span>,<span class="number">11000200</span>,<span class="number">11000047</span>,<span class="number">11000168</span>,<span class="number">11000201</span>,<span class="number">11000044</span>,<span class="number">11000165</span>,<span class="number">11000045</span>,<span class="number">11000166</span>,<span class="number">11000174</span>,<span class="number">11000175</span>,<span class="number">11000172</span>,<span class="number">11000173</span>,<span class="number">11000170</span>,<span class="number">11000171</span>,<span class="number">710400</span>,<span class="number">11000019</span>,<span class="number">110100</span>,<span class="number">11000017</span>,<span class="number">11000138</span>,<span class="number">11000018</span>,<span class="number">11000139</span>,<span class="number">11002954</span>,<span class="number">11000136</span>,<span class="number">11000016</span>,<span class="number">11000137</span>,<span class="number">11000134</span>,<span class="number">11000135</span>,<span class="number">11000011</span>,<span class="number">11000132</span>,<span class="number">11000012</span>,<span class="number">11000133</span>,<span class="number">11000020</span>,<span class="number">11000141</span>,<span class="number">11000021</span>,<span class="number">11000142</span>,<span class="number">11000140</span>,<span class="number">11000028</span>,<span class="number">11000149</span>,<span class="number">11000147</span>,<span class="number">11000027</span>,<span class="number">11000148</span>,<span class="number">11000024</span>,<span class="number">11000145</span>,<span class="number">11000146</span>,<span class="number">11002961</span>,<span class="number">11000143</span>,<span class="number">11000144</span>,<span class="number">11000031</span>,<span class="number">11000152</span>,<span class="number">11000032</span>,<span class="number">11000153</span>,<span class="number">11000150</span>,<span class="number">11000151</span>,<span class="number">11000116</span>,<span class="number">11000198</span>,<span class="number">310100</span>,<span class="number">11000111</span>,<span class="number">11000199</span>,<span class="number">11000008</span>,<span class="number">11000129</span>,<span class="number">11000009</span>,<span class="number">11000006</span>,<span class="number">11000125</span>,<span class="number">11000126</span>,<span class="number">11000003</span>,<span class="number">11000088</span>,<span class="number">11000010</span>)</span><br><span class="line"> <span class="keyword">GROUP</span> <span class="keyword">BY</span></span><br><span class="line">  dt,bu_name,seller_id,seller_name</span><br><span class="line"> <span class="keyword">order</span> <span class="keyword">by</span> <span class="string">`arranged_amt_3p`</span> <span class="keyword">DESC</span> <span class="keyword">nulls</span> <span class="keyword">last</span></span><br><span class="line"> <span class="keyword">limit</span> <span class="number">20</span>;</span><br></pre></td></tr></table></figure>
+
+<p>sku明细查询：</p>
+<ul>
+<li>天分区表查询时间：3.7s、6s、4.3s、5s、3.9</li>
+<li>月分区一张表查询时间：4.9s、4s、4.3s、3.9s、5s</li>
+</ul>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">SELECT</span> t44923_0.<span class="string">`dt`</span> <span class="string">`dt`</span>,</span><br><span class="line">       t44923_0.<span class="string">`bu_name`</span> <span class="string">`buname`</span>,</span><br><span class="line">       t44923_0.<span class="string">`seller_id`</span> <span class="string">`seller_id`</span>,</span><br><span class="line">       t44923_0.<span class="string">`seller_name`</span> <span class="string">`seller_name`</span>,</span><br><span class="line">       t44923_0.<span class="string">`sku_id`</span> <span class="string">`sku_id`</span>,</span><br><span class="line">       t44923_0.<span class="string">`sku_name`</span> <span class="string">`sku_name`</span>,</span><br><span class="line">       t44923_0.<span class="string">`brand_name`</span> <span class="string">`brand_name`</span>,</span><br><span class="line">       t44923_0.<span class="string">`sku_unit_desc`</span> <span class="string">`sku_unit_desc`</span>,</span><br><span class="line">       t44923_0.<span class="string">`cat1_id`</span> <span class="string">`cat1_id`</span>,</span><br><span class="line">       t44923_0.<span class="string">`cat1_name`</span> <span class="string">`cat1_name`</span>,</span><br><span class="line">       <span class="keyword">sum</span>(t44923_0.arranged_weight) <span class="string">`arranged_weight_3p`</span>,</span><br><span class="line">       <span class="keyword">sum</span>(t44923_0.arranged_cnt) <span class="string">`arranged_cnt_3p`</span>,</span><br><span class="line">       <span class="keyword">sum</span>(t44923_0.billing_amt)/(<span class="keyword">sum</span>(t44923_0.arranged_amt)+<span class="keyword">sum</span>(t44923_0.coupon_amt)) <span class="string">`billing_rate_3p`</span>,</span><br><span class="line">       bitmap_union_count(t44923_0.quality_case_customer_str)/bitmap_union_count(t44923_0.ord_customer_str) <span class="string">`quality_case_cust_rate_3p`</span>,</span><br><span class="line">       <span class="keyword">sum</span>(t44923_0.arranged_amt) <span class="string">`arranged_amt_3p`</span>,</span><br><span class="line">       bitmap_union_count(t44923_0.order_code) <span class="string">`order_cnt_3p`</span>,</span><br><span class="line">       <span class="keyword">sum</span>(t44923_0.arranged_amt)/bitmap_union_count(t44923_0.dt_customer_id) <span class="string">`day_cust_order_amt_3p`</span></span><br><span class="line">  <span class="keyword">FROM</span> kldp_data_stat.app_invite_business_analysis_view_dt t44923_0</span><br><span class="line"> <span class="keyword">where</span> t44923_0.<span class="string">`dt`</span> = <span class="number">20210523</span></span><br><span class="line">   <span class="keyword">and</span> t44923_0.<span class="string">`bu_id`</span> <span class="keyword">in</span>(<span class="number">11002915</span>,<span class="number">11000217</span>,<span class="number">11000215</span>,<span class="number">11000216</span>,<span class="number">11000213</span>,<span class="number">11000214</span>,<span class="number">11000178</span>,<span class="number">11000211</span>,<span class="number">11000179</span>,<span class="number">11000212</span>,<span class="number">11000176</span>,<span class="number">11000177</span>,<span class="number">11000210</span>,<span class="number">11000185</span>,<span class="number">11000186</span>,<span class="number">11000183</span>,<span class="number">11000184</span>,<span class="number">11000181</span>,<span class="number">11000182</span>,<span class="number">120100</span>,<span class="number">11000180</span>,<span class="number">11000189</span>,<span class="number">11000187</span>,<span class="number">11000188</span>,<span class="number">11000075</span>,<span class="number">11000196</span>,<span class="number">11000197</span>,<span class="number">11000073</span>,<span class="number">11000194</span>,<span class="number">11000195</span>,<span class="number">11000192</span>,<span class="number">11000193</span>,<span class="number">11000190</span>,<span class="number">11000191</span>,<span class="number">11000039</span>,<span class="number">11000037</span>,<span class="number">11000158</span>,<span class="number">11000159</span>,<span class="number">11000156</span>,<span class="number">11000157</span>,<span class="number">11000033</span>,<span class="number">11000154</span>,<span class="number">11000155</span>,<span class="number">11000042</span>,<span class="number">11000163</span>,<span class="number">11000043</span>,<span class="number">11000164</span>,<span class="number">11000040</span>,<span class="number">11000161</span>,<span class="number">11000041</span>,<span class="number">11000162</span>,<span class="number">11000160</span>,<span class="number">340100</span>,<span class="number">11000208</span>,<span class="number">11000209</span>,<span class="number">11000206</span>,<span class="number">11000207</span>,<span class="number">11000204</span>,<span class="number">11000205</span>,<span class="number">11000169</span>,<span class="number">11000202</span>,<span class="number">11000203</span>,<span class="number">11000046</span>,<span class="number">11000167</span>,<span class="number">11000200</span>,<span class="number">11000047</span>,<span class="number">11000168</span>,<span class="number">11000201</span>,<span class="number">11000044</span>,<span class="number">11000165</span>,<span class="number">11000045</span>,<span class="number">11000166</span>,<span class="number">11000174</span>,<span class="number">11000175</span>,<span class="number">11000172</span>,<span class="number">11000173</span>,<span class="number">11000170</span>,<span class="number">11000171</span>,<span class="number">710400</span>,<span class="number">11000019</span>,<span class="number">110100</span>,<span class="number">11000017</span>,<span class="number">11000138</span>,<span class="number">11000018</span>,<span class="number">11000139</span>,<span class="number">11002954</span>,<span class="number">11000136</span>,<span class="number">11000016</span>,<span class="number">11000137</span>,<span class="number">11000134</span>,<span class="number">11000135</span>,<span class="number">11000011</span>,<span class="number">11000132</span>,<span class="number">11000012</span>,<span class="number">11000133</span>,<span class="number">11000020</span>,<span class="number">11000141</span>,<span class="number">11000021</span>,<span class="number">11000142</span>,<span class="number">11000140</span>,<span class="number">11000028</span>,<span class="number">11000149</span>,<span class="number">11000147</span>,<span class="number">11000027</span>,<span class="number">11000148</span>,<span class="number">11000024</span>,<span class="number">11000145</span>,<span class="number">11000146</span>,<span class="number">11002961</span>,<span class="number">11000143</span>,<span class="number">11000144</span>,<span class="number">11000031</span>,<span class="number">11000152</span>,<span class="number">11000032</span>,<span class="number">11000153</span>,<span class="number">11000150</span>,<span class="number">11000151</span>,<span class="number">11000116</span>,<span class="number">11000198</span>,<span class="number">310100</span>,<span class="number">11000111</span>,<span class="number">11000199</span>,<span class="number">11000008</span>,<span class="number">11000129</span>,<span class="number">11000009</span>,<span class="number">11000006</span>,<span class="number">11000125</span>,<span class="number">11000126</span>,<span class="number">11000003</span>,<span class="number">11000088</span>,<span class="number">11000010</span>)</span><br><span class="line"> <span class="keyword">GROUP</span> <span class="keyword">BY</span></span><br><span class="line">dt,bu_name,seller_id,seller_name,sku_id,sku_name,brand_name,sku_unit_desc,cat1_id,cat1_name</span><br><span class="line"> <span class="keyword">order</span> <span class="keyword">by</span> <span class="string">`arranged_amt_3p`</span> <span class="keyword">DESC</span> <span class="keyword">nulls</span> <span class="keyword">last</span></span><br><span class="line">  <span class="keyword">limit</span> <span class="number">20</span> <span class="keyword">offset</span> <span class="number">2000</span>;</span><br></pre></td></tr></table></figure>
+
+<p>总体表现：查询性能差距不是非常大，大查询在1s左右，小查询在200ms左右</p>
+<h1 id="总结-amp-思考"><a href="#总结-amp-思考" class="headerlink" title="总结&amp;思考"></a>总结&amp;思考</h1><p>感觉多张表的代价有点大，最好还是创建一张表，以月维度为分区，然后日、周的查询通过创建rollup来加速。</p>
+<h2 id="明细表的思考"><a href="#明细表的思考" class="headerlink" title="明细表的思考"></a>明细表的思考</h2><p>从上面的性能测试可以看出，sku明细的查询基本需要5s开外了，比较慢，而且明细也是不需要聚合的，如果直接采用明细结果查询，是不是更快？</p>
+<p>后续是不是考虑明细和类目粒度的分开存储？</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">#不group by直接查询明细，只需要1.5s，如果使用es，性能应该会更好</span></span><br><span class="line"><span class="keyword">SELECT</span> t44923_0.<span class="string">`dt`</span> <span class="string">`dt`</span>,</span><br><span class="line">       t44923_0.<span class="string">`bu_name`</span> <span class="string">`buname`</span>,</span><br><span class="line">       t44923_0.<span class="string">`seller_id`</span> <span class="string">`seller_id`</span>,</span><br><span class="line">       t44923_0.<span class="string">`seller_name`</span> <span class="string">`seller_name`</span>,</span><br><span class="line">       t44923_0.<span class="string">`sku_id`</span> <span class="string">`sku_id`</span>,</span><br><span class="line">       t44923_0.<span class="string">`sku_name`</span> <span class="string">`sku_name`</span>,</span><br><span class="line">       t44923_0.<span class="string">`brand_name`</span> <span class="string">`brand_name`</span>,</span><br><span class="line">       t44923_0.<span class="string">`sku_unit_desc`</span> <span class="string">`sku_unit_desc`</span>,</span><br><span class="line">       t44923_0.<span class="string">`cat1_id`</span> <span class="string">`cat1_id`</span>,</span><br><span class="line">       t44923_0.<span class="string">`cat1_name`</span> <span class="string">`cat1_name`</span>,</span><br><span class="line">       t44923_0.arranged_weight <span class="string">`arranged_weight_3p`</span>,</span><br><span class="line">       t44923_0.arranged_cnt <span class="string">`arranged_cnt_3p`</span>,</span><br><span class="line">       t44923_0.billing_amt/(t44923_0.arranged_amt+t44923_0.coupon_amt) <span class="string">`billing_rate_3p`</span>,</span><br><span class="line">       bitmap_count(t44923_0.quality_case_customer_str)/bitmap_count(t44923_0.ord_customer_str) <span class="string">`quality_case_cust_rate_3p`</span>,</span><br><span class="line">       t44923_0.arranged_amt <span class="string">`arranged_amt_3p`</span>,</span><br><span class="line">       bitmap_count(t44923_0.order_code) <span class="string">`order_cnt_3p`</span>,</span><br><span class="line">       t44923_0.arranged_amt/bitmap_count(t44923_0.dt_customer_id) <span class="string">`day_cust_order_amt_3p`</span></span><br><span class="line">  <span class="keyword">FROM</span> kldp_data_stat.app_invite_business_analysis_view_dt t44923_0</span><br><span class="line"> <span class="keyword">where</span> t44923_0.<span class="string">`dt`</span> = <span class="number">20210523</span> </span><br><span class="line">   <span class="keyword">and</span> t44923_0.<span class="string">`bu_id`</span> <span class="keyword">in</span>(<span class="number">11002915</span>,<span class="number">11000217</span>,<span class="number">11000215</span>,<span class="number">11000216</span>,<span class="number">11000213</span>,<span class="number">11000214</span>,<span class="number">11000178</span>,<span class="number">11000211</span>,<span class="number">11000179</span>,<span class="number">11000212</span>,<span class="number">11000176</span>,<span class="number">11000177</span>,<span class="number">11000210</span>,<span class="number">11000185</span>,<span class="number">11000186</span>,<span class="number">11000183</span>,<span class="number">11000184</span>,<span class="number">11000181</span>,<span class="number">11000182</span>,<span class="number">120100</span>,<span class="number">11000180</span>,<span class="number">11000189</span>,<span class="number">11000187</span>,<span class="number">11000188</span>,<span class="number">11000075</span>,<span class="number">11000196</span>,<span class="number">11000197</span>,<span class="number">11000073</span>,<span class="number">11000194</span>,<span class="number">11000195</span>,<span class="number">11000192</span>,<span class="number">11000193</span>,<span class="number">11000190</span>,<span class="number">11000191</span>,<span class="number">11000039</span>,<span class="number">11000037</span>,<span class="number">11000158</span>,<span class="number">11000159</span>,<span class="number">11000156</span>,<span class="number">11000157</span>,<span class="number">11000033</span>,<span class="number">11000154</span>,<span class="number">11000155</span>,<span class="number">11000042</span>,<span class="number">11000163</span>,<span class="number">11000043</span>,<span class="number">11000164</span>,<span class="number">11000040</span>,<span class="number">11000161</span>,<span class="number">11000041</span>,<span class="number">11000162</span>,<span class="number">11000160</span>,<span class="number">340100</span>,<span class="number">11000208</span>,<span class="number">11000209</span>,<span class="number">11000206</span>,<span class="number">11000207</span>,<span class="number">11000204</span>,<span class="number">11000205</span>,<span class="number">11000169</span>,<span class="number">11000202</span>,<span class="number">11000203</span>,<span class="number">11000046</span>,<span class="number">11000167</span>,<span class="number">11000200</span>,<span class="number">11000047</span>,<span class="number">11000168</span>,<span class="number">11000201</span>,<span class="number">11000044</span>,<span class="number">11000165</span>,<span class="number">11000045</span>,<span class="number">11000166</span>,<span class="number">11000174</span>,<span class="number">11000175</span>,<span class="number">11000172</span>,<span class="number">11000173</span>,<span class="number">11000170</span>,<span class="number">11000171</span>,<span class="number">710400</span>,<span class="number">11000019</span>,<span class="number">110100</span>,<span class="number">11000017</span>,<span class="number">11000138</span>,<span class="number">11000018</span>,<span class="number">11000139</span>,<span class="number">11002954</span>,<span class="number">11000136</span>,<span class="number">11000016</span>,<span class="number">11000137</span>,<span class="number">11000134</span>,<span class="number">11000135</span>,<span class="number">11000011</span>,<span class="number">11000132</span>,<span class="number">11000012</span>,<span class="number">11000133</span>,<span class="number">11000020</span>,<span class="number">11000141</span>,<span class="number">11000021</span>,<span class="number">11000142</span>,<span class="number">11000140</span>,<span class="number">11000028</span>,<span class="number">11000149</span>,<span class="number">11000147</span>,<span class="number">11000027</span>,<span class="number">11000148</span>,<span class="number">11000024</span>,<span class="number">11000145</span>,<span class="number">11000146</span>,<span class="number">11002961</span>,<span class="number">11000143</span>,<span class="number">11000144</span>,<span class="number">11000031</span>,<span class="number">11000152</span>,<span class="number">11000032</span>,<span class="number">11000153</span>,<span class="number">11000150</span>,<span class="number">11000151</span>,<span class="number">11000116</span>,<span class="number">11000198</span>,<span class="number">310100</span>,<span class="number">11000111</span>,<span class="number">11000199</span>,<span class="number">11000008</span>,<span class="number">11000129</span>,<span class="number">11000009</span>,<span class="number">11000006</span>,<span class="number">11000125</span>,<span class="number">11000126</span>,<span class="number">11000003</span>,<span class="number">11000088</span>,<span class="number">11000010</span>)</span><br><span class="line"> <span class="keyword">order</span> <span class="keyword">by</span> <span class="string">`arranged_amt_3p`</span> <span class="keyword">DESC</span> <span class="keyword">nulls</span> <span class="keyword">last</span></span><br><span class="line">  <span class="keyword">limit</span> <span class="number">20</span> <span class="keyword">offset</span> <span class="number">0</span>;</span><br></pre></td></tr></table></figure>
+
+
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/doris/" rel="tag"># doris</a>
+          
+            <a href="/tags/模型/" rel="tag"># 模型</a>
+          
+            <a href="/tags/维度/" rel="tag"># 维度</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2021/05/14/mysql小知识点/" rel="next" title>
+                <i class="fa fa-chevron-left"></i> 
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2021/05/23/数据平台-数据服务应用架构/" rel="prev" title="数据平台-数据服务应用架构">
+                数据平台-数据服务应用架构 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+            
+              <img class="site-author-image" itemprop="image" src="/images/我的头像.jpg" alt="penghong.zhan">
+            
+              <p class="site-author-name" itemprop="name">penghong.zhan</p>
+              <p class="site-description motion-element" itemprop="description">一个热爱生活的程序猿</p>
+          </div>
+
+          <nav class="site-state motion-element">
+
+            
+              <div class="site-state-item site-state-posts">
+              
+                <a href="/archives/">
+              
+                  <span class="site-state-item-count">84</span>
+                  <span class="site-state-item-name">日志</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-categories">
+                <a href="/categories/index.html">
+                  <span class="site-state-item-count">38</span>
+                  <span class="site-state-item-name">分类</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-tags">
+                <a href="/tags/index.html">
+                  <span class="site-state-item-count">157</span>
+                  <span class="site-state-item-name">标签</span>
+                </a>
+              </div>
+            
+
+          </nav>
+
+          
+
+          
+
+          
+          
+
+          
+          
+
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#卖家多维分析多张表"><span class="nav-number">1.</span> <span class="nav-text">卖家多维分析多张表</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#查询性能对比"><span class="nav-number">1.1.</span> <span class="nav-text">查询性能对比</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#写入时间对比"><span class="nav-number">1.2.</span> <span class="nav-text">写入时间对比</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#卖家多维分析单张表"><span class="nav-number">2.</span> <span class="nav-text">卖家多维分析单张表</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#数据导入"><span class="nav-number">2.1.</span> <span class="nav-text">数据导入</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#数据查询"><span class="nav-number">2.2.</span> <span class="nav-text">数据查询</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#月维度查询对比"><span class="nav-number">2.2.1.</span> <span class="nav-text">月维度查询对比</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#日维度查询对比"><span class="nav-number">2.2.2.</span> <span class="nav-text">日维度查询对比</span></a></li></ol></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#总结-amp-思考"><span class="nav-number">3.</span> <span class="nav-text">总结&amp;思考</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#明细表的思考"><span class="nav-number">3.1.</span> <span class="nav-text">明细表的思考</span></a></li></ol></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2022</span>
+  <span class="with-love">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">penghong.zhan</span>
+
+  
+</div>
+
+
+  <div class="powered-by">由 <a class="theme-link" target="_blank" href="https://hexo.io">Hexo</a> 强力驱动</div>
+
+
+
+  <span class="post-meta-divider">|</span>
+
+
+
+  <div class="theme-info">主题 &mdash; <a class="theme-link" target="_blank" href="https://github.com/iissnan/hexo-theme-next">NexT.Mist</a> v5.1.4</div>
+
+
+
+
+        
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.4"></script>
+
+
+
+  
+  
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.4"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>

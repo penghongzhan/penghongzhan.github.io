@@ -1,0 +1,982 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next mist use-motion" lang="zh-Hans">
+<head><meta name="generator" content="Hexo 3.9.0">
+  <meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform">
+<meta http-equiv="Cache-Control" content="no-siteapp">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css">
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css">
+
+<link href="/css/main.css?v=5.1.4" rel="stylesheet" type="text/css">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=5.1.4">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=5.1.4" color="#222">
+
+
+
+
+
+  <meta name="keywords" content="hbase,原理,概论,">
+
+
+
+
+
+
+
+
+
+
+<meta name="description" content="目录 [toc]  1 Hbase的应用场景 HBase是一个分布式的、面向列的开源数据库，该技术来源于 Fay Chang 所撰写的Google论文“Bigtable：一个结构化数据的分布式存储系统”。就像Bigtable利用了Google文件系统（File System）所提供的分布式数据存储一样，HBase在Hadoop之上提供了类似于Bigtable的能力。 图：HBase的使用场景 1.">
+<meta name="keywords" content="hbase,原理,概论">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Hbase的原理以及在ADT的应用">
+<meta property="og:url" content="https://penghongzhan.github.io/2019/04/03/Hbase的原理以及在ADT的应用/index.html">
+<meta property="og:site_name" content="HongMo&#39;s Blog">
+<meta property="og:description" content="目录 [toc]  1 Hbase的应用场景 HBase是一个分布式的、面向列的开源数据库，该技术来源于 Fay Chang 所撰写的Google论文“Bigtable：一个结构化数据的分布式存储系统”。就像Bigtable利用了Google文件系统（File System）所提供的分布式数据存储一样，HBase在Hadoop之上提供了类似于Bigtable的能力。 图：HBase的使用场景 1.">
+<meta property="og:locale" content="zh-Hans">
+<meta property="og:image" content="https://penghongzhan.github.io/2019/04/03/Hbase的原理以及在ADT的应用/HBase%E7%9A%84%E4%BD%BF%E7%94%A8%E5%9C%BA%E6%99%AF.jpg">
+<meta property="og:image" content="https://penghongzhan.github.io/2019/04/03/Hbase的原理以及在ADT的应用/Hbase%E7%9A%84%E5%9F%BA%E6%9C%AC%E6%9E%B6%E6%9E%84.png">
+<meta property="og:image" content="https://penghongzhan.github.io/2019/04/03/Hbase的原理以及在ADT的应用/%E6%95%B0%E6%8D%AE%E7%9A%84%E5%86%99%E5%85%A5%E6%A6%82%E8%A7%88.jpg">
+<meta property="og:image" content="https://penghongzhan.github.io/2019/04/03/Hbase的原理以及在ADT的应用/%E6%95%B0%E6%8D%AE%E7%9A%84%E5%86%99%E5%85%A5%E8%BF%87%E7%A8%8B.jpg">
+<meta property="og:image" content="https://penghongzhan.github.io/2019/04/03/Hbase的原理以及在ADT的应用/HBase%E7%9A%84%E5%AD%98%E5%82%A8%E6%A6%82%E5%BF%B5%E6%A8%A1%E5%9E%8B.jpg">
+<meta property="og:image" content="https://penghongzhan.github.io/2019/04/03/Hbase的原理以及在ADT的应用/HBase%E7%9A%84%E5%AD%98%E5%82%A8%E7%BB%93%E6%9E%84.jpg">
+<meta property="og:image" content="https://penghongzhan.github.io/2019/04/03/Hbase的原理以及在ADT的应用/mysql%E7%9A%84B+%E6%A0%91.jpg">
+<meta property="og:image" content="https://penghongzhan.github.io/2019/04/03/Hbase的原理以及在ADT的应用/LSM%E6%A0%91%E7%9A%84%E5%90%88%E5%B9%B6.jpg">
+<meta property="og:image" content="https://penghongzhan.github.io/2019/04/03/Hbase的原理以及在ADT的应用/Hfile%E7%9A%84%E5%AD%98%E5%82%A8%E7%BB%93%E6%9E%84.png">
+<meta property="og:image" content="https://penghongzhan.github.io/2019/04/03/Hbase的原理以及在ADT的应用/%E6%97%A0%E5%8E%8B%E7%BC%A9%E7%9A%84KV%E5%AD%98%E5%82%A8.png">
+<meta property="og:image" content="https://penghongzhan.github.io/2019/04/03/Hbase的原理以及在ADT的应用/%E5%89%8D%E7%BC%80%E5%8E%8B%E7%BC%A9.png">
+<meta property="og:image" content="https://penghongzhan.github.io/2019/04/03/Hbase的原理以及在ADT的应用/region%E7%9A%84%E6%9F%A5%E6%89%BE%E8%BF%87%E7%A8%8B.jpg">
+<meta property="og:image" content="https://penghongzhan.github.io/2019/04/03/Hbase的原理以及在ADT的应用/HFile%E6%9F%A5%E8%AF%A2.png">
+<meta property="og:image" content="https://penghongzhan.github.io/2019/04/03/Hbase的原理以及在ADT的应用/rowkey%E8%AE%BE%E8%AE%A1%E6%96%B9%E5%BC%8F-%E5%8A%A0%E7%9B%90.png">
+<meta property="og:image" content="https://penghongzhan.github.io/2019/04/03/Hbase的原理以及在ADT的应用/rowkey%E8%AE%BE%E8%AE%A1%E6%96%B9%E5%BC%8F-%E5%93%88%E5%B8%8C.png">
+<meta property="og:image" content="https://penghongzhan.github.io/2019/04/03/Hbase的原理以及在ADT的应用/rowkey%E8%AE%BE%E8%AE%A1%E6%96%B9%E5%BC%8F-%E5%8F%8D%E8%BD%AC.png">
+<meta property="og:updated_time" content="2019-09-03T06:51:21.000Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Hbase的原理以及在ADT的应用">
+<meta name="twitter:description" content="目录 [toc]  1 Hbase的应用场景 HBase是一个分布式的、面向列的开源数据库，该技术来源于 Fay Chang 所撰写的Google论文“Bigtable：一个结构化数据的分布式存储系统”。就像Bigtable利用了Google文件系统（File System）所提供的分布式数据存储一样，HBase在Hadoop之上提供了类似于Bigtable的能力。 图：HBase的使用场景 1.">
+<meta name="twitter:image" content="https://penghongzhan.github.io/2019/04/03/Hbase的原理以及在ADT的应用/HBase%E7%9A%84%E4%BD%BF%E7%94%A8%E5%9C%BA%E6%99%AF.jpg">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Mist',
+    version: '5.1.4',
+    sidebar: {"position":"left","display":"post","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    duoshuo: {
+      userId: '0',
+      author: '博主'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="https://penghongzhan.github.io/2019/04/03/Hbase的原理以及在ADT的应用/">
+
+
+
+
+
+  <title>Hbase的原理以及在ADT的应用 | HongMo's Blog</title>
+  
+
+
+
+
+
+
+
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">HongMo's Blog</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle"></p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br>
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br>
+            
+            标签
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br>
+            
+            分类
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br>
+            
+            归档
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-about">
+          <a href="/about/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-user"></i> <br>
+            
+            关于
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="https://penghongzhan.github.io/2019/04/03/Hbase的原理以及在ADT的应用/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="penghong.zhan">
+      <meta itemprop="description" content>
+      <meta itemprop="image" content="/images/我的头像.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="HongMo's Blog">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">Hbase的原理以及在ADT的应用</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2019-04-03T09:00:00+08:00">
+                2019-04-03
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category">
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/hbase/" itemprop="url" rel="index">
+                    <span itemprop="name">hbase</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <p><strong>目录</strong></p>
+<p>[toc]</p>
+<hr>
+<h1 id="1-Hbase的应用场景"><a href="#1-Hbase的应用场景" class="headerlink" title="1 Hbase的应用场景"></a>1 Hbase的应用场景</h1><hr>
+<p>HBase是一个分布式的、面向列的开源数据库，该技术来源于 Fay Chang 所撰写的Google论文“Bigtable：一个结构化数据的分布式存储系统”。就像Bigtable利用了Google文件系统（File System）所提供的分布式数据存储一样，HBase在Hadoop之上提供了类似于Bigtable的能力。</p>
+<p><strong>图：HBase的使用场景</strong><img src="HBase%E7%9A%84%E4%BD%BF%E7%94%A8%E5%9C%BA%E6%99%AF.jpg" alt="HBase的使用场景.jpg"></p>
+<h2 id="1-1-对比Mysql"><a href="#1-1-对比Mysql" class="headerlink" title="1.1 对比Mysql"></a>1.1 对比Mysql</h2><p>KV存储，通过rowkey进行查询，类似于mysql的唯一主键，这种简单的查询场景下，可以理解为分布式的mysql，由于hbase的数据预排序以及其内部的索引结构，决定了Hbase对于rowkey的随机查询和范围查询，速度都很快。但是没有mysql那么强大的功能，例如聚合，各种联合索引，事务等。</p>
+<p>hbase是为大数据而生的，支持千万并发，PB存储，它内部采用列式存储，决定他适合存储以下类型的数据：</p>
+<ul>
+<li>非结构化数据</li>
+<li>稀疏表</li>
+</ul>
+<hr>
+<h1 id="2-架构"><a href="#2-架构" class="headerlink" title="2 架构"></a>2 架构</h1><hr>
+<p><strong>图：Hbase的基本架构</strong><img src="Hbase%E7%9A%84%E5%9F%BA%E6%9C%AC%E6%9E%B6%E6%9E%84.png" alt="hbase基本架构.png"></p>
+<ul>
+<li>master：<ul>
+<li>表的操作，例如修改列族配置等</li>
+<li>region的分配，合并，分割</li>
+</ul>
+</li>
+<li>zookeeper：<ul>
+<li>维护服务器存活、是否可访问的状态</li>
+<li>master的HA</li>
+<li>记录Hbase的元数据信息的存储位置</li>
+</ul>
+</li>
+<li>region server：数据的写入与查询</li>
+<li>hdfs：数据的存储，region不直接跟磁盘打交道，通过hdfs实现数据的落盘和读取</li>
+</ul>
+<hr>
+<h1 id="3-数据的写入"><a href="#3-数据的写入" class="headerlink" title="3 数据的写入"></a>3 数据的写入</h1><hr>
+<h2 id="3-1-数据的写入过程"><a href="#3-1-数据的写入过程" class="headerlink" title="3.1 数据的写入过程"></a>3.1 数据的写入过程</h2><p><strong>图：数据的写入概览</strong><img src="%E6%95%B0%E6%8D%AE%E7%9A%84%E5%86%99%E5%85%A5%E6%A6%82%E8%A7%88.jpg" alt="数据的写入概览.jpg"></p>
+<ul>
+<li>WAL：write ahead log，数据首先写入log，保证数据不丢失，该log也是保存在hdfs上</li>
+<li>MemStore：数据进入内存，按照rowkey进行排序</li>
+<li>HFile：MemStore中的数据到达一定量或者一定时间，创建HFile落盘</li>
+</ul>
+<p><strong>图：数据的写入过程</strong><img src="%E6%95%B0%E6%8D%AE%E7%9A%84%E5%86%99%E5%85%A5%E8%BF%87%E7%A8%8B.jpg" alt="数据的写入过程.jpg"></p>
+<h2 id="3-2-数据格式"><a href="#3-2-数据格式" class="headerlink" title="3.2 数据格式"></a>3.2 数据格式</h2><p>HBase存储的所有内容都是byte数组，所以只要能转化成byte数组的数据都可以存储在HBase中。</p>
+<hr>
+<h1 id="4-存储模型"><a href="#4-存储模型" class="headerlink" title="4 存储模型"></a>4 存储模型</h1><hr>
+<p><strong>图：HBase的存储概念模型</strong><img src="HBase%E7%9A%84%E5%AD%98%E5%82%A8%E6%A6%82%E5%BF%B5%E6%A8%A1%E5%9E%8B.jpg" alt="HBase的存储概念模型.jpg"></p>
+<ul>
+<li>表</li>
+<li>行：每一行都有唯一主键rowkey</li>
+<li>列族：列族包含若干列，这些列在物理上存储在一起，所以列族内的列一般是在查询的时候需要一起读取</li>
+<li>列</li>
+<li>单元格：列的内容保存在单元格中，如果有过更新操作，会有多个版本</li>
+</ul>
+<hr>
+<h1 id="5-存储实现"><a href="#5-存储实现" class="headerlink" title="5 存储实现"></a>5 存储实现</h1><hr>
+<p><strong>图：HBase的存储结构</strong><img src="HBase%E7%9A%84%E5%AD%98%E5%82%A8%E7%BB%93%E6%9E%84.jpg" alt="数据存储结构.jpg"></p>
+<h2 id="5-1-region"><a href="#5-1-region" class="headerlink" title="5.1 region"></a>5.1 region</h2><p>Table的数据以region的形式分布在所有的服务器上。region的存在是为了解决横向扩展问题。</p>
+<h3 id="5-1-1-region的拆分"><a href="#5-1-1-region的拆分" class="headerlink" title="5.1.1 region的拆分"></a>5.1.1 region的拆分</h3><p>通过将数据均衡的分布到所有机器上，可以充分利用各个服务器的能力，提高查询速度。随着数据的不断写入，region会不断增大，region太大会影响查询性能，所以hbase会自动对region进行拆分。</p>
+<p>region的拆分策略：</p>
+<ul>
+<li>ConstantSizeRegionSplitPolicy：老版本的hbase使用的拆分策略，按照固定的大小进行拆分，默认为10G，一个region大小超过10G之后，会被拆分成两个。缺点：太死板、太简单，无论是数据写入量大还是小，都是通过这个固定的值来判断</li>
+<li>IncreasingToUpperBoundRegionSplitPolicy：新版本的默认策略，这个策略随着数据增长，动态改变拆分的阈值，公式为<code>min(tableRegionCount^3*initialSize, defaultRegionMaxFileSize)</code><ul>
+<li>tableRegionCount：当前region的数量，开始region数量少的时候，阈值也小；后期region数量变多，阈值随之变大</li>
+<li>initialSize：一个固定值，如果没有设置，默认为mem flush的大小，一般flush配置的越大，写入吞吐量也大，所以阈值也应该更大</li>
+<li>defaultRegionMaxFileSize：最大值，默认为10G，后期随着分片数量增多，<code>tableRegionCount^3*initialSize</code>可能超过10G，但是region上限是10G</li>
+</ul>
+</li>
+<li>…</li>
+</ul>
+<h4 id="5-1-2-region合并"><a href="#5-1-2-region合并" class="headerlink" title="5.1.2 region合并"></a>5.1.2 region合并</h4><p>场景：region中大量数据被删除，不需要开始那么多region，可以手动进行region的合并</p>
+<h4 id="5-1-3-注意"><a href="#5-1-3-注意" class="headerlink" title="5.1.3 注意"></a>5.1.3 注意</h4><p>region的合并英文为<code>merge</code>，不要跟后续的HFile的合并混淆，HFile的合并英文单词为<code>compaction</code></p>
+<h2 id="5-2-store"><a href="#5-2-store" class="headerlink" title="5.2 store"></a>5.2 store</h2><p>一个region内部有多个store，store是列族级别的概念，一个表有三个列族，那么在一台服务器上的region中会有三个store。</p>
+<h3 id="5-2-1-MemStore"><a href="#5-2-1-MemStore" class="headerlink" title="5.2.1 MemStore"></a>5.2.1 MemStore</h3><p>每个列族/store对应一个独立的MemStore，也就是一块内存空间，数据写入之后，列族的内容进入对应的MemStore，会按照rowkey进行排序，并创建类似于Btree的索引——LMS-Tree。</p>
+<h4 id="LMS-Tree"><a href="#LMS-Tree" class="headerlink" title="LMS-Tree"></a>LMS-Tree</h4><p>LMS-Tree（Log-Structured Merge Tree）理解为merge tree即可。</p>
+<p><strong>图：mysql的B+树：</strong><img src="mysql%E7%9A%84B+%E6%A0%91.jpg" alt="mysql的B+树"></p>
+<p>B+tree能有效的提高mysql的查询性能，但是对于高并发大数据量的写入场景，面对大量的随机写，性能无法满足要求。因此产生了LSM-Tree，LSM树采用的索引结构与B+Tree相同，而且通过批量存储技术规避磁盘随机写入问题，因为数据过来之后，首先会在内存中进行排序，构建索引，当到达一定的量的时候，flush到磁盘中，随着磁盘中的小文件的增多，后台进行会自动进行合并，过多的小文件合并为一个大文件，能够有效加快查询速度。</p>
+<p><strong>图：LSM树的合并：</strong><img src="LSM%E6%A0%91%E7%9A%84%E5%90%88%E5%B9%B6.jpg" alt="LSM树的合并"></p>
+<h4 id="flush时机"><a href="#flush时机" class="headerlink" title="flush时机"></a>flush时机</h4><ul>
+<li>大小达到刷写阀值</li>
+<li>整个RegionServer的memstore总和达到阀值</li>
+<li>Memstore达到刷写时间间隔</li>
+<li>WAL的数量大于maxLogs</li>
+<li>手动触发flush</li>
+</ul>
+<h3 id="5-2-2-HFile"><a href="#5-2-2-HFile" class="headerlink" title="5.2.2 HFile"></a>5.2.2 HFile</h3><p>Hbase的数据文件，Hbase的所有数据都保存在HFile中，查询的时候也是从HFile中进行查询。</p>
+<h4 id="HFile的结构"><a href="#HFile的结构" class="headerlink" title="HFile的结构"></a>HFile的结构</h4><p><strong>图：Hfile的存储结构</strong><img src="Hfile%E7%9A%84%E5%AD%98%E5%82%A8%E7%BB%93%E6%9E%84.png" alt="Hfile的存储结构.png"></p>
+<ul>
+<li>scan block：scan查询的时候需要读取的部分<ul>
+<li>data block：数据KV存储</li>
+<li>leaf index block：Btree的叶子节点</li>
+<li>bloom block：布隆过滤器</li>
+</ul>
+</li>
+<li>none scan block<ul>
+<li>meta block</li>
+<li>intermediate index block：Btree的中间节点</li>
+</ul>
+</li>
+<li>load on open：HFile加载的时候，需要加载到内存的部分<ul>
+<li>root index block：Btree的根节点</li>
+<li>meta index</li>
+<li>file info</li>
+<li>bloom filter metadata：布隆过滤器的索引</li>
+</ul>
+</li>
+<li>trailer：记录上面各个部分的偏移量，HFile读取的时候首先读取该部分，然后获取其他部分所在的位置</li>
+</ul>
+<h4 id="data-block的物理结构"><a href="#data-block的物理结构" class="headerlink" title="data block的物理结构"></a>data block的物理结构</h4><p><strong>图：无压缩的KV存储</strong><img src="%E6%97%A0%E5%8E%8B%E7%BC%A9%E7%9A%84KV%E5%AD%98%E5%82%A8.png" alt="无压缩的KV存储"></p>
+<p>由于key经过排序并且通常非常相似，因此可以设计比通用压缩算法能够做得更好的压缩方式。</p>
+<p><strong>前缀压缩</strong></p>
+<p><strong>图：前缀压缩</strong><img src="%E5%89%8D%E7%BC%80%E5%8E%8B%E7%BC%A9.png" alt="前缀压缩"></p>
+<p>前缀编码的主要思想是只存储一次公共前缀，因为行被排序，所以开始部分通常是相同的。</p>
+<h4 id="Hfile的合并"><a href="#Hfile的合并" class="headerlink" title="Hfile的合并"></a>Hfile的合并</h4><p>每次memstore的刷写都会产生一个新的HFile，而HFile毕竟是存储在硬盘上的东西，凡是读取存储在硬盘上的东西都涉及一个操作：寻址，如果是传统硬盘那就是磁头的移动寻址，这是一个很慢的动作。当HFile一多，你每次读取数据的时候寻址的动作就多了，效率就低了。所以为了防止寻址的动作过多，我们要适当地减少碎片文件，所以需要继续合并操作。</p>
+<p>合并分类：</p>
+<ul>
+<li>小合并：小的合并成大的</li>
+<li>大合并：大的最终合并成一个，注意：只有在大合并之后，标记删除的文档才会真正被删除</li>
+</ul>
+<p>合并过程：</p>
+<ul>
+<li>读取合并列表中的hfile</li>
+<li>创建数据读取的scanner</li>
+<li>读取hfile中的内容到一个临时文件中</li>
+<li>临时文件替换合并之前的多个hfile</li>
+</ul>
+<hr>
+<h1 id="6-数据查询"><a href="#6-数据查询" class="headerlink" title="6 数据查询"></a>6 数据查询</h1><hr>
+<h2 id="6-1-查询顺序"><a href="#6-1-查询顺序" class="headerlink" title="6.1 查询顺序"></a>6.1 查询顺序</h2><ul>
+<li>[1] block cache：HFile的load on open部分是常驻内存的，data block是在磁盘上的，查询的时候，定位到某个data block之后，Hbase会将整个data block加载到block cache中，后续查询的时候，先检查是否存在block cache中，如果是，优先查询block cache。之所以可以这么放心的使用block cache，是基于Hfile的不可变性，后续的修改和删除操作不会直接修改HFile，而是追加新的文件，所以只要HFile还在，对应的block cache就是不变的。<ul>
+<li>堆内缓存：LRUBlockCache，设计思想有点类似GC的分代回收</li>
+<li>堆外缓存：<ul>
+<li>SlabCache：有点不好用</li>
+<li>BucketCache：阿里大牛基于SlabCache的思想开发的堆外缓存版本，不能说比LRUBlockCache好多少，只能说适用于不同的场景</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>[2] region -&gt; memstore + hfile：通过hbase的元数据表，找到需要查询的rowkey所在的region server，从而定位到memstore和hfile</li>
+</ul>
+<h2 id="6-2-region的查找过程"><a href="#6-2-region的查找过程" class="headerlink" title="6.2 region的查找过程"></a>6.2 region的查找过程</h2><p><strong>图：region的查找过程</strong><img src="region%E7%9A%84%E6%9F%A5%E6%89%BE%E8%BF%87%E7%A8%8B.jpg" alt="region的查找过程.jpg"></p>
+<p>一个表有多个region，分布在不同机器上，需要一定的机制来确定需要查找的region</p>
+<ul>
+<li>通过zk找到meta所在的sever：meta表的位置保存在zk中，meta中保存了每个region的rowkey范围，以及region所在的位置</li>
+<li>通过meta查询出需要查询的region所在的服务器</li>
+<li>到服务器上进行查询</li>
+</ul>
+<p>客户端会对meta信息进行缓存，加快查询速度</p>
+<h2 id="6-3-hfile的查询过程"><a href="#6-3-hfile的查询过程" class="headerlink" title="6.3 hfile的查询过程"></a>6.3 hfile的查询过程</h2><p>hfile中有两种数据结构，能够加快查询</p>
+<ul>
+<li>数据索引btree：最多三层节点</li>
+<li>布隆：用于快速的排除不存在的数据</li>
+</ul>
+<p><strong>图：HFile查询：</strong><img src="HFile%E6%9F%A5%E8%AF%A2.png" alt="HFile查询"></p>
+<p>root index在HFile解析的时候直接被加载到内存中。查询的时候：</p>
+<ul>
+<li>在内存中的root index中通过二分查找快速定位到某个row key对应的下一级节点intermediate index所在的block</li>
+<li>将intermediate index block读取到内存中，通过二分查找找到某个index entry，进而找到row key对应的叶子节点的block的位置</li>
+<li>将leaf block读取到内存中，通过二分查找找到某个index entry，进而找到row key对应的data block，将整个数据块加载到内存，通过遍历的方式找到对应的value</li>
+</ul>
+<h2 id="6-4-查询API"><a href="#6-4-查询API" class="headerlink" title="6.4 查询API"></a>6.4 查询API</h2><ul>
+<li>get：查询某个rowkey对应的列</li>
+<li>scan：指定rowkey范围的扫描（setStartRow, setStopRow）</li>
+<li>filter：scan过程中，对内容进行过滤</li>
+</ul>
+<p><strong>其中指定rowkey范围是最有效的加快查询速度的方式，不限定rowkey的范围则需要全表扫</strong></p>
+<hr>
+<h1 id="7-rowkey的设计"><a href="#7-rowkey的设计" class="headerlink" title="7 rowkey的设计"></a>7 rowkey的设计</h1><hr>
+<p>查询速度和数据均衡分布的权衡：</p>
+<ul>
+<li>完全按照业务字段来设计rowkey，例如使用<code>用户id+产品id+时间</code>作为rowkey，相同用户相同产品的信息保存在同一个region中，查询快，但是由于用户的数据量不同，可能导致热点数据，造成某台机器负载过高，影响机群正常工作</li>
+<li>完全采用随机的rowkey，跟业务不相关，查询的时候只能全表扫，查询效率低</li>
+</ul>
+<p><strong>rowkey长度设计建议：</strong></p>
+<ul>
+<li><ol>
+<li>数据的持久化文件 HFile 中是按照 KeyValue 存储的，如果 rowkey 过长，比如超过 100 字节，1000w 行数据，光 rowkey 就要占用 100*1000w=10 亿个字节，将近 1G 数据，这样会极大影响 HFile 的存储效率；</li>
+</ol>
+</li>
+<li><ol start="2">
+<li>MemStore 将缓存部分数据到内存，如果 rowkey 字段过长，内存的有效利用率就会降低，系统不能缓存更多的数据，这样会降低检索效率；</li>
+</ol>
+</li>
+<li><ol start="3">
+<li>目前操作系统都是 64 位系统，内存 8 字节对齐，rowkey长度建议控制在 16 个字节（8 字节的整数倍），充分利用操作系统的最佳特性。</li>
+</ol>
+</li>
+</ul>
+<h2 id="7-1-rowkey设计方式-加盐"><a href="#7-1-rowkey设计方式-加盐" class="headerlink" title="7.1 rowkey设计方式-加盐"></a>7.1 rowkey设计方式-加盐</h2><p><strong>图：rowkey设计方式-加盐</strong><img src="rowkey%E8%AE%BE%E8%AE%A1%E6%96%B9%E5%BC%8F-%E5%8A%A0%E7%9B%90.png" alt="rowkey设计-加盐.png"></p>
+<p>使用固定的随机前缀：</p>
+<ul>
+<li>优点：数据均衡</li>
+<li>缺点：因为前缀是随机的，所以无法快速get；scan的速度还可以</li>
+</ul>
+<h2 id="7-2-rowkey设计方式-hash"><a href="#7-2-rowkey设计方式-hash" class="headerlink" title="7.2 rowkey设计方式-hash"></a>7.2 rowkey设计方式-hash</h2><p><strong>图：rowkey设计方式-哈希</strong><img src="rowkey%E8%AE%BE%E8%AE%A1%E6%96%B9%E5%BC%8F-%E5%93%88%E5%B8%8C.png" alt="rowkey设计-hash.png"></p>
+<p>rowkey hash之后取md5的前五位：</p>
+<ul>
+<li>优点：打散数据，前缀在查询的时候能通过rowkey得到，可以很快get</li>
+<li>缺点：相同前缀的rowkey被打散，scan变慢</li>
+</ul>
+<h2 id="7-3-rowkey设计方式-反转"><a href="#7-3-rowkey设计方式-反转" class="headerlink" title="7.3 rowkey设计方式-反转"></a>7.3 rowkey设计方式-反转</h2><p><strong>图：rowkey设计方式-反转</strong><img src="rowkey%E8%AE%BE%E8%AE%A1%E6%96%B9%E5%BC%8F-%E5%8F%8D%E8%BD%AC.png" alt="rowkey设计-翻转.png"></p>
+<p>反转一段固定长度的rowkey，或者整个反转。上图中三个网址属于相同域名下的，但是如果不反转，会完全分散到不同的region中，不利于查询。</p>
+<hr>
+<h1 id="ADT应用场景"><a href="#ADT应用场景" class="headerlink" title="ADT应用场景"></a>ADT应用场景</h1><hr>
+<ul>
+<li>用户的数据导出服务</li>
+<li>将产品，推广活动等信息作为rowkey，同一个用户的信息由于rowkey的有序性，存储在一起，从而加快查询速度</li>
+<li>实时性要求不高</li>
+</ul>
+<h2 id="替换回HDFS-Spark任务"><a href="#替换回HDFS-Spark任务" class="headerlink" title="替换回HDFS+Spark任务"></a>替换回HDFS+Spark任务</h2><ul>
+<li>业务上实时性要求不高，但是现在使用hbase查询，实时写入实时可以查询到，如此实时，有点浪费，T+1即可</li>
+<li>HBase根据rowkey进行排序，通过将业务字段作为rowkey，可以加快查询速度。但是感觉<strong>rowkey排序+HFile整个扫描</strong>的方式在查询速度上应该可以满足要求；HBase的数据结构设计，包括分层的BTree索引以及布隆过滤器，很大程度上是为了rowkey的随机查询的场景，尤其是布隆过滤器，在查找rowkey的时候，能够很快排除不存在这个rowkey的block，从而减少磁盘IO。但是对于数据量较大的scan来说，感觉没啥必要。所以感觉，HBase用于ADT的数据导出，还有有些性能上的浪费，如果替换回HDFS+Spark可以节省一部分机器资源。</li>
+</ul>
+<h2 id="Hbase资源占用较大的几个点"><a href="#Hbase资源占用较大的几个点" class="headerlink" title="Hbase资源占用较大的几个点"></a>Hbase资源占用较大的几个点</h2><ul>
+<li>内存对rowkey排序，构建索引（内存操作，很快）</li>
+<li>WAL：对于数据完整性不是非常严格的情况下，可以开启异步</li>
+<li>rowkey以及列族列明冗余存储（磁盘空间占用大，尤其是rowkey设计不合理的情况）</li>
+<li>hfile merge：最消耗IO和CPU，尤其是大合并，在集群使用低谷时间段进行</li>
+<li>HFile中的btree索引，根节点常驻内存</li>
+<li>HFile中的布隆过滤器，索引常驻内存</li>
+</ul>
+<h3 id="参考链接"><a href="#参考链接" class="headerlink" title="参考链接"></a>参考链接</h3><ul>
+<li><a href="http://blog.cloudera.com/blog/2012/06/hbase-io-hfile-input-output/" target="_blank" rel="noopener">hbase-io-hfile-input-output</a></li>
+<li><a href="https://blog.csdn.net/Yaokai_AssultMaster/article/details/72877127" target="_blank" rel="noopener">深入理解HBase的系统架构</a></li>
+<li><a href="https://www.cnblogs.com/panpanwelcome/p/8716652.html" target="_blank" rel="noopener">HBase底层存储原理</a></li>
+<li><a href="http://hbasefly.com/2016/04/03/hbase_hfile_index/" target="_blank" rel="noopener">HBase – 探索HFile索引机制</a></li>
+<li><a href="http://hbasefly.com/2016/03/25/hbase-hfile/" target="_blank" rel="noopener">HBase – 存储文件HFile结构解析</a></li>
+</ul>
+
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/hbase/" rel="tag"># hbase</a>
+          
+            <a href="/tags/原理/" rel="tag"># 原理</a>
+          
+            <a href="/tags/概论/" rel="tag"># 概论</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2018/05/20/Hbase学习笔记/" rel="next" title="Hbase学习笔记">
+                <i class="fa fa-chevron-left"></i> Hbase学习笔记
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2019/08/12/Elasticsearch的原理与ADT应用/" rel="prev" title="Elasticsearch的原理与ADT应用">
+                Elasticsearch的原理与ADT应用 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+            
+              <img class="site-author-image" itemprop="image" src="/images/我的头像.jpg" alt="penghong.zhan">
+            
+              <p class="site-author-name" itemprop="name">penghong.zhan</p>
+              <p class="site-description motion-element" itemprop="description">一个热爱生活的程序猿</p>
+          </div>
+
+          <nav class="site-state motion-element">
+
+            
+              <div class="site-state-item site-state-posts">
+              
+                <a href="/archives/">
+              
+                  <span class="site-state-item-count">84</span>
+                  <span class="site-state-item-name">日志</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-categories">
+                <a href="/categories/index.html">
+                  <span class="site-state-item-count">38</span>
+                  <span class="site-state-item-name">分类</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-tags">
+                <a href="/tags/index.html">
+                  <span class="site-state-item-count">157</span>
+                  <span class="site-state-item-name">标签</span>
+                </a>
+              </div>
+            
+
+          </nav>
+
+          
+
+          
+
+          
+          
+
+          
+          
+
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#1-Hbase的应用场景"><span class="nav-number">1.</span> <span class="nav-text">1 Hbase的应用场景</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#1-1-对比Mysql"><span class="nav-number">1.1.</span> <span class="nav-text">1.1 对比Mysql</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#2-架构"><span class="nav-number">2.</span> <span class="nav-text">2 架构</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#3-数据的写入"><span class="nav-number">3.</span> <span class="nav-text">3 数据的写入</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#3-1-数据的写入过程"><span class="nav-number">3.1.</span> <span class="nav-text">3.1 数据的写入过程</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#3-2-数据格式"><span class="nav-number">3.2.</span> <span class="nav-text">3.2 数据格式</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#4-存储模型"><span class="nav-number">4.</span> <span class="nav-text">4 存储模型</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#5-存储实现"><span class="nav-number">5.</span> <span class="nav-text">5 存储实现</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#5-1-region"><span class="nav-number">5.1.</span> <span class="nav-text">5.1 region</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#5-1-1-region的拆分"><span class="nav-number">5.1.1.</span> <span class="nav-text">5.1.1 region的拆分</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#5-1-2-region合并"><span class="nav-number">5.1.1.1.</span> <span class="nav-text">5.1.2 region合并</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#5-1-3-注意"><span class="nav-number">5.1.1.2.</span> <span class="nav-text">5.1.3 注意</span></a></li></ol></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#5-2-store"><span class="nav-number">5.2.</span> <span class="nav-text">5.2 store</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#5-2-1-MemStore"><span class="nav-number">5.2.1.</span> <span class="nav-text">5.2.1 MemStore</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#LMS-Tree"><span class="nav-number">5.2.1.1.</span> <span class="nav-text">LMS-Tree</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#flush时机"><span class="nav-number">5.2.1.2.</span> <span class="nav-text">flush时机</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#5-2-2-HFile"><span class="nav-number">5.2.2.</span> <span class="nav-text">5.2.2 HFile</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#HFile的结构"><span class="nav-number">5.2.2.1.</span> <span class="nav-text">HFile的结构</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#data-block的物理结构"><span class="nav-number">5.2.2.2.</span> <span class="nav-text">data block的物理结构</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#Hfile的合并"><span class="nav-number">5.2.2.3.</span> <span class="nav-text">Hfile的合并</span></a></li></ol></li></ol></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#6-数据查询"><span class="nav-number">6.</span> <span class="nav-text">6 数据查询</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#6-1-查询顺序"><span class="nav-number">6.1.</span> <span class="nav-text">6.1 查询顺序</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#6-2-region的查找过程"><span class="nav-number">6.2.</span> <span class="nav-text">6.2 region的查找过程</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#6-3-hfile的查询过程"><span class="nav-number">6.3.</span> <span class="nav-text">6.3 hfile的查询过程</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#6-4-查询API"><span class="nav-number">6.4.</span> <span class="nav-text">6.4 查询API</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#7-rowkey的设计"><span class="nav-number">7.</span> <span class="nav-text">7 rowkey的设计</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#7-1-rowkey设计方式-加盐"><span class="nav-number">7.1.</span> <span class="nav-text">7.1 rowkey设计方式-加盐</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#7-2-rowkey设计方式-hash"><span class="nav-number">7.2.</span> <span class="nav-text">7.2 rowkey设计方式-hash</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#7-3-rowkey设计方式-反转"><span class="nav-number">7.3.</span> <span class="nav-text">7.3 rowkey设计方式-反转</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#ADT应用场景"><span class="nav-number">8.</span> <span class="nav-text">ADT应用场景</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#替换回HDFS-Spark任务"><span class="nav-number">8.1.</span> <span class="nav-text">替换回HDFS+Spark任务</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Hbase资源占用较大的几个点"><span class="nav-number">8.2.</span> <span class="nav-text">Hbase资源占用较大的几个点</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#参考链接"><span class="nav-number">8.2.1.</span> <span class="nav-text">参考链接</span></a></li></ol></li></ol></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2022</span>
+  <span class="with-love">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">penghong.zhan</span>
+
+  
+</div>
+
+
+  <div class="powered-by">由 <a class="theme-link" target="_blank" href="https://hexo.io">Hexo</a> 强力驱动</div>
+
+
+
+  <span class="post-meta-divider">|</span>
+
+
+
+  <div class="theme-info">主题 &mdash; <a class="theme-link" target="_blank" href="https://github.com/iissnan/hexo-theme-next">NexT.Mist</a> v5.1.4</div>
+
+
+
+
+        
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.4"></script>
+
+
+
+  
+  
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.4"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>

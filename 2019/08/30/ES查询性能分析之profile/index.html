@@ -1,0 +1,781 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next mist use-motion" lang="zh-Hans">
+<head><meta name="generator" content="Hexo 3.9.0">
+  <meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform">
+<meta http-equiv="Cache-Control" content="no-siteapp">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css">
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css">
+
+<link href="/css/main.css?v=5.1.4" rel="stylesheet" type="text/css">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=5.1.4">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=5.1.4" color="#222">
+
+
+
+
+
+  <meta name="keywords" content="elastic,profile,query,">
+
+
+
+
+
+
+
+
+
+
+<meta name="description" content="重要指标query type：查询类型 time：查询消耗的时间  breakdownquery的详细信息，单位是纳秒  create_weight：创建用于查询的临时上下文 build_scorer：构建用户评分的评分器 next_doc：统计得到的查询下一个文档id需要的时间，这个不太懂啥意思，有啥用，难道是为了加快查询速度的预查询？？？ advance：跟next_doc的作用好像差不多，但">
+<meta name="keywords" content="elastic,profile,query">
+<meta property="og:type" content="article">
+<meta property="og:title" content="ES查询性能分析之profile">
+<meta property="og:url" content="https://penghongzhan.github.io/2019/08/30/ES查询性能分析之profile/index.html">
+<meta property="og:site_name" content="HongMo&#39;s Blog">
+<meta property="og:description" content="重要指标query type：查询类型 time：查询消耗的时间  breakdownquery的详细信息，单位是纳秒  create_weight：创建用于查询的临时上下文 build_scorer：构建用户评分的评分器 next_doc：统计得到的查询下一个文档id需要的时间，这个不太懂啥意思，有啥用，难道是为了加快查询速度的预查询？？？ advance：跟next_doc的作用好像差不多，但">
+<meta property="og:locale" content="zh-Hans">
+<meta property="og:updated_time" content="2019-08-30T07:36:58.000Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="ES查询性能分析之profile">
+<meta name="twitter:description" content="重要指标query type：查询类型 time：查询消耗的时间  breakdownquery的详细信息，单位是纳秒  create_weight：创建用于查询的临时上下文 build_scorer：构建用户评分的评分器 next_doc：统计得到的查询下一个文档id需要的时间，这个不太懂啥意思，有啥用，难道是为了加快查询速度的预查询？？？ advance：跟next_doc的作用好像差不多，但">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Mist',
+    version: '5.1.4',
+    sidebar: {"position":"left","display":"post","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    duoshuo: {
+      userId: '0',
+      author: '博主'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="https://penghongzhan.github.io/2019/08/30/ES查询性能分析之profile/">
+
+
+
+
+
+  <title>ES查询性能分析之profile | HongMo's Blog</title>
+  
+
+
+
+
+
+
+
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">HongMo's Blog</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle"></p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br>
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br>
+            
+            标签
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br>
+            
+            分类
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br>
+            
+            归档
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-about">
+          <a href="/about/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-user"></i> <br>
+            
+            关于
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="https://penghongzhan.github.io/2019/08/30/ES查询性能分析之profile/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="penghong.zhan">
+      <meta itemprop="description" content>
+      <meta itemprop="image" content="/images/我的头像.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="HongMo's Blog">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">ES查询性能分析之profile</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2019-08-30T15:34:05+08:00">
+                2019-08-30
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category">
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/elasticsearch/" itemprop="url" rel="index">
+                    <span itemprop="name">elasticsearch</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h1 id="重要指标"><a href="#重要指标" class="headerlink" title="重要指标"></a>重要指标</h1><h2 id="query"><a href="#query" class="headerlink" title="query"></a>query</h2><ul>
+<li>type：查询类型</li>
+<li>time：查询消耗的时间</li>
+</ul>
+<h3 id="breakdown"><a href="#breakdown" class="headerlink" title="breakdown"></a>breakdown</h3><p>query的详细信息，单位是纳秒</p>
+<ul>
+<li>create_weight：创建用于查询的临时上下文</li>
+<li>build_scorer：构建用户评分的评分器</li>
+<li>next_doc：<strong>统计得到的查询下一个文档id需要的时间，这个不太懂啥意思，有啥用，难道是为了加快查询速度的预查询？？？</strong></li>
+<li>advance：<strong>跟next_doc的作用好像差不多，但是不是所有的查询都能使用next_doc，此时会用到advance，所以advance能干啥也不是特别清楚。。。</strong></li>
+<li>matches：两阶段查询会统计的指标，例如短语查询，首先需要确保文档中包含这两个单词，其次再确定这两个单词在文档中是不是相邻的，大部分查询来说，这个时间一般是0</li>
+<li>score：使用上面的评分器进行评分消耗的时间</li>
+<li>*_count：上面的这些指标后面添加_count，标识这些指标被执行的次数，上面的时间是统计的所有这些次数的总的执行时间</li>
+</ul>
+<h2 id="collector"><a href="#collector" class="headerlink" title="collector"></a>collector</h2><p>对应lucene底层的高阶执行细节，称为collector，collector的种类有以下几种：</p>
+<ul>
+<li>search_sorted：打分并且进行排序</li>
+<li>search_count：计算文档数量，不会获取source，当size为0的时候会显示这个</li>
+<li>search_terminate_after_count：找到n个匹配文档后终止搜索执行的collector。在指定了terminate_after_count查询参数时会出现这种情况</li>
+<li>search_min_score：只查询分数大于某个最小值的文档</li>
+<li>search_multi：该collector组装了其他多个collector，当在单个搜索中同时有搜索，聚合，全局aggs和post_filters时，可以看到这种情况。</li>
+<li>search_timeout：查询执行超时，当在查询时指定了timeout参数时可能出现</li>
+<li>aggregation：聚合查询的场景会出现</li>
+<li>global_aggregation：全量聚合，没有配合其他的查询或者过滤条件的聚合场景会出现</li>
+</ul>
+<h2 id="aggregations"><a href="#aggregations" class="headerlink" title="aggregations"></a>aggregations</h2><ul>
+<li>type：聚合类型</li>
+<li>time：花费时间</li>
+</ul>
+<h3 id="breakdown-1"><a href="#breakdown-1" class="headerlink" title="breakdown"></a>breakdown</h3><p>下面的这些指标有一定的先后顺序，能够有助于很好的理解聚合过程中各个环节的执行时间</p>
+<ul>
+<li>initialise：创建和初始化聚合需要的时间</li>
+<li>collect：收集聚合需要的字段的值，应该是去查询doc_values</li>
+<li>build_aggregation：对字段的值进行聚合，得到分片级别的聚合结果</li>
+<li>reduce：各个分片的结果最终reduce的时间，这个时间现在都是0</li>
+<li>*_count：这面的这些环节执行的次数</li>
+</ul>
+<h1 id="使用方式"><a href="#使用方式" class="headerlink" title="使用方式"></a>使用方式</h1><p>查询语句中添加<code>&quot;profile&quot;: true</code></p>
+<figure class="highlight json"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line">&#123;</span><br><span class="line">    <span class="attr">"from"</span> : <span class="number">0</span>,</span><br><span class="line">    <span class="attr">"size"</span> : <span class="number">0</span>,</span><br><span class="line">    <span class="attr">"timeout"</span> : <span class="string">"120s"</span>,</span><br><span class="line">    <span class="attr">"profile"</span>: <span class="literal">true</span>,</span><br><span class="line">    <span class="attr">"query"</span> : &#123;</span><br><span class="line">      <span class="attr">"bool"</span> : &#123;</span><br><span class="line">        <span class="attr">"filter"</span> : [</span><br><span class="line">          &#123;</span><br><span class="line">            <span class="attr">"term"</span> : &#123;</span><br><span class="line">              <span class="attr">"dt"</span> : <span class="string">"20190803"</span></span><br><span class="line">            &#125;</span><br><span class="line">          &#125;</span><br><span class="line">        ]</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/elastic/" rel="tag"># elastic</a>
+          
+            <a href="/tags/profile/" rel="tag"># profile</a>
+          
+            <a href="/tags/query/" rel="tag"># query</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2019/08/27/explain命令的使用/" rel="next" title="explain命令的使用">
+                <i class="fa fa-chevron-left"></i> explain命令的使用
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2019/08/30/输入流与输出流/" rel="prev" title="输入流与输出流">
+                输入流与输出流 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+            
+              <img class="site-author-image" itemprop="image" src="/images/我的头像.jpg" alt="penghong.zhan">
+            
+              <p class="site-author-name" itemprop="name">penghong.zhan</p>
+              <p class="site-description motion-element" itemprop="description">一个热爱生活的程序猿</p>
+          </div>
+
+          <nav class="site-state motion-element">
+
+            
+              <div class="site-state-item site-state-posts">
+              
+                <a href="/archives/">
+              
+                  <span class="site-state-item-count">84</span>
+                  <span class="site-state-item-name">日志</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-categories">
+                <a href="/categories/index.html">
+                  <span class="site-state-item-count">38</span>
+                  <span class="site-state-item-name">分类</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-tags">
+                <a href="/tags/index.html">
+                  <span class="site-state-item-count">157</span>
+                  <span class="site-state-item-name">标签</span>
+                </a>
+              </div>
+            
+
+          </nav>
+
+          
+
+          
+
+          
+          
+
+          
+          
+
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#重要指标"><span class="nav-number">1.</span> <span class="nav-text">重要指标</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#query"><span class="nav-number">1.1.</span> <span class="nav-text">query</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#breakdown"><span class="nav-number">1.1.1.</span> <span class="nav-text">breakdown</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#collector"><span class="nav-number">1.2.</span> <span class="nav-text">collector</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#aggregations"><span class="nav-number">1.3.</span> <span class="nav-text">aggregations</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#breakdown-1"><span class="nav-number">1.3.1.</span> <span class="nav-text">breakdown</span></a></li></ol></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#使用方式"><span class="nav-number">2.</span> <span class="nav-text">使用方式</span></a></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2022</span>
+  <span class="with-love">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">penghong.zhan</span>
+
+  
+</div>
+
+
+  <div class="powered-by">由 <a class="theme-link" target="_blank" href="https://hexo.io">Hexo</a> 强力驱动</div>
+
+
+
+  <span class="post-meta-divider">|</span>
+
+
+
+  <div class="theme-info">主题 &mdash; <a class="theme-link" target="_blank" href="https://github.com/iissnan/hexo-theme-next">NexT.Mist</a> v5.1.4</div>
+
+
+
+
+        
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.4"></script>
+
+
+
+  
+  
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.4"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>
