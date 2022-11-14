@@ -316,6 +316,8 @@ Lucene采用的前缀索引数据结构为FST，它的优点有：
 
 缺点：结构复杂、输入要求有序、更新不易
 
+[关于Lucene的词典FST深入剖析](https://www.shenyanchao.cn/blog/2018/12/04/lucene-fst/)
+
 ## 字典后缀（.tim文件）
 
 后缀词块主要保存了单词后缀，以及对应的文档列表的位置。
