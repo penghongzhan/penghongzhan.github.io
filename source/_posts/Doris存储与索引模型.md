@@ -3,7 +3,6 @@ title: Doris存储与索引模型
 date: 2021-03-31 14:33:23
 tags:
 - doris
-- 存储模型
 - 索引
 categories:
 - doris
