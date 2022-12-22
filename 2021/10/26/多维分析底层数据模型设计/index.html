@@ -68,7 +68,7 @@
 
 
 
-  <meta name="keywords" content="多维分析,数据建模,模型,">
+  <meta name="keywords" content="多维分析,建模,">
 
 
 
@@ -80,14 +80,14 @@
 
 
 <meta name="description" content="两种模型分析cube聚合结果冗余模型  查询事业部的数据：select bu_id, amount from table where dt=20211001 and bu_id&amp;gt;0 and cat1_id=-1 and cat2_id=-1;     dt bu_id cat1_id cat2_id amount    20211001 110100 1001 11001 100   202">
-<meta name="keywords" content="多维分析,数据建模,模型">
+<meta name="keywords" content="多维分析,建模">
 <meta property="og:type" content="article">
 <meta property="og:title" content="多维分析底层数据模型设计">
 <meta property="og:url" content="https://penghongzhan.github.io/2021/10/26/多维分析底层数据模型设计/index.html">
 <meta property="og:site_name" content="HongMo&#39;s Blog">
 <meta property="og:description" content="两种模型分析cube聚合结果冗余模型  查询事业部的数据：select bu_id, amount from table where dt=20211001 and bu_id&amp;gt;0 and cat1_id=-1 and cat2_id=-1;     dt bu_id cat1_id cat2_id amount    20211001 110100 1001 11001 100   202">
 <meta property="og:locale" content="zh-Hans">
-<meta property="og:updated_time" content="2022-11-14T08:34:38.077Z">
+<meta property="og:updated_time" content="2022-12-22T02:17:36.008Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="多维分析底层数据模型设计">
 <meta name="twitter:description" content="两种模型分析cube聚合结果冗余模型  查询事业部的数据：select bu_id, amount from table where dt=20211001 and bu_id&amp;gt;0 and cat1_id=-1 and cat2_id=-1;     dt bu_id cat1_id cat2_id amount    20211001 110100 1001 11001 100   202">
@@ -566,10 +566,20 @@
 <li><strong>无法进行衍生计算：</strong><ul>
 <li>类似于品类销售额占比这个指标，会配置一个衍生模型，依赖两个指标作为分子和分母</li>
 <li>分母需要配置移除维度，也就是说，拼装sql的时候，起源会自动将用户提交的sql中的品类条件移除掉</li>
-<li>但是对于冗余cube模型，移除类目条件是不够的，需要添加类目=-1的条件，这一点起源是做不到的</li>
+<li><del>但是对于冗余cube模型，移除类目条件是不够的，需要添加类目=-1的条件，这一点起源是做不到的</del></li>
+<li>起源通过支持grouping set和cube两种模型，并且支持维度的默认值设置，以及维度级联关系的设置，很好的支持了冗余cube模型的查询</li>
 </ul>
 </li>
 </ul>
+<h2 id="1-2-起源对于冗余cube模型的支持"><a href="#1-2-起源对于冗余cube模型的支持" class="headerlink" title="1.2 起源对于冗余cube模型的支持"></a>1.2 起源对于冗余cube模型的支持</h2><p>冗余cube模型这种叫法不是很规范，后续建议以起源的叫法为准，起源将模型的聚合类型分为三种：</p>
+<ul>
+<li>普通：对模型包含的全部维度进行聚合查询</li>
+<li>groupingsets：对不同的维度组进行聚合预计算</li>
+<li>with cube：对维度组内任意的维度集合进行聚合预计算(仅支持创建一个维度组)</li>
+</ul>
+<p>我们所说的冗余cube实际上对应的是grouping set和with cube这两种聚合类型，grouping set是with cube的子集。这两种数据聚合方式，是通过预计算的方式，将数据提前计算，各个维度组合的计算结果保存在一起，查询的时候不需要聚合，只需要简单的select。因为所有的聚合结果都存储在一起，所以被聚合的维度会给一个默认值，起源提供了维度粒度设置功能，可以给维度设置默认值。</p>
+<p>同时，该功能会配合级联维度功能，级联的维度比如region/bu，如果bu设置了具体的值，即使用户没有设置region的值，也不会补充-1。</p>
+<p>选择了冗余的这两种模型之后，指标计算方式的配置可以选择『无聚合方式』，此时产生的sql中不会有group by和sum等聚合函数。</p>
 <h1 id="2-实时聚合的聚合模型"><a href="#2-实时聚合的聚合模型" class="headerlink" title="2. 实时聚合的聚合模型"></a>2. 实时聚合的聚合模型</h1><ul>
 <li>doris导入压力很大，因为全局字典和导入的bitmap指标聚合计算，需求迭代重刷数据非常困难</li>
 <li>聚合计算压力大，尤其是时间范围选的比较大，周月维度不能预聚合的场景</li>
@@ -593,9 +603,7 @@
           
             <a href="/tags/多维分析/" rel="tag"># 多维分析</a>
           
-            <a href="/tags/数据建模/" rel="tag"># 数据建模</a>
-          
-            <a href="/tags/模型/" rel="tag"># 模型</a>
+            <a href="/tags/建模/" rel="tag"># 建模</a>
           
         </div>
       
@@ -710,7 +718,7 @@
               
               <div class="site-state-item site-state-categories">
                 <a href="/categories/index.html">
-                  <span class="site-state-item-count">38</span>
+                  <span class="site-state-item-count">37</span>
                   <span class="site-state-item-name">分类</span>
                 </a>
               </div>
@@ -721,7 +729,7 @@
               
               <div class="site-state-item site-state-tags">
                 <a href="/tags/index.html">
-                  <span class="site-state-item-count">157</span>
+                  <span class="site-state-item-count">154</span>
                   <span class="site-state-item-name">标签</span>
                 </a>
               </div>
@@ -754,7 +762,7 @@
             
 
             
-              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#两种模型分析"><span class="nav-number">1.</span> <span class="nav-text">两种模型分析</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#流量多维分析案例"><span class="nav-number">2.</span> <span class="nav-text">流量多维分析案例</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#1-冗余cube聚合结果模型"><span class="nav-number">3.</span> <span class="nav-text">1. 冗余cube聚合结果模型</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#1-1-冗余cube聚合结果与起源"><span class="nav-number">3.1.</span> <span class="nav-text">1.1 冗余cube聚合结果与起源</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#2-实时聚合的聚合模型"><span class="nav-number">4.</span> <span class="nav-text">2. 实时聚合的聚合模型</span></a></li></ol></div>
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#两种模型分析"><span class="nav-number">1.</span> <span class="nav-text">两种模型分析</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#流量多维分析案例"><span class="nav-number">2.</span> <span class="nav-text">流量多维分析案例</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#1-冗余cube聚合结果模型"><span class="nav-number">3.</span> <span class="nav-text">1. 冗余cube聚合结果模型</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#1-1-冗余cube聚合结果与起源"><span class="nav-number">3.1.</span> <span class="nav-text">1.1 冗余cube聚合结果与起源</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#1-2-起源对于冗余cube模型的支持"><span class="nav-number">3.2.</span> <span class="nav-text">1.2 起源对于冗余cube模型的支持</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#2-实时聚合的聚合模型"><span class="nav-number">4.</span> <span class="nav-text">2. 实时聚合的聚合模型</span></a></li></ol></div>
             
 
           </div>

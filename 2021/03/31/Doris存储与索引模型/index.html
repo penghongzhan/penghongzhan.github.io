@@ -68,7 +68,7 @@
 
 
 
-  <meta name="keywords" content="doris,存储模型,索引,">
+  <meta name="keywords" content="doris,索引,">
 
 
 
@@ -80,14 +80,14 @@
 
 
 <meta name="description" content="针对聚合模型的分析  列式存储，每个列单独存储 数据排序，每个列的数据都根据agg key的顺序进行存储 前缀索引，将agg key组合到一起，取前36个字节，创建一个前缀索引  为什么每一列都需要按照agg key进行排序最左匹配的时候查找很快，比如说agg key的组合是：bu_id、cat1_id，输入条件where bu_id=1 and cat1_id=102的时候：  先通过最左的bu">
-<meta name="keywords" content="doris,存储模型,索引">
+<meta name="keywords" content="doris,索引">
 <meta property="og:type" content="article">
 <meta property="og:title" content="Doris存储与索引模型">
 <meta property="og:url" content="https://penghongzhan.github.io/2021/03/31/Doris存储与索引模型/index.html">
 <meta property="og:site_name" content="HongMo&#39;s Blog">
 <meta property="og:description" content="针对聚合模型的分析  列式存储，每个列单独存储 数据排序，每个列的数据都根据agg key的顺序进行存储 前缀索引，将agg key组合到一起，取前36个字节，创建一个前缀索引  为什么每一列都需要按照agg key进行排序最左匹配的时候查找很快，比如说agg key的组合是：bu_id、cat1_id，输入条件where bu_id=1 and cat1_id=102的时候：  先通过最左的bu">
 <meta property="og:locale" content="zh-Hans">
-<meta property="og:updated_time" content="2021-04-01T08:09:39.000Z">
+<meta property="og:updated_time" content="2022-12-22T01:57:14.641Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="Doris存储与索引模型">
 <meta name="twitter:description" content="针对聚合模型的分析  列式存储，每个列单独存储 数据排序，每个列的数据都根据agg key的顺序进行存储 前缀索引，将agg key组合到一起，取前36个字节，创建一个前缀索引  为什么每一列都需要按照agg key进行排序最左匹配的时候查找很快，比如说agg key的组合是：bu_id、cat1_id，输入条件where bu_id=1 and cat1_id=102的时候：  先通过最左的bu">
@@ -544,8 +544,6 @@
           
             <a href="/tags/doris/" rel="tag"># doris</a>
           
-            <a href="/tags/存储模型/" rel="tag"># 存储模型</a>
-          
             <a href="/tags/索引/" rel="tag"># 索引</a>
           
         </div>
@@ -661,7 +659,7 @@
               
               <div class="site-state-item site-state-categories">
                 <a href="/categories/index.html">
-                  <span class="site-state-item-count">38</span>
+                  <span class="site-state-item-count">37</span>
                   <span class="site-state-item-name">分类</span>
                 </a>
               </div>
@@ -672,7 +670,7 @@
               
               <div class="site-state-item site-state-tags">
                 <a href="/tags/index.html">
-                  <span class="site-state-item-count">157</span>
+                  <span class="site-state-item-count">154</span>
                   <span class="site-state-item-name">标签</span>
                 </a>
               </div>
